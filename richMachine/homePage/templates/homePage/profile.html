@@ -1,0 +1,91 @@
+
+{% extends 'homePage/layout.html' %}
+{% load static %}
+{% load humanize %}
+{% load my_filters %}
+{% block title %} {{title}} {% endblock %}
+
+{% block stylesheet %} 
+<link rel="icon" href="{% static 'homePage/img/logo.png' %}">
+
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Cinzel:wght@400..900&family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Moul&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="{% static 'homePage/styles/style_profile.css' %}">
+{% endblock %}
+
+{% block script %}{% endblock %}
+
+{% block content %}
+
+<div class="main-info">
+    <div class="info">
+        <div class="up">
+            <div class="nickname">{{nickname.name}} 
+                {% if language == 'ru' %}
+                    <img src="{% static 'homePage/img/russia.svg' %}"/>
+                {% else %}
+                    <img src="{% static 'homePage/img/eng.svg' %}"/>
+                {% endif %}
+                <br><span class="job-name">{{job.title}}</span></div>
+            
+            <div class="donate-coin">
+                <span>{{donate_balance|intcomma}} DC</span>
+            </div>
+        </div>
+        <div class="down">
+            <div class="balance">
+                <div class="balance__cash">Наличные: {{money.cash|intcomma}} ₽</div>
+                <br>
+                <div class="balance__bank">Банк: {{money.bank|intcomma}} ₽</div>
+            </div>
+            <div class="couple">
+                <div class="couple__username">Супруг(а) Лерка</div>
+                <br>
+                <div class="couple__date">В браке с 04.01.2023</div>
+            </div>
+            <div class="dollar">
+                <img src="{% static 'homePage/img/profile_dollar.svg' %}"/>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="property">
+    <div class="cars">
+        <span class="type-property">Автомобили</span>
+
+        {% for car in car.cars %}
+            <div class="car frosted_glass" id="{{car.id}}">
+                <span class="car__name">{{car.name}}</span><br>
+                <span class="car__price">Гос.стоимость - {{car.price|intcomma}} ₽</span>
+            </div>
+        {% endfor %}
+    </div>
+    <div class="yachts">
+        <span class="type-property">Яхты</span>
+        {% for yacht in yacht.yachts %}
+            <div class="yacht frosted_glass" id="{{yacht.id}}">
+                <span class="yacht__name">{{yacht.name}}</span><br>
+                <span class="yacht__price">Гос.стоимость - {{yacht.price|intcomma}} ₽</span>
+            </div>
+        {% endfor %}
+    </div>
+    <div class="houses">
+        <span class="type-property">Недвижимость</span>
+        {% for house in houses %}
+            <div class="house frosted_glass" id="{{house.id}}">
+                <span class="house__name">{{house.district_info.name|translite}} {{house.type}} №{{house.id}}</span><br>
+                <span class="house__price">Гос.стоимость - {{house.price|intcomma}} ₽</span>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+<div class="sun">
+    
+</div>
+{% endblock %}

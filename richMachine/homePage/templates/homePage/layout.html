@@ -1,0 +1,47 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{% endblock %}</title>
+    
+    <link rel="icon" href="{% static 'homePage/img/logo.png' %}">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Cinzel:wght@400..900&family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Moul&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="{% static 'homePage/styles/style.css' %}">
+    {% block stylesheet %} {% endblock %}
+    
+    {% block script %} {% endblock %}
+</head>
+
+<body>
+    <div class="container">
+        <header class="a_cap">
+            <div class="header__logo">
+                <a href="#">
+                    <img class="logo__icon" src="{% static 'homePage/img/logo.svg' %}">
+                </a>
+                <div class="logo__text">Rich<br>Machine</div>
+            </div>
+            <ul class="header__buttons">
+                <li><a href="/profile">Профиль</a></li>
+                <li><a href="/magazine">Магазин</a></li>
+                <li><a href="#">Функции</a></li>
+                <svg width="23" height="23" viewBox="0 0 23 23" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M16.1856 9.27869C16.3262 9.13807 16.5474 9.11839 16.7106 9.23198L16.847 9.3269C17.057 9.47303 17.0838 9.77353 16.9029 9.95444L11.7904 15.0669C11.63 15.2273 11.37 15.2273 11.2096 15.0669L6.09714 9.95444C5.91623 9.77353 5.94297 9.47303 6.15298 9.3269L6.28939 9.23198C6.45262 9.1184 6.67378 9.13807 6.81439 9.27869L11.2096 13.6739C11.37 13.8343 11.63 13.8343 11.7904 13.6739L16.1856 9.27869Z" fill="#B7B7B7"/>
+                </svg>
+            </ul>
+        </header>
+        {% block content %}
+        {% endblock %}
+
+        
+    </div>
+</body>
