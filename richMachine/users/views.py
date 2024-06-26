@@ -1,11 +1,13 @@
 # users/views.py
 
+from django.contrib import messages
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.backends import ModelBackend
-from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 from django.contrib.auth.models import User
+from django.http import HttpResponseNotFound
 from django.shortcuts import get_object_or_404, redirect, render
-from django.urls import reverse_lazy
+from django.urls import reverse, reverse_lazy
 from django.views.generic.edit import CreateView
 from icecream import ic
 from utils import coll, get_district_by_id, get_house_by_id
@@ -85,10 +87,11 @@ def register(request):
     return render(request, 'registration/signup.html', {'form': form})
 
 def profile(request, username):
-    user = get_object_or_404(CustomUser, username=username)
-    
+    # user = get_object_or_404(CustomUser, username=username)
     user = coll.find_one({'username': username})
-    ic(username)
+    
+    if not user:
+        return HttpResponseNotFound(render(request, '404.html'))
     
     houses_id = user['house']['houses']
     houses = []
@@ -99,37 +102,38 @@ def profile(request, username):
         houses.append(house_info)
     
     data = {
-        "nickname": user.get('nickname'),
         "money": user.get('money'),
         "donate_balance": user.get('donate_balance'),
         "job": user.get('job', {}).get('title') if user.get('job', {}).get('title') else 'Безработный',
         "car": user.get('car'),
         "yacht": user.get('yacht'),
         "houses": houses,
-        "couple": None,
+        # "couple": None,
         "registration": user.get('registration'),
         "language": user.get('language'),
-        "active": user.get('active'),
-        "username": user.get('username')
+        "username": user.get('username'),
+        "my_username": request.user.username
     }
-    
-    # data = {'nickname': {'name': request.user.username}}
-    
-
     
     return render(request, 'homePage/profile.html', data)
 
 def login_user(request):
     if request.method == 'POST':
-        username = request.POST['username']
-        password = request.POST['password']
-        user = authenticate(request, username=username, password=password)
-        if user is not None:
-            login(request, user)
-            return redirect('users:profile', username=user.username)
+        form = AuthenticationForm(request, data=request.POST)
+        if form.is_valid():
+            username = form.cleaned_data.get('username')
+            password = form.cleaned_data.get('password')
+            user = authenticate(username=username, password=password)
+            if user is not None:
+                login(request, user)
+                return redirect(reverse('users:profile', kwargs={'username': username}))
+            else:
+                messages.error(request, "Invalid username or password.")
         else:
-            return render(request, 'login.html', {'error': 'Invalid login'})
-    return render(request, 'login.html')
+            messages.error(request, "Invalid username or password.")
+    else:
+        form = AuthenticationForm()
+    return render(request, 'registration/login.html', {'form': form})
 
 class SignUpView(CreateView):
     form_class = CustomUserCreationForm
