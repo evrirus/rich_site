@@ -7,7 +7,7 @@ from pymongo import MongoClient
 client = MongoClient('mongodb://localhost:27017')
 db = client.get_database('lalka')
 
-coll = db.get_collection('lerkalalka')
+coll = db.get_collection('users_customuser')
 counter_collection = db.get_collection('counters')
 
 db_districts = db.get_collection('districts')

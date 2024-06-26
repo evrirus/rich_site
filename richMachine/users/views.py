@@ -1,40 +1,143 @@
 # users/views.py
 
 from django.contrib.auth import authenticate, login
+from django.contrib.auth.backends import ModelBackend
 from django.contrib.auth.forms import UserCreationForm
-from django.shortcuts import redirect, render
+from django.contrib.auth.models import User
+from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse_lazy
+from django.views.generic.edit import CreateView
+from icecream import ic
+from utils import coll, get_district_by_id, get_house_by_id
 
-from .forms import LoginUserForm  # Подключаем форму входа
+from .forms import CustomUserCreationForm, LoginUserForm
+from .models import CustomUser
+
+# def signup_user(request):
+#     if request.method == 'POST':
+#         form = UserCreationForm(request.POST)
+#         if form.is_valid():
+#             form.save()
+#             # После успешной регистрации пользователя можно выполнить дополнительные действия, например, войти в систему или отправить на другую страницу
+#             return redirect('users:login')  # Перенаправляем на страницу входа после успешной регистрации
+#     else:
+#         form = UserCreationForm()
+
+#     return render(request, 'users/signup.html', {'form': form})
+
+# # users/views.py
 
 
-def signup_user(request):
+
+# class CustomBackend(ModelBackend):
+#     def authenticate(self, request, username=None, password=None, **kwargs):
+#         # Получить пользователя из вашей собственной базы данных
+#         try:
+#             user = CustomUser.objects.get(username=username)
+#             ic(user)
+#         except CustomUser.DoesNotExist:
+#             return None
+        
+#         # Проверить пароль
+#         if user.check_password(password):
+#             return user
+
+#         return None
+
+# def login_user(request):
+#     if request.method == 'POST':
+#         ic(request.POST.username)
+#         form = LoginUserForm(request.POST)
+#         ic(form.is_valid())
+#         ic(form.data)
+#         ic(form.username)
+#         if form.is_valid():
+#             username = form.cleaned_data['username']
+#             password = form.cleaned_data['password']
+
+#             # Использовать переопределенный метод authenticate()
+#             user = CustomBackend().authenticate(request, username=username, password=password)
+
+#             if user:
+#                 # Проверить, является ли пользователь новым пользователем
+#                 if user.is_new_user:
+#                     # Вывести имя пользователя в консоли
+#                     ic(user.username)
+
+#                 login(request, user)
+#                 return redirect('homePage:profile')  # Замените 'home' на ваше имя представления или URL для профиля
+#             else:
+#                 form.add_error(None, "Неверные учетные данные")
+#     else:
+#         form = LoginUserForm()
+
+#     return render(request, 'users/login.html', {'form': form})
+
+def register(request):
     if request.method == 'POST':
-        form = UserCreationForm(request.POST)
+        form = CustomUserCreationForm(request.POST)
         if form.is_valid():
-            form.save()
-            # После успешной регистрации пользователя можно выполнить дополнительные действия, например, войти в систему или отправить на другую страницу
-            return redirect('users:login')  # Перенаправляем на страницу входа после успешной регистрации
+            user = form.save()
+            login(request, user)
+            return redirect('users:profile', username=user.username)
     else:
-        form = UserCreationForm()
+        form = CustomUserCreationForm()
+    return render(request, 'registration/signup.html', {'form': form})
 
-    return render(request, 'users/signup.html', {'form': form})
+def profile(request, username):
+    user = get_object_or_404(CustomUser, username=username)
+    
+    user = coll.find_one({'username': username})
+    ic(username)
+    
+    houses_id = user['house']['houses']
+    houses = []
+    for x in houses_id:
+        house_info = get_house_by_id(x['id'])
+        district_info = get_district_by_id(house_info['district_id'])
+        house_info['district_info'] = district_info
+        houses.append(house_info)
+    
+    data = {
+        "nickname": user.get('nickname'),
+        "money": user.get('money'),
+        "donate_balance": user.get('donate_balance'),
+        "job": user.get('job', {}).get('title') if user.get('job', {}).get('title') else 'Безработный',
+        "car": user.get('car'),
+        "yacht": user.get('yacht'),
+        "houses": houses,
+        "couple": None,
+        "registration": user.get('registration'),
+        "language": user.get('language'),
+        "active": user.get('active'),
+        "username": user.get('username')
+    }
+    
+    # data = {'nickname': {'name': request.user.username}}
+    
 
-# users/views.py
-
+    
+    return render(request, 'homePage/profile.html', data)
 
 def login_user(request):
     if request.method == 'POST':
-        form = LoginUserForm(request.POST)
-        if form.is_valid():
-            username = form.cleaned_data['username']
-            password = form.cleaned_data['password']
-            user = authenticate(request, username=username, password=password)
-            if user is not None:
-                login(request, user)
-                return redirect('homePage:profile')  # Замените 'home' на ваше имя представления или URL для профиля
-            else:
-                form.add_error(None, "Неверные учетные данные")
-    else:
-        form = LoginUserForm()
+        username = request.POST['username']
+        password = request.POST['password']
+        user = authenticate(request, username=username, password=password)
+        if user is not None:
+            login(request, user)
+            return redirect('users:profile', username=user.username)
+        else:
+            return render(request, 'login.html', {'error': 'Invalid login'})
+    return render(request, 'login.html')
 
-    return render(request, 'users/login.html', {'form': form})
+class SignUpView(CreateView):
+    form_class = CustomUserCreationForm
+    success_url = reverse_lazy('home')
+    template_name = 'registration/signup.html'
+    
+    
+class LoginView(CreateView):
+    form_class = LoginUserForm
+    success_url = reverse_lazy("login")
+    template_name = "registration/login.html"
