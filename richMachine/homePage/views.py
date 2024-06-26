@@ -9,8 +9,8 @@ def index(request):
     }
     return render(request, 'homePage/index.html', data)
 
-def profile(request):
-    ic(request.user.username)
+# def profile(request):
+#     ic(request.user.username)
     # user = coll.find_one({'user_id': 899827113})
     
     # houses_id = user['house']['houses']
@@ -35,6 +35,6 @@ def profile(request):
     #     "active": user.get('active'),
     #     "username": user.get('username')
     # }
-    data = {'nickname': {'name': request.user.username}}
+    # data = {'nickname': {'name': request.user.username}}
     
-    return render(request, 'homePage/profile.html', data)
+    # return render(request, 'homePage/profile.html', data)
