@@ -4,6 +4,8 @@
 {% load humanize %}
 {% load my_filters %}
 {% block title %} {{title}} {% endblock %}
+{% block username %}{{ username }}{% endblock %}
+{% block my_username %}{{ my_username }}{% endblock %}
 
 {% block stylesheet %} 
 <link rel="icon" href="{% static 'homePage/img/logo.png' %}">
@@ -20,12 +22,14 @@
 
 {% block script %}{% endblock %}
 
+
+
 {% block content %}
 
 <div class="main-info">
     <div class="info">
         <div class="up">
-            <div class="nickname">{{nickname.name}} 
+            <div class="nickname">{{ username }} 
                 {% if language == 'ru' %}
                     <img src="{% static 'homePage/img/russia.svg' %}"/>
                 {% else %}
