@@ -5,7 +5,7 @@
 {% load my_filters %}
 {% block title %} {{title}} {% endblock %}
 {% block username %}{{ username }}{% endblock %}
-{% block my_username %}{{ my_username }}{% endblock %}
+{% block server_id %}{{ server_id }}{% endblock %}
 
 {% block stylesheet %} 
 <link rel="icon" href="{% static 'homePage/img/logo.png' %}">
@@ -20,7 +20,10 @@
 <link rel="stylesheet" href="{% static 'homePage/styles/style_profile.css' %}">
 {% endblock %}
 
-{% block script %}{% endblock %}
+
+{% block script %}
+<script src="{% static 'homePage/js/profile.js' %}" defer></script>
+{% endblock %}
 
 
 
@@ -29,28 +32,62 @@
 <div class="main-info">
     <div class="info">
         <div class="up">
-            <div class="nickname">{{ username }} 
-                {% if language == 'ru' %}
-                    <img src="{% static 'homePage/img/russia.svg' %}"/>
+            <div class="nickname" id="nickname">
+                {% if server_id == my_server_id %}
+                    <span class="edited" style="cursor: pointer" id="name">{{ nickname.name }}</span>
                 {% else %}
-                    <img src="{% static 'homePage/img/eng.svg' %}"/>
+                    <span class="static" id="name">{{ nickname.name }}</span>
                 {% endif %}
-                <br><span class="job-name">{{job.title}}</span></div>
-            
-            <div class="donate-coin">
-                <span>{{donate_balance|intcomma}} DC</span>
+
+                {% if language == 'ru' %}
+                    <img src="{% static 'homePage/img/russia.svg' %}" />
+                {% else %}
+                    <img src="{% static 'homePage/img/eng.svg' %}" />
+                {% endif %}
+                <br>
+                <span class="job-name">{{ job.title }}</span>
             </div>
+            
+            {% if server_id == my_server_id %}
+                <div class="donate-coin">
+                    <span>{{ donate_balance|intcomma }} DC</span>
+                </div>
+            {% else %}
+                <div class="donate-coin" style="visibility: hidden;">
+                    <span>{{ donate_balance|intcomma }} DC</span>
+                </div>
+            {% endif %}
+            
+            
+            <dialog id="nicknameModal" class="modal">
+                <div class="modal-content">
+                    <form method="post" action="{% url 'users:change_nickname' %}">
+                        {% csrf_token %}
+                        <label for="new_nickname" class="label_new_nickname">Введите новый никнейм</label>
+                        <input type="text" id="new_nickname" name="new_nickname" placeholder="Никнейм" required>
+                        <div class="buttons">
+                            <button type="button" id="close_nickname">Закрыть</button>
+                            <button type="submit" id="accept_nickname">Подтвердить</button>
+                        </div>
+                    </form>
+                </div>
+            </dialog>
+            
+
+
         </div>
         <div class="down">
-            <div class="balance">
-                <div class="balance__cash">Наличные: {{money.cash|intcomma}} ₽</div>
-                <br>
-                <div class="balance__bank">Банк: {{money.bank|intcomma}} ₽</div>
-            </div>
-            <div class="couple">
-                <div class="couple__username">Супруг(а) Лерка</div>
-                <br>
-                <div class="couple__date">В браке с 04.01.2023</div>
+            <div class="info-group">
+                <div class="balance">
+                    <div class="balance__cash">Наличные: {{money.cash|intcomma}} ₽</div>
+                    <br>
+                    <div class="balance__bank">Банк: {{money.bank|intcomma}} ₽</div>
+                </div>
+                <div class="couple">
+                    <div class="couple__username">Супруг(а) Лерка</div>
+                    <br>
+                    <div class="couple__date">В браке с 04.01.2023</div>
+                </div>
             </div>
             <div class="dollar">
                 <img src="{% static 'homePage/img/profile_dollar.svg' %}"/>
@@ -89,7 +126,14 @@
         {% endfor %}
     </div>
 </div>
-<div class="sun">
-    
+
+<div class="alerts">
+    {% for message in messages %}
+        {{ message}}
+    {% endfor %}
 </div>
+
+<span class="sun">
+    
+</span>
 {% endblock %}

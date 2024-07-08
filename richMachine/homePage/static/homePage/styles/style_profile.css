@@ -72,7 +72,7 @@
     position: absolute;
     left: 0;
     top: 0;
-    z-index: 1;
+    z-index: -1;
     background-image: url('/static/homePage/img/сун.svg');
     background-position: center;
     background-repeat: no-repeat;
@@ -87,7 +87,7 @@
     top: 7em;
     border: 1px solid white;
     border-radius: 50px;
-    width: 80em;
+    width: 80vw;
     height: 23.125em;
     display: flex;
     gap: 1.5rem;
@@ -121,6 +121,7 @@
     font-size: 3rem;
     font-weight: bold;
     line-height: 2rem;
+    user-select: none;
 }
 .job-name {
     color: #808080;
@@ -164,8 +165,17 @@
 .down .balance {
     margin-left: 5rem;
 }
+.info-group {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    width: 100%;
+
+}
 
 .down .balance, .down .couple{
+    height: auto;
+    max-height: 5rem;
     position: relative;
     border-radius: 2.5rem;
     background-color: #222222;
@@ -174,10 +184,11 @@
     align-items: center;
     flex-direction: column;
     align-self: center;
-    padding: 1.2em 3em;
+    padding: .5em 3rem;
 }
 
 .dollar {
+    margin-left: 3vw;
     margin-right: 5em;
     display: flex;
     align-items: center;
@@ -189,7 +200,7 @@
     flex-direction:row;
     height: auto;
     margin-top: 10em;
-    z-index: 3;
+    z-index: -1;
     position: relative;
 }
 
@@ -253,3 +264,137 @@
     text-align: center;
     line-height: 1.5em;
 }
+
+
+.modal {
+    overflow: none;
+    z-index: 10;
+    display: none;
+    position: fixed;
+    transform: translate(-50%, -50%);
+    padding: 20px;
+    background-color: white;
+    border: none;
+    width: 300px;
+    box-sizing: border-box;
+    border-radius: 2em;
+    height: 11.25em;
+    width: 21em;
+    background: #1C1C1C;
+}
+.modal-content {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+.modal-content label,
+.modal-content input,
+.modal-content button {
+    width: 100%;
+    margin-bottom: 25px;
+    box-sizing: border-box;
+}
+.modal-content label {
+    text-align: left;
+    font-size: 14px;
+    margin-bottom: 5px;
+    color: white;
+    font-size: 1em;
+    font-weight: bold;
+}
+.modal-content input {
+    padding: 10px;
+    font-size: 14px;
+    width: 305px;
+}
+.modal-content .buttons {
+    display: flex;
+    justify-content: space-between;
+}
+.modal-content .buttons button {
+    width: 8.125em;
+    height: 2.563em;
+    padding: 10px;
+    font-size: 15px;
+    cursor: pointer;
+    border-radius: 30px;
+    border: none;
+    display: flex;
+    justify-content: center;
+    align-items: center; 
+    color: white;
+    font-weight: bold;
+}
+
+#close_nickname {
+    background: linear-gradient(60deg, rgba(191,118,51,1) 0%, rgba(173,97,28,1) 100%);
+}
+#accept_nickname {
+    background-image: linear-gradient(123deg, rgba(54,134,114,1) 0%, rgba(80,199,170,1) 100%);
+}
+#new_nickname {
+    margin-top: 5px;
+    height: 3.375em;
+    background-color: #131313;
+    border: none;
+    border-radius: 0.813em;
+    color: #444444;
+    font-size: 1em;
+    font-weight: bold;
+}
+
+
+@media screen and (max-width: 1080px) {
+    .down {
+        flex-direction: column;
+        align-items: center;
+    }
+    .down .balance {
+        margin-left: 0; 
+    }
+    /* .dollar {
+        display: none;
+    } */
+
+    .nickname img {
+        display: none;
+    }
+    .up .nickname {
+        line-height: 3vw;
+    }
+    #name {
+        font-size: 5vw;
+
+    }
+    .job-name{
+        font-size: 3vw;
+    }
+    .donate-coin {
+        height: 5vw;
+        font-size: calc(0.1rem + 1vw);
+    }
+    .down .balance, .down .couple {
+        font-size: 2vw;
+    }
+    .main-info {
+        height: auto;
+    }
+    .info {
+        min-height: 40vw;
+    }
+    .info-group {
+        flex-direction: column;
+    }
+}
+
+/* @media screen and (max-width: 768px) {
+    .donate-coin {
+        display: none;
+    }
+}
+
+@media screen and (max-width: 558px) {
+    .nickname span {
+        font-size: 29px;
+    }
+} */
