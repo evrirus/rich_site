@@ -1,8 +1,9 @@
 # from django.db import models
-from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin, Group, Permission
-from django.utils import timezone
 
-import datetime
+from django.contrib.auth.models import BaseUserManager
+from django.db.models import Max
+from icecream import ic
+
 
 def default_nickname():
     return {
@@ -136,9 +137,10 @@ def default_couple():
 #         return self.username
 
 
+from bson import ObjectId
 from django.contrib.auth.models import AbstractUser
 from djongo import models
-from bson import ObjectId
+from utils import counter_collection
 
 class CustomUserManager(BaseUserManager):
     def create_user(self, username, password=None, **extra_fields):
@@ -157,7 +159,7 @@ class CustomUserManager(BaseUserManager):
 
 class CustomUser(AbstractUser):
     _id = models.ObjectIdField(primary_key=True, editable=False, default=ObjectId)  # Удалить это поле
-    server_id = models.IntegerField(default=1)
+    server_id = models.IntegerField(default=0)
     user_id = models.IntegerField(blank=True, null=True)
     donate_balance = models.IntegerField(default=0)
     job_lvl = models.IntegerField(default=1)
@@ -180,4 +182,8 @@ class CustomUser(AbstractUser):
     def save(self, *args, **kwargs):
         if not self.is_new_user:
             self.is_new_user = False
+        if not self.server_id:
+            max_server_id = CustomUser.objects.all().aggregate(Max('server_id'))#['server_id__max']
+            ic(max_server_id['server_id__max'])
+            self.server_id = max_server_id['server_id__max'] + 1
         super().save(*args, **kwargs)

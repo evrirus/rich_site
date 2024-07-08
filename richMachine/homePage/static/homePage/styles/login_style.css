@@ -1,0 +1,104 @@
+.container {
+    display: flex;
+    align-items: center;
+    justify-content:center;
+}
+
+.frame {
+    display: flex;
+    align-items: center;
+    justify-content:center;
+    position: relative;
+    margin-top: 7em;
+    width: 47.188em;
+    height: 29.063em;
+    flex-direction: column;
+    z-index: 10;
+}
+
+.form {
+    display: flex;
+    align-items: center;
+    justify-content:center;
+    background-color: #222222;
+    border-radius: 40px;
+    flex-direction: column;
+}
+
+form {
+    width: 47.188em;
+    height: 29.063em;
+    display: flex;
+    align-items: center;
+    justify-content:flex-start;
+    flex-direction: column;
+    margin-top: 2.25em;
+}
+
+label {
+    display: none;
+}
+
+input {
+    outline: none !important; 
+    font-size: 13px;
+    width: 19.063em;
+    height: 3.375em;
+    border: none;
+    border-radius: 1.25em;
+    background-color: #131313;
+    padding-left: 1.063em;
+    color: #444444;
+    font-size: 16px;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: bold;
+}
+
+.main-text {
+    margin-top: 4em;
+    margin-bottom: 15px;
+    font-weight: bold;
+    font-size: 46px;
+    color: #FFFFFF;
+    margin-right: 8em;
+}
+p {
+    margin: 0;
+    margin-bottom: 1.875em;
+}
+#telegram-login-evrirus_bot {
+    margin-top: 3.563em;
+    margin-bottom: 1.125em;
+}
+
+.button-authorizacia {
+    background: linear-gradient(123deg, rgba(54,134,114,1) 0%, rgba(80,199,170,1) 100%);
+    border: none;
+    padding: 18px 30px;
+    border-radius: 30px;
+    font-size: 24px;
+    font-weight: bold;
+    color: #FFFFFF;
+    margin-bottom: 1em;
+}
+
+.no-account {
+    color: #FFFFFF;
+    font-size: 15px;
+    font-weight:400;
+}
+
+.graffiti_one {
+    position: absolute;
+    left: 0;
+}
+.graffiti_two {
+    position: absolute;
+    margin-top: 50em;
+    right: 0;
+}
+.graffiti_cho_nado {
+    position: absolute;
+    margin-top: 120em;
+    /* position: relative; */
+}

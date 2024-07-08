@@ -3,9 +3,11 @@
 from django.contrib import messages
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.backends import ModelBackend
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 from django.contrib.auth.models import User
-from django.http import HttpResponseNotFound
+from django.db.models import Q
+from django.http import HttpResponse, HttpResponseNotFound
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
 from django.views.generic.edit import CreateView
@@ -78,17 +80,25 @@ from .models import CustomUser
 def register(request):
     if request.method == 'POST':
         form = CustomUserCreationForm(request.POST)
+        username = form.data['username']
+
+        if coll.find_one({'username': username}):
+            messages.error(request, 'A user with that username or email already exists.')
+            return render(request, 'registration/signup.html', {'form': form})
         if form.is_valid():
+            
+
             user = form.save()
             login(request, user)
-            return redirect('users:profile', username=user.username)
+            return redirect('users:profile', server_id=user.server_id)
     else:
         form = CustomUserCreationForm()
     return render(request, 'registration/signup.html', {'form': form})
 
-def profile(request, username):
+@login_required
+def profile(request, server_id):
     # user = get_object_or_404(CustomUser, username=username)
-    user = coll.find_one({'username': username})
+    user = coll.find_one({'server_id': server_id})
     
     if not user:
         return HttpResponseNotFound(render(request, '404.html'))
@@ -102,37 +112,40 @@ def profile(request, username):
         houses.append(house_info)
     
     data = {
+        "nickname": user.get('nickname'),
         "money": user.get('money'),
         "donate_balance": user.get('donate_balance'),
         "job": user.get('job', {}).get('title') if user.get('job', {}).get('title') else 'Безработный',
         "car": user.get('car'),
         "yacht": user.get('yacht'),
         "houses": houses,
-        # "couple": None,
+        "couple": user.get('couple', {}),
         "registration": user.get('registration'),
         "language": user.get('language'),
         "username": user.get('username'),
-        "my_username": request.user.username
+        "my_username": request.user.username,
+        "server_id": user.get('server_id'),
+        "my_server_id": request.user.server_id
     }
     
     return render(request, 'homePage/profile.html', data)
 
 def login_user(request):
     if request.method == 'POST':
-        form = AuthenticationForm(request, data=request.POST)
+        form = LoginUserForm(request, data=request.POST)
         if form.is_valid():
             username = form.cleaned_data.get('username')
             password = form.cleaned_data.get('password')
             user = authenticate(username=username, password=password)
             if user is not None:
                 login(request, user)
-                return redirect(reverse('users:profile', kwargs={'username': username}))
+                return redirect(reverse('users:profile', kwargs={'server_id': user.server_id}))
             else:
                 messages.error(request, "Invalid username or password.")
         else:
             messages.error(request, "Invalid username or password.")
     else:
-        form = AuthenticationForm()
+        form = LoginUserForm()
     return render(request, 'registration/login.html', {'form': form})
 
 class SignUpView(CreateView):
@@ -145,3 +158,16 @@ class LoginView(CreateView):
     form_class = LoginUserForm
     success_url = reverse_lazy("login")
     template_name = "registration/login.html"
+
+
+@login_required
+def change_nickname(request):
+    if request.method == 'POST':
+        new_nickname = request.POST.get('new_nickname')
+        if new_nickname:
+            user = request.user
+            user.nickname['name'] = new_nickname
+            user.save()
+            messages.success(request, 'Profile updated successfully')
+            return redirect('users:profile', server_id=user.server_id)
+    return redirect('users:profile', username=user.server_id)
