@@ -11,7 +11,7 @@
     position: relative;
     margin-top: 7em;
     width: 47.188em;
-    height: 29.063em;
+    height: 35.063em;
     flex-direction: column;
     z-index: 10;
 }
@@ -23,9 +23,10 @@
     background-color: #222222;
     border-radius: 40px;
     flex-direction: column;
+    height: 29.063em;
 }
 
-form {
+#registrationForm {
     width: 47.188em;
     height: 29.063em;
     display: flex;
@@ -33,6 +34,7 @@ form {
     justify-content:flex-start;
     flex-direction: column;
     margin-top: 2.25em;
+    height: max-content;
 }
 
 label {
@@ -55,7 +57,7 @@ input {
 }
 
 .main-text {
-    margin-top: 4em;
+    margin-top: 1em;
     margin-bottom: 15px;
     font-weight: bold;
     font-size: 46px;
@@ -67,8 +69,9 @@ p {
     margin-bottom: 1.875em;
 }
 #telegram-login-evrirus_bot {
-    margin-top: 3.563em;
+    /* margin-top: 3.563em; */
     margin-bottom: 1.125em;
+    z-index:111;
 }
 
 .button-authorizacia {
@@ -80,12 +83,14 @@ p {
     font-weight: bold;
     color: #FFFFFF;
     margin-bottom: 1em;
+    width: 13.5em;
 }
 
 .no-account {
     color: #FFFFFF;
     font-size: 15px;
     font-weight:400;
+    margin-bottom: 3em;
 }
 
 .graffiti_one {
@@ -101,4 +106,11 @@ p {
     position: absolute;
     margin-top: 120em;
     /* position: relative; */
+}
+#id_username, #id_password2 {
+    margin-bottom: 25px;
+}
+
+#id_password1 {
+    margin-bottom: 81px;
 }

@@ -23,16 +23,18 @@
     background-color: #222222;
     border-radius: 40px;
     flex-direction: column;
+    height: 29.063em;
 }
 
 #registrationForm {
     width: 47.188em;
-    /* height: 29.063em; */
+    height: 29.063em;
     display: flex;
     align-items: center;
     justify-content:flex-start;
     flex-direction: column;
     margin-top: 2.25em;
+    height: max-content;
 }
 
 label {
@@ -55,7 +57,7 @@ input {
 }
 
 .main-text {
-    margin-top: 4em;
+    margin-top: 1em;
     margin-bottom: 15px;
     font-weight: bold;
     font-size: 46px;
@@ -87,6 +89,7 @@ p {
     color: #FFFFFF;
     font-size: 15px;
     font-weight:400;
+    margin-bottom: 3em;
 }
 
 .graffiti_one {
@@ -105,7 +108,4 @@ p {
 }
 #id_username, #id_password1, #id_password2 {
     margin-bottom: 25px;
-}
-#registrationForm {
-    height: auto;
 }

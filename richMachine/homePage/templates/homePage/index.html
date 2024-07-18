@@ -3,6 +3,7 @@
 {% load static %}
 {% block title %} {{ title }} {% endblock %}
 {% block username %}{{ nickname }}{% endblock %}
+{% block my_server_id %}{{ my_server_id }}{% endblock %}
 
 {% block stylesheet %} 
 <!-- <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous"> -->
@@ -78,7 +79,11 @@
 </div>
 
 <div class="button_start">
-    <button class="start_button">Начать</button>
+    {% if my_server_id %}
+        <a class="start_button" href="users/profile/{{my_server_id}}">Начать</a>
+    {% else %}
+        <a class="start_button" href="users/login">Начать</a>
+    {% endif %}
 </div>
 
 <div class="info_blocks">

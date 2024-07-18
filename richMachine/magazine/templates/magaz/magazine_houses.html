@@ -1,0 +1,53 @@
+{% extends 'homePage/layout.html' %}
+{% load static %}
+{% load humanize %}
+{% load my_filters %}
+{% block title %} {{title}} {% endblock %}
+{% block username %}{{ username }}{% endblock %}
+{% block server_id %}{{ server_id }}{% endblock %}
+
+
+{% block stylesheet %} 
+<link rel="icon" href="{% static 'homePage/img/logo.png' %}">
+
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Cinzel:wght@400..900&family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Moul&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="{% static 'homePage/styles/magazine_style.css' %}">
+{% endblock %}
+
+
+{% block script %}
+<!-- <script src="{% static 'homePage/js/profile.js' %}" defer></script> -->
+{% endblock %}
+
+
+{% block content %}
+
+<div class="main-block">
+    <p class="houses-type">
+        Дома
+    </p>
+    <div class="property">
+        {% for item in houses %}
+            <a class="district_item" href="../{{type}}/{{item.district_id}}">
+                <div class="property-icon">
+                    {{ icon|safe }}
+                </div>
+                <div class="property-class">
+                    {% if item.type == 'house' %}Дом {% else %}Квартира {% endif %}№{{ item.id }}
+                </div>
+                <div class="property-price">
+                    {{ item.price|intcomma }} ₽
+                </div>
+
+            </a>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
+

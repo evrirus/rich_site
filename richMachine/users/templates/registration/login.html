@@ -11,22 +11,23 @@
 <div class="frame">
     <p class="main-text">Авторизация</p>
     <div class="form">
-        <form method="post">
+        <form id="registrationForm" method="post">
             {% csrf_token %}
-            {{ form.as_p }}
+            <input type="text" id="id_username" name="username" placeholder="Логин">
+            <input type="password" id="id_password1" name="password" placeholder="Пароль">
+            <!-- <input style="visibility: hidden;"> -->
 
             <script async src="https://telegram.org/js/telegram-widget.js?22" data-telegram-login="evrirus_bot" data-size="large" data-onauth="onTelegramAuth(user)" data-request-access="write"></script>
-            <script type="text/javascript">
-                function onTelegramAuth(user) {
-                    alert('Logged in as ' + user.first_name + ' ' + user.last_name + ' (' + user.id + (user.username ? ', @' + user.username : '') + ')');
-                }
-            </script>
 
-            <button class="button-authorizacia" type="submit">Авторизироваться</button>
-            <p class="no-account">Нет аккаунта?</p>
+            <button class="button-authorizacia" type="submit">Авторизоваться</button>
+            <a class="no-account" href="../register">Нет аккаунта?</a>
         </form>
         
-    </div>
+        <script type="text/javascript">
+            function onTelegramAuth(user) {alert('Logged in as ' + user.first_name + ' ' + user.last_name + ' (' + user.id + (user.username ? ', @' + user.username : '') + ')');}
+        </script>
+        
+    </div>   
 </div>
 
 <img src="{% static 'homePage/img/graffiti1.svg' %}" class="graffiti_one">
