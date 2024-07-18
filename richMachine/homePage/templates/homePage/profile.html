@@ -22,6 +22,7 @@
 
 
 {% block script %}
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 <script src="{% static 'homePage/js/profile.js' %}" defer></script>
 {% endblock %}
 
@@ -34,9 +35,9 @@
         <div class="up">
             <div class="nickname" id="nickname">
                 {% if server_id == my_server_id %}
-                    <span class="edited" style="cursor: pointer" id="name">{{ nickname.name }}</span>
+                    <span class="edited" style="cursor: pointer" id="current-name">{{ nickname.name }}</span>
                 {% else %}
-                    <span class="static" id="name">{{ nickname.name }}</span>
+                    <span class="static" id="current-name">{{ nickname.name }}</span>
                 {% endif %}
 
                 {% if language == 'ru' %}
@@ -46,6 +47,19 @@
                 {% endif %}
                 <br>
                 <span class="job-name">{{ job.title }}</span>
+            </div>
+            <div id="nicknameModal" class="modal">
+                <div class="modal-content">
+                  <form id="nickname-form" method="POST" action="{% url 'users:change_nickname' %}">
+                    {% csrf_token %}
+                    <label for="new_nickname" class="label_new_nickname">Введите новый никнейм</label>
+                    <input type="text" id="new_nickname" name="new_nickname" placeholder="Никнейм" required>
+                    <div class="buttons">
+                      <button type="button" id="close_nickname">Закрыть</button>
+                      <button type="reset" id="accept_nickname">Подтвердить</button>
+                    </div>
+                  </form>
+                </div>
             </div>
             
             {% if server_id == my_server_id %}
@@ -59,34 +73,26 @@
             {% endif %}
             
             
-            <dialog id="nicknameModal" class="modal">
-                <div class="modal-content">
-                    <form method="post" action="{% url 'users:change_nickname' %}">
-                        {% csrf_token %}
-                        <label for="new_nickname" class="label_new_nickname">Введите новый никнейм</label>
-                        <input type="text" id="new_nickname" name="new_nickname" placeholder="Никнейм" required>
-                        <div class="buttons">
-                            <button type="button" id="close_nickname">Закрыть</button>
-                            <button type="submit" id="accept_nickname">Подтвердить</button>
-                        </div>
-                    </form>
-                </div>
-            </dialog>
-            
-
+              
 
         </div>
         <div class="down">
             <div class="info-group">
                 <div class="balance">
-                    <div class="balance__cash">Наличные: {{money.cash|intcomma}} ₽</div>
+                    <div class="balance__cash nowrap">Наличные: {{money.cash|intcomma}} ₽</div>
                     <br>
-                    <div class="balance__bank">Банк: {{money.bank|intcomma}} ₽</div>
+                    <div class="balance__bank nowrap">Банк: {{money.bank|intcomma}} ₽</div>
                 </div>
                 <div class="couple">
-                    <div class="couple__username">Супруг(а) Лерка</div>
-                    <br>
-                    <div class="couple__date">В браке с 04.01.2023</div>
+                    {% if couple.user_id %}
+                        <div class="couple__username nowrap">Супруг(а) Лерка</div>
+                        <br>
+                        <div class="couple__date nowrap">В браке с 04.01.2023</div>
+                    {% else %}
+                        <div class="couple__username nowrap">Супруг(а) не найден</div>
+                        <!-- <br>
+                        <div class="couple__date nowrap" style="visibility: hidden;">a</div> -->
+                    {% endif %}
                 </div>
             </div>
             <div class="dollar">
@@ -127,13 +133,10 @@
     </div>
 </div>
 
-<div class="alerts">
-    {% for message in messages %}
-        {{ message}}
-    {% endfor %}
-</div>
+
 
 <span class="sun">
     
 </span>
 {% endblock %}
+

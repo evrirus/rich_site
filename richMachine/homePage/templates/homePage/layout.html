@@ -31,8 +31,9 @@
                 <div class="logo__text">Rich<br>Machine</div>
             </div>
             <ul class="header__buttons">
-                {% if server_id %}
-                    <li><a href="/users/profile/{{ server_id }}">Профиль</a></li>
+                {% if my_server_id %}
+                    <li><a href="/users/profile/{{ my_server_id }}">Профиль</a></li>
+                    <li><a href="/users/logout">Выйти</a></li>
                 {% else %}
                     <li><a href="/users/login/">Войти</a></li>
                 {% endif %}
@@ -43,9 +44,12 @@
                 </svg>
             </ul>
         </header>
-        {% block content %}
-        {% endblock %}
+        <main>
+            {% block content %}
+            {% endblock %}
+        </main>
 
         
     </div>
+    {% block modals %}{% endblock %}
 </body>

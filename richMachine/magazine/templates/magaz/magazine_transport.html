@@ -1,0 +1,76 @@
+{% extends 'homePage/layout.html' %}
+{% load static %}
+{% load humanize %}
+{% load my_filters %}
+{% block title %} {{title}} {% endblock %}
+{% block username %}{{ username }}{% endblock %}
+{% block server_id %}{{ server_id }}{% endblock %}
+
+
+{% block stylesheet %} 
+<link rel="icon" href="{% static 'homePage/img/logo.png' %}">
+
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Cinzel:wght@400..900&family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Moul&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="{% static 'homePage/styles/magazine_style.css' %}">
+{% endblock %}
+
+
+{% block script %}
+    
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="{% static 'homePage/js/magazine_transport.js' %}" defer></script>
+{% endblock %}
+
+
+{% block content %}
+<div class="main-block">
+    <p class="trasport-type">
+        {% if type == 'cars' %}
+            Автомобили
+        {% else %}
+            Яхты
+        {% endif %}
+    </p>
+    <div class="property">
+        {% for item in transport %}
+            <div class="transport_item {{type}}" data-modal-id="{{ item.id }}" data-type="{{ type }}">
+                <div class="property-icon">
+                    {{ icon|safe }}
+                </div>
+                <div class="property-class">
+                    {{ item.name }}
+                </div>
+                <div class="property-price">
+                    {{ item.price|intcomma }} ₽
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+    
+    <div id="transportModal" class="modal">
+        <div class="modal-content">
+            <div class="loading" style="display: none;">Загрузка...</div>
+            <div class="info__car">
+                <span class="transport-name"></span><br>
+                <span class="transport-price"></span><br>
+                <span class="transport-produced"></span>
+                <span class="transport-quantity"></span>
+            </div>
+            <form id="buyTransport-form" method="POST" action="{% url 'users:change_nickname' %}">
+                {% csrf_token %}
+                <div class="buttons">
+                    <button type="submit" id="accept_buy_transport">Купить</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+</div>
+{% endblock %}
+

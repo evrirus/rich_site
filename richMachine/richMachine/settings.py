@@ -32,6 +32,7 @@ INSTALLED_APPS = [
     'homePage',
     'djongo',
     'users',
+    'magazine',
     'django_filters',
     'django.contrib.humanize',
     'django.contrib.admin',

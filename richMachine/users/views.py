@@ -7,7 +7,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 from django.contrib.auth.models import User
 from django.db.models import Q
-from django.http import HttpResponse, HttpResponseNotFound
+from django.http import HttpResponse, HttpResponseNotFound, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
 from django.views.generic.edit import CreateView
@@ -95,9 +95,8 @@ def register(request):
         form = CustomUserCreationForm()
     return render(request, 'registration/signup.html', {'form': form})
 
-@login_required
+@login_required(login_url="/users/login/")
 def profile(request, server_id):
-    # user = get_object_or_404(CustomUser, username=username)
     user = coll.find_one({'server_id': server_id})
     
     if not user:
@@ -119,13 +118,14 @@ def profile(request, server_id):
         "car": user.get('car'),
         "yacht": user.get('yacht'),
         "houses": houses,
-        "couple": user.get('couple', {}),
+        "couple": user.get('couple'),
         "registration": user.get('registration'),
         "language": user.get('language'),
         "username": user.get('username'),
         "my_username": request.user.username,
         "server_id": user.get('server_id'),
-        "my_server_id": request.user.server_id
+        "my_server_id": request.user.server_id,
+        "is_authenticated": user.get('is_authenticated'),
     }
     
     return render(request, 'homePage/profile.html', data)
@@ -160,7 +160,7 @@ class LoginView(CreateView):
     template_name = "registration/login.html"
 
 
-@login_required
+@login_required(login_url="/users/login/")
 def change_nickname(request):
     if request.method == 'POST':
         new_nickname = request.POST.get('new_nickname')
@@ -169,5 +169,5 @@ def change_nickname(request):
             user.nickname['name'] = new_nickname
             user.save()
             messages.success(request, 'Profile updated successfully')
-            return redirect('users:profile', server_id=user.server_id)
-    return redirect('users:profile', username=user.server_id)
+            return JsonResponse({'success': True, 'new_nickname': new_nickname})
+    return JsonResponse({'success': False, 'error': 'Неверный метод запроса'})

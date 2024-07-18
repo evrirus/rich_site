@@ -6,7 +6,6 @@ from . import views
 app_name = 'users'
 
 
-
 urlpatterns = [
     path('register/', views.register, name='register'),
     path('profile/<int:server_id>/', views.profile, name='profile'),

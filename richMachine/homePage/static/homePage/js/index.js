@@ -1,9 +1,9 @@
-document.addEventListener('DOMContentLoaded', () => {
+// document.addEventListener('DOMContentLoaded', () => {
 
-    const startButton = document.querySelector('.start_button');
+//     const startButton = document.querySelector('.start_button');
 
-    startButton.addEventListener('click', () => {
-        window.location.href = '/profile';
-    });
+//     startButton.addEventListener('click', () => {
+//         window.location.href = '/users/profile/';
+//     });
 
-});
+// });

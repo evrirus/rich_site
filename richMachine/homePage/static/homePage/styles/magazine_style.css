@@ -1,0 +1,256 @@
+* {
+    --yacht-color: #2ec6ff;
+    --car-color: #b4fa63;
+    --houses-color: #ffe02e;
+    --videocard-color: #d35f00;
+  }
+  
+
+.main-block {
+    margin-top: 60px;
+    height: max-content;
+    color: aliceblue;
+    display: flex; 
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+}
+
+.property {
+    display: grid;
+    width: 60vw;
+    margin-bottom: 30px;
+    padding: 20px;
+    border-radius: 10px;
+    /* background-color: rgba(255, 255, 255, 0.8); */
+    grid-template-columns: repeat(3, 1fr);
+}
+
+.cell_item {
+    padding: 10px;
+    border-radius: 40px;
+    border: 1px solid white;
+    /* background-color: rgba(255, 255, 255, 0.8); */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    margin: 1em;
+    padding: 50px;
+    /* background: radial-gradient(circle, rgba(255,255,255,0.091) 0%, rgba(0,0,0,0.035) 70%); */
+    cursor: pointer;
+    text-decoration: none;
+    color: white;
+    transition: border 0.5s, color 0.5s, fill 0.5s;
+}
+
+.cell_item .property-class {
+    font-size: 28px;
+    font-weight: 500;
+    transition: color 0.5s;
+}
+
+/* Стили для типа яхт */
+.cell_item.type__yachts:hover {
+    border-color: radial-gradient(circle at 12.3% 19.3%, rgb(85, 88, 218) 0%, rgb(95, 209, 249) 100.2%);
+}
+
+.transport_item, .district_item {
+    padding: 10px;
+    border-radius: 40px;
+    border: 1px solid white;
+    /* background-color: rgba(255, 255, 255, 0.8); */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    margin: 1em;
+    padding: 50px;
+    background: radial-gradient(circle, rgba(255,255,255,0.091) 0%, rgba(0,0,0,0.035) 70%);
+    cursor: pointer;
+    text-decoration: none;
+    color: white;
+}
+
+.transport_item .property-class {
+    font-size: 30px;
+    font-weight: 500;
+    text-align: center;
+    font-weight: 700;
+}
+
+.transport_item .property-icon {
+    height: 60px;
+    transition: fill 0.5s;
+}
+
+.transport_item .property-price {
+    color: #444444;
+    font-size: 18px;
+}
+
+.trasport-type, .marking {
+    font-size: 32px;
+    font-weight: 500;
+    margin: 50px 0 0 0;
+    width: 60vw;
+    padding-left: 50px;
+}
+
+
+/* Стили для яхт */
+.cell_item.type__yachts:hover {
+    border-color: var(--yacht-color);
+}
+
+.cell_item.type__yachts .property-icon path {
+    transition: fill 0.5s;
+    fill: #ffffff;
+}
+.cell_item.type__yachts:hover .property-icon path {
+    transition: fill 0.5s;
+    fill: var(--yacht-color);
+}
+
+.cell_item.type__yachts:hover .property-class {
+    color: var(--yacht-color);
+} 
+
+
+/* Стили для машин */
+.cell_item.type__cars:hover {
+    border-color: var(--car-color);
+}
+
+.cell_item.type__cars .property-icon path {
+    transition: fill 0.5s;
+    fill: #ffffff;
+}
+.cell_item.type__cars:hover .property-icon path {
+    transition: fill 0.5s;
+    fill: var(--car-color);
+}
+
+.cell_item.type__cars:hover .property-class {
+    color: var(--car-color);
+} 
+
+
+/* Стили для домов */
+.cell_item.type__districts:hover {
+    border-color: var(--houses-color);
+}
+
+.cell_item.type__districts .property-icon path {
+    transition: fill 0.5s;
+    fill: #ffffff;
+}
+.cell_item.type__districts:hover .property-icon path {
+    transition: fill 0.5s;
+    fill: var(--houses-color);
+}
+
+.cell_item.type__districts:hover .property-class {
+    color: var(--houses-color);
+} 
+
+
+/* Стили для видеокарт */
+.cell_item.type__videocards:hover {
+    border-color: var(--videocard-color);
+}
+
+.cell_item.type__videocards .property-icon path {
+    transition: fill 0.5s;
+    fill: #ffffff;
+}
+.cell_item.type__videocards:hover .property-icon path {
+    transition: fill 0.5s;
+    fill: var(--videocard-color);
+}
+
+.cell_item.type__videocards:hover .property-class {
+    color: var(--videocard-color);
+} 
+
+
+#transportModal {
+    position: absolute;
+    visibility: hidden;
+    /* display: none; */
+    flex-direction: column;
+    /* justify-content: center; */
+    background: #1D1D1D;
+    z-index: 100;
+    height: 17em;
+    width: 12.5em;
+    border-radius: 20px;
+}
+
+.modal-content {
+    display: flex;
+    flex-direction: column;
+    /* justify-content: center; */
+    align-items: center;
+    height:100%;
+}
+
+.buttons button{
+    height: 2.188em;
+    width: 8.75em;
+    margin-bottom: 15px;
+    background: linear-gradient(60deg, rgba(191,118,51,1) 0%, rgba(173,97,28,1) 100%);
+    border: none;
+    color: #fff;
+    border-radius: 15px;
+    font-weight: 700;
+    font-size: 20px;
+}
+
+.transport-name {
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: .3em;
+    display: flex;
+}
+.transport-price {
+    font-size: 18px;
+    font-weight: bold;
+    color: transparent; 
+    background-image: linear-gradient(123deg, rgba(54,134,114,1) 0%, rgba(80,199,170,1) 100%);
+    background-clip: text;
+    -webkit-background-clip: text;
+    margin-bottom: 1em;
+}
+.transport-produced, .transport-quantity {
+    font-size: 14px;
+    font-weight: 700;
+    color: #444444;
+    margin-bottom: 2.1em;
+}
+.transport-produced {
+    margin-bottom: 5px;
+}
+
+
+.info__car {
+    margin-top: 1em;
+    height: 100%;
+    
+}
+
+.info__car span {
+    display: block;
+    display: flex;
+    justify-content: center;
+    text-align: center;
+}
+
+.loading {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 1.5em;
+    color: #000;
+}

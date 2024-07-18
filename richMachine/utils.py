@@ -267,13 +267,5 @@ def log_action(user_id: int | str, situation: str, balance: bool = False, **kwar
     if balance:
         log_entry['balance'] = user.get('money')
     db_log.insert_one(log_entry)
-    
-    
-# user = coll.find_one({'user_id': 899827113})
-# data = {
-#     'title': "Profile",
-#     "language": "ru",
-#     'user': user
-# }
-# houses = user['house']['houses']
-# houses = [get_house_by_id(x.get('id')) for x in houses] 
+
+
