@@ -266,6 +266,10 @@
     font-size: 1.5em;
     color: #000;
 }
+.loading img {
+    width: 60px;
+    height: auto;
+}
 
 .info__house {
     display: flex;
