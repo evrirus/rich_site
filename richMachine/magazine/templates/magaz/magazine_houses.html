@@ -22,7 +22,8 @@
 
 
 {% block script %}
-<!-- <script src="{% static 'homePage/js/profile.js' %}" defer></script> -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script src="{% static 'homePage/js/magazine_house.js' %}" defer></script>
 {% endblock %}
 
 
@@ -34,7 +35,7 @@
     </p>
     <div class="property">
         {% for item in houses %}
-            <a class="district_item" href="../{{type}}/{{item.district_id}}">
+            <div class="house_item" data-modal-id="{{ item.id }}">
                 <div class="property-icon">
                     {{ icon|safe }}
                 </div>
@@ -45,9 +46,50 @@
                     {{ item.price|intcomma }} ₽
                 </div>
 
-            </a>
+            </div>
         {% endfor %}
     </div>
+    <div id="houseModal" class="modal">
+        <div class="modal-content">
+            <div class="loading" style="display: none;">Загрузка...</div>
+            <div class="info__house">
+                <span class="house-district-name">Арбат</span><br>
+                <div class="type_and_number_house">
+                    <span class="house-type">Квартира</span>
+                    <span id="house_id_district"> №1</span><br>
+                </div>
+                <table>
+                    <tr>
+                        <td class="table-left" id="house_id_header">ID</td>
+                        <td class="table-right" id="house_id">1</td>
+                    </tr>
+                    <tr>
+                        <td class="table-left" id="house_price_header">Гос. цена</td>
+                        <td class="table-right" id="house_price">30 000 000 ₽</td>
+                    </tr> 
+                    <tr>
+                        <td class="table-left" id="house_basement_header">Подвал</td>
+                        <td class="table-right" id="house_basement"><span id="basement_built">Имеется[</span><span style="color: rgb(255, 28, 28);" id="house_basement_level">lvl</span>=<span id="level_basement">1</span>]</td>
+                    </tr>
+                    <tr>
+                        <td class="table-left" id="house_floors_header">Этажей</td>
+                        <td class="table-right" id="house_floors">3</td>
+                    </tr>
+                    <tr>
+                        <td class="table-left" id="house_class_header">Класс</td>
+                        <td class="table-right" id="house_class">Elite</td>
+                    </tr>
+                </table>
+                
+
+            </div>
+            <div class="buttons">
+                <button type="button" id="accept_buy_house">Купить</button>
+            </div>
+        </div>
+    </div>
+    
+    <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
 </div>
 {% endblock %}
 

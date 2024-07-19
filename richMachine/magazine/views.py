@@ -6,15 +6,16 @@ from django.contrib.auth.backends import ModelBackend
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 from django.contrib.auth.models import User
+from django.contrib.humanize.templatetags.humanize import intcomma
 from django.db.models import Q
 from django.http import HttpResponse, HttpResponseNotFound, JsonResponse
-from django.shortcuts import get_object_or_404, redirect, render, HttpResponse
+from django.shortcuts import HttpResponse, get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
+from django.views.decorators.csrf import csrf_exempt
 from django.views.generic.edit import CreateView
 from icecream import ic
 from utils import (coll, db_cars, db_districts, db_houses, db_yachts,
-                   get_district_by_id, get_house_by_id)
-from django.contrib.humanize.templatetags.humanize import intcomma
+                   get_district_by_id, get_house_by_id, give_money)
 
 # Create your views here.
 
@@ -53,8 +54,8 @@ def magazin(request: WSGIRequestHandler):
 
 
 @login_required(login_url="/users/login/")
-def get_transport_info(request, type, id):
-    ic(type)
+def get_transport_info(request: WSGIRequestHandler, type: str, id: int):
+    ic(type, request.method)
     if type == 'cars':
         transport = db_cars.find_one({'id': id})
     elif type == 'yachts':
@@ -71,12 +72,101 @@ def get_transport_info(request, type, id):
     
     return JsonResponse(data)
 
+
+@login_required(login_url="/users/login")
+def buy_transport(request: WSGIRequestHandler, type, id):
+    if request.method == 'POST':
+        if type == 'yachts':
+            trasport_info = db_yachts.find_one({'id': id})
+        elif type == 'cars':
+            trasport_info = db_cars.find_one({'id': id})
+        else:
+            return JsonResponse({'success': False, 'message': 'Invalid type'}, status=405)
+        
+        if trasport_info.get('quantity') <= 0:
+            return JsonResponse({'success': False, 'message': 'Транспорт раскуплен.'}, status=400)
+        
+        user_info = coll.find_one({'server_id': request.user.server_id})
+        if user_info.get('money', {}).get('cash', {}) < trasport_info.get('price'):
+            return JsonResponse({'success': False, 'message': 'Недостаточно средств.'}, status=400)
+        
+        if user_info.get('car', {}).get('maxPlaces', 2) <= len(user_info.get('car', {}).get('cars', {})):
+            return JsonResponse({'success': False, 'message': 'Превышено максимальное количество мест в вашем гараже.'}, status=400)
+        
+        
+        sample = {
+            'id': trasport_info.get('id'),
+            'name': trasport_info.get('name'),
+            'price': trasport_info.get('price'),
+            'plate': None
+        }
+        
+        give_money(request.user.server_id, -trasport_info.get('price'))
+        if type == 'cars':
+            coll.update_one({'server_id': request.user.server_id},
+                            {'$push': {'car.cars': sample}})
+            db_cars.update_one({'id': trasport_info.get('id')},
+                               {'$inc': {'quantity': -1}})
+        else:
+            del sample['plate']
+            coll.update_one({'server_id': request.user.server_id},
+                            {'$push': {'yacht.yachts': sample}})
+            db_yachts.update_one({'id': trasport_info.get('id')},
+                               {'$inc': {'quantity': -1}})
+        ic(type, id, "loh")
+
+        return JsonResponse({'success': True, 'message': 'Покупка прошла успешно!'}, status=200)
+    else:
+        return JsonResponse({'success': False, 'message': 'Метод не поддерживается.'}, status=405)
+
+
+@login_required(login_url="/users/login")
+def get_house_info(request: WSGIRequestHandler, id: int):
+
+    house_info = get_house_by_id(id)
+    district_info = get_district_by_id(house_info['district_id'])
+    house_info['district_info'] = district_info
+    ic(house_info)
+    return JsonResponse({'district_name': house_info['district_info']['name'],
+                         'house_type': "Дом" if house_info['type'] == "house" else "Квартира",
+                         'house_id': intcomma(house_info['id']),
+                         'house_id_for_district': house_info['id_for_district'],
+                         'house_price': intcomma(house_info['price']),
+                         'house_basement': f"Имеется[<span style='color: rgb(255, 28, 28);'>lvl</span>={house_info['basement']['level']}]" if house_info['basement'] else "Отсутствует",
+                        #  'house_basement_level': house_info['basement']['level'] if house_info['basement'] else 0,
+                         'house_floor': house_info['floors'],
+                         'house_class': house_info['class']})
+
+@login_required(login_url="/users/login")
+def buy_house(request: WSGIRequestHandler, id: int):
+    house_info = get_house_by_id(id)
+    if house_info['owner']:
+        return JsonResponse({'success': False, 'message': "Дом уже занят!"}, status=422)
+    
+    user_info = coll.find_one({'server_id': request.user.server_id})
+    if user_info.get('money', {}).get('cash', {}) < house_info.get('price'):
+        return JsonResponse({'success': False, 'message': 'Недостаточно средств.'}, status=400)
+    
+    if user_info.get('car', {}).get('maxPlaces', 2) <= len(user_info.get('car', {}).get('cars', {})):
+        return JsonResponse({'success': False, 'message': 'Превышено максимальное количество.'}, status=400)
+    
+    give_money(request.user.server_id, -house_info['price'])
+
+    coll.update_one({'server_id': request.user.server_id},
+                    {'$push': {'house.houses': {'id': house_info['id']}}})
+
+    db_houses.update_one({'id': house_info['id']},
+                               {'$set': {'owner': request.user.server_id}})
+
+    return JsonResponse({"message": "Дом успешно приобретен!"}, status=200)
+
+
 class Magazine:
     def __init__(self, db):
         self.db = db
     
     def get_transport(self):
-        return [x for x in self.db.find() if x.get('maxQuantity') <= x.get('quantity')]
+        return [x for x in self.db.find() if x.get('quantity') > 0]
     
     def get_car_by_id(self, id):
         return self.db.find_one({'id': id})
@@ -86,7 +176,6 @@ class Magazine:
     
     def get_free_houses_by_district_id(self, district_id):
         return [x for x in self.db.find({'district_id': district_id}) if not x.get('owner')]
-    
     
     
 def get_cars(request: WSGIRequestHandler):
@@ -110,8 +199,7 @@ def get_houses(request: WSGIRequestHandler, district_id: int):
         'my_server_id': request.user.server_id if not request.user.is_anonymous else False})
     
     
-    
-def render_free_cars(request: WSGIRequestHandler, car_id: int):
-    return render(request, 'magaz/magazine_car_info.html', {'item': Magazine(db_cars).get_car_by_id(car_id), 
-                                                            'type': 'cars',
-                                                            'my_server_id': request.user.server_id if not request.user.is_anonymous else False})
+# def render_free_cars(request: WSGIRequestHandler, car_id: int):
+#     return render(request, 'magaz/magazine_car_info.html', {'item': Magazine(db_cars).get_car_by_id(car_id), 
+#                                                             'type': 'cars',
+#                                                             'my_server_id': request.user.server_id if not request.user.is_anonymous else False})

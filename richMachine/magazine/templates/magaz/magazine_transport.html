@@ -39,7 +39,9 @@
     </p>
     <div class="property">
         {% for item in transport %}
-            <div class="transport_item {{type}}" data-modal-id="{{ item.id }}" data-type="{{ type }}">
+            <div class="transport_item {{type}}" data-modal-id="{{ item.id }}" data-type="{{ type }}" 
+                 data-name="{{ item.name }}" data-price="{{ item.price|intcomma }} ₽" 
+                 data-produced="{{ item.produced }}" data-quantity="{{ item.quantity }}">
                 <div class="property-icon">
                     {{ icon|safe }}
                 </div>
@@ -59,17 +61,17 @@
             <div class="info__car">
                 <span class="transport-name"></span><br>
                 <span class="transport-price"></span><br>
-                <span class="transport-produced"></span>
+                <span class="transport-produced"></span><br>
                 <span class="transport-quantity"></span>
             </div>
-            <form id="buyTransport-form" method="POST" action="{% url 'users:change_nickname' %}">
-                {% csrf_token %}
-                <div class="buttons">
-                    <button type="submit" id="accept_buy_transport">Купить</button>
-                </div>
-            </form>
+            <div class="buttons">
+                <button type="button" id="accept_buy_transport">Купить</button>
+            </div>
         </div>
     </div>
+    
+    <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+    
     
 </div>
 {% endblock %}
