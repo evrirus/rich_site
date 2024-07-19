@@ -63,9 +63,9 @@ def get_car_by_id(car_id: int):
 def get_yacht_by_id(yacht_id: int):
     return db_yachts.find_one({'id': yacht_id})
 
-def give_money(user_id: int, sum: int, type_money: str = 'cash'):
+def give_money(server_id: int, sum: int, type_money: str = 'cash'):
     result = coll.update_one(
-        {'user_id': user_id},
+        {'server_id': server_id},
         {'$inc': {f'money.{type_money}': sum}}
     )
     if result.modified_count > 0:
