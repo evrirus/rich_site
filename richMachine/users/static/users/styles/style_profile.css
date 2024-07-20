@@ -159,7 +159,7 @@
     flex-direction:row;
     height: auto;
     margin-top: 10em;
-    z-index: -1;
+    z-index: 1;
     position: relative;
     justify-content: center;
 }
@@ -231,7 +231,7 @@
     z-index: 10;
     visibility: hidden;
     position: absolute;
-    transform: translate(-50%, -50%);
+    
     padding: 20px;
     background-color: white;
     border: none;
@@ -354,6 +354,102 @@
         width: 50%;
         
     }
+}
+
+.transport-modal {
+    visibility: hidden;
+    position: absolute;
+    overflow: none;
+    z-index: 10;
+    visibility: hidden;
+    position: absolute;
+    padding: 20px;
+    background-color: white;
+    border: none;
+    width: 300px;
+    box-sizing: border-box;
+    border-radius: 2em;
+    height: min-content;
+    width: 15em;
+    background: #1C1C1C;
+}
+.house-modal {
+    visibility: hidden;
+    position: absolute;
+}
+.transport-name {
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: .3em;
+    display: flex;
+    color: white;
+}
+.transport-price {
+    font-size: 18px;
+    font-weight: bold;
+    color: transparent; 
+    background-image: linear-gradient(123deg, rgba(54,134,114,1) 0%, rgba(80,199,170,1) 100%);
+    background-clip: text;
+    -webkit-background-clip: text;
+    margin-bottom: 1em;
+}
+.transport-produced, .transport-quantity {
+    font-size: 14px;
+    font-weight: 700;
+    color: #444444;
+    margin-bottom: 2.1em;
+}
+.transport-produced {
+    margin-bottom: 5px;
+}
+
+.info__car {
+    /* margin-top: 1em; */
+    height: 100%;
+}
+
+.info__car span {
+    display: block;
+    display: flex;
+    justify-content: center;
+    text-align: center;
+}
+
+.loading {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 1.5em;
+    color: #000;
+}
+.loading img {
+    width: 60px;
+    height: auto;
+}
+.transport-modal .buttons {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+}
+
+.transport-modal .buttons button:first-child {
+    margin-bottom: 1em;
+}
+.transport-modal .buttons button {
+    font-family: "Montserrat";
+    border: none;
+    height: 2.3em;
+    width: 12em;
+    background: linear-gradient(60deg, rgba(191,118,51,1) 0%, rgba(173,97,28,1) 100%);
+    color: white;
+    font-size: 16px;
+    font-weight:700;
+    border-radius: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 /* @media screen and (max-width: 768px) {

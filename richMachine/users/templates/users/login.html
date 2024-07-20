@@ -3,7 +3,7 @@
 {% if user.is_authenticated %}
     <p>Welcome, {{ user.username }}!</p>
     <!-- Link to profile or home page -->
-    <a href="{% url 'homePage:profile' %}">Profile</a>
+    <a href="{% url 'users:profile' %}">Profile</a>
 
 {% else %}
     <!-- Login form -->

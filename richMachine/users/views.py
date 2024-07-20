@@ -1,5 +1,7 @@
 # users/views.py
 
+from wsgiref.simple_server import WSGIRequestHandler
+
 from django.contrib import messages
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.backends import ModelBackend
@@ -12,72 +14,13 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
 from django.views.generic.edit import CreateView
 from icecream import ic
-from utils import coll, get_district_by_id, get_house_by_id
+from utils import coll, db_cars, db_yachts, get_district_by_id, get_house_by_id, give_money
 
 from .forms import CustomUserCreationForm, LoginUserForm
 from .models import CustomUser
 
-# def signup_user(request):
-#     if request.method == 'POST':
-#         form = UserCreationForm(request.POST)
-#         if form.is_valid():
-#             form.save()
-#             # После успешной регистрации пользователя можно выполнить дополнительные действия, например, войти в систему или отправить на другую страницу
-#             return redirect('users:login')  # Перенаправляем на страницу входа после успешной регистрации
-#     else:
-#         form = UserCreationForm()
 
-#     return render(request, 'users/signup.html', {'form': form})
-
-# # users/views.py
-
-
-
-# class CustomBackend(ModelBackend):
-#     def authenticate(self, request, username=None, password=None, **kwargs):
-#         # Получить пользователя из вашей собственной базы данных
-#         try:
-#             user = CustomUser.objects.get(username=username)
-#             ic(user)
-#         except CustomUser.DoesNotExist:
-#             return None
-        
-#         # Проверить пароль
-#         if user.check_password(password):
-#             return user
-
-#         return None
-
-# def login_user(request):
-#     if request.method == 'POST':
-#         ic(request.POST.username)
-#         form = LoginUserForm(request.POST)
-#         ic(form.is_valid())
-#         ic(form.data)
-#         ic(form.username)
-#         if form.is_valid():
-#             username = form.cleaned_data['username']
-#             password = form.cleaned_data['password']
-
-#             # Использовать переопределенный метод authenticate()
-#             user = CustomBackend().authenticate(request, username=username, password=password)
-
-#             if user:
-#                 # Проверить, является ли пользователь новым пользователем
-#                 if user.is_new_user:
-#                     # Вывести имя пользователя в консоли
-#                     ic(user.username)
-
-#                 login(request, user)
-#                 return redirect('homePage:profile')  # Замените 'home' на ваше имя представления или URL для профиля
-#             else:
-#                 form.add_error(None, "Неверные учетные данные")
-#     else:
-#         form = LoginUserForm()
-
-#     return render(request, 'users/login.html', {'form': form})
-
-def register(request):
+def register(request: WSGIRequestHandler):
     if request.method == 'POST':
         form = CustomUserCreationForm(request.POST)
         username = form.data['username']
@@ -96,7 +39,7 @@ def register(request):
     return render(request, 'registration/signup.html', {'form': form})
 
 @login_required(login_url="/users/login/")
-def profile(request, server_id):
+def profile(request: WSGIRequestHandler, server_id: int):
     user = coll.find_one({'server_id': server_id})
     
     if not user:
@@ -128,9 +71,9 @@ def profile(request, server_id):
         "is_authenticated": user.get('is_authenticated'),
     }
     
-    return render(request, 'homePage/profile.html', data)
+    return render(request, 'profile.html', data)
 
-def login_user(request):
+def login_user(request: WSGIRequestHandler):
     if request.method == 'POST':
         form = LoginUserForm(request, data=request.POST)
         if form.is_valid():
@@ -161,7 +104,7 @@ class LoginView(CreateView):
 
 
 @login_required(login_url="/users/login/")
-def change_nickname(request):
+def change_nickname(request: WSGIRequestHandler):
     if request.method == 'POST':
         new_nickname = request.POST.get('new_nickname')
         if new_nickname:
@@ -171,3 +114,29 @@ def change_nickname(request):
             messages.success(request, 'Profile updated successfully')
             return JsonResponse({'success': True, 'new_nickname': new_nickname})
     return JsonResponse({'success': False, 'error': 'Неверный метод запроса'})
+
+
+# @login_required(login_url="/users/login/")
+def sell_transport(request: WSGIRequestHandler, type: type, id: int, numerical_order: int):
+    
+    if type not in ('car', 'yacht'):
+        return JsonResponse({'success': False, 'error': 'Неверный тип транспорта'})
+    
+    user_info = coll.find_one({'server_id': request.user.server_id})
+    if not user_info:
+        return JsonResponse({'success': False, 'error': 'Пользователь не найден'})
+    
+    transport_info = user_info[f'{type}'][f'{type}s'][numerical_order-1]
+    if not transport_info:
+        return JsonResponse({'success': False, 'error': 'Транспорт не найден'})
+    
+    items = user_info.get(f'{type}', {}).get(f'{type}s', [])
+    items.pop(numerical_order-1)
+    
+    coll.update_one(
+        {'server_id': request.user.server_id},
+        {'$set': {f'{type}.{type}s': items}}
+    )
+    give_money(request.user.server_id, transport_info['price'] // 2)
+    
+    return JsonResponse({'success': True, 'message': 'Транспорт успешно продан!'})
