@@ -3,6 +3,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const modal = document.querySelector('#houseModal');
     const acceptBuyHouseButton = document.getElementById('accept_buy_house');
 
+    const loadingIndicator = modal.querySelector('.loader');
     // Создаем объект кеша
     const cache = {};
 
@@ -17,6 +18,8 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         function openModal(event, item) {
+
+            // loadingIndicator.style.visibility = 'visible';
             modal.style.visibility = 'visible';
             modal.style.left = `${event.layerX}px`; 
             modal.style.top = `${event.layerY}px`; 
@@ -50,11 +53,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         function updateModalContent(data) {
-            console.log(data)
+
             document.querySelector('.house-district-name').textContent = `${data.district_name}`;
             document.querySelector('.house-type').textContent = `${data.house_type} №`;
             document.querySelector('#house_id_district').textContent = `${data.house_id_for_district}`;
-
 
             // document.querySelector('#house_id_header').textContent = `${data.quantity}`;
             document.querySelector('#house_id').textContent = `${data.house_id}`;
@@ -71,6 +73,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
             // document.querySelector('#house_class_header').textContent = `${data.quantity}`;
             document.querySelector('#house_class').textContent = `${data.house_class}`;
+            loadingIndicator.style.visibility = 'hidden';
         }
 
         function closeModal() {
@@ -86,8 +89,8 @@ document.addEventListener('DOMContentLoaded', () => {
         // Добавляем обработчик для кнопки покупки
         if (acceptBuyHouseButton) {
             acceptBuyHouseButton.addEventListener('click', function() {
-                // const loadingIndicator = modal.querySelector('.loading');
-                // loadingIndicator.style.display = 'block'; // Показываем индикатор загрузки
+
+                loadingIndicator.style.visibility = 'visible'; // Показываем индикатор загрузки
 
                 const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
 
@@ -102,7 +105,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     })
                 }).then(response => response.json())
                   .then(data => {
-                    //   loadingIndicator.style.display = 'none'; // Скрываем индикатор загрузки
+                      loadingIndicator.style.visibility = 'hidden'; // Скрываем индикатор загрузки
 
                       if (data.success) {
                           alert('Покупка прошла успешно!');
@@ -111,7 +114,7 @@ document.addEventListener('DOMContentLoaded', () => {
                           alert('Произошла ошибка при покупке: ' + data.message);
                       }
                   }).catch(error => {
-                    //   loadingIndicator.style.display = 'none'; // Скрываем индикатор загрузки
+                      loadingIndicator.style.visiblity = 'hidden'; // Скрываем индикатор загрузки
                       alert('Произошла ошибка: ' + error.message);
                   });
             });

@@ -12,4 +12,5 @@ urlpatterns = [
     path('change-nickname/', views.change_nickname, name='change_nickname'),
     path('login/', views.login_user, name='login'),
     path('logout/', LogoutView.as_view(next_page='users:login'), name='logout'),
+    path('sell_transport/<str:type>/<int:id>/<int:numerical_order>/', views.sell_transport, name='sell_transport'),
 ]

@@ -10,20 +10,19 @@
 {% block stylesheet %} 
 <link rel="icon" href="{% static 'homePage/img/logo.png' %}">
 
-
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
 <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Cinzel:wght@400..900&family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Moul&display=swap" rel="stylesheet">
 
-<link rel="stylesheet" href="{% static 'homePage/styles/magazine_style.css' %}">
+<link rel="stylesheet" href="{% static 'magazine/styles/magazine_style.css' %}">
 {% endblock %}
-
 
 {% block script %}
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-<script src="{% static 'homePage/js/magazine_house.js' %}" defer></script>
+<script src="{% static 'magazine/js/magazine_house.js' %}" defer></script>
+
 {% endblock %}
 
 
@@ -51,7 +50,11 @@
     </div>
     <div id="houseModal" class="modal">
         <div class="modal-content">
-            <div class="loading" style="display: none;">Загрузка...</div>
+            <div class="loader">
+                <div class="inner one"></div>
+                <div class="inner two"></div>
+                <div class="inner three"></div>
+            </div>
             <div class="info__house">
                 <span class="house-district-name">Арбат</span><br>
                 <div class="type_and_number_house">

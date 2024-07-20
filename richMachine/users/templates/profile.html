@@ -17,13 +17,13 @@
 <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Cinzel:wght@400..900&family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Moul&display=swap" rel="stylesheet">
 
-<link rel="stylesheet" href="{% static 'homePage/styles/style_profile.css' %}">
+<link rel="stylesheet" href="{% static 'users/styles/style_profile.css' %}">
 {% endblock %}
 
 
 {% block script %}
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-<script src="{% static 'homePage/js/profile.js' %}" defer></script>
+<script src="{% static 'users/js/profile.js' %}" defer></script>
 {% endblock %}
 
 
@@ -41,9 +41,9 @@
                 {% endif %}
 
                 {% if language == 'ru' %}
-                    <img src="{% static 'homePage/img/russia.svg' %}" />
+                    <img src="{% static 'users/img/russia.svg' %}" />
                 {% else %}
-                    <img src="{% static 'homePage/img/eng.svg' %}" />
+                    <img src="{% static 'users/img/eng.svg' %}" />
                 {% endif %}
                 <br>
                 <span class="job-name">{{ job.title }}</span>
@@ -96,7 +96,7 @@
                 </div>
             </div>
             <div class="dollar">
-                <img src="{% static 'homePage/img/profile_dollar.svg' %}"/>
+                <img src="{% static 'users/img/profile_dollar.svg' %}"/>
             </div>
         </div>
     </div>
@@ -107,7 +107,7 @@
         <span class="type-property">Автомобили</span>
 
         {% for car in car.cars %}
-            <div class="car frosted_glass" id="{{car.id}}">
+            <div class="car frosted_glass" id="{{car.id}}" data-modal-id="{{car.id}}" data-modal-type="car" numerical-order="{{ forloop.counter }}">
                 <span class="car__name">{{car.name}}</span><br>
                 <span class="car__price">Гос.стоимость - {{car.price|intcomma}} ₽</span>
             </div>
@@ -116,7 +116,7 @@
     <div class="yachts">
         <span class="type-property">Яхты</span>
         {% for yacht in yacht.yachts %}
-            <div class="yacht frosted_glass" id="{{yacht.id}}">
+            <div class="yacht frosted_glass" id="{{yacht.id}}" data-modal-id="{{yacht.id}}" data-modal-type="yacht" numerical-order="{{ forloop.counter }}">
                 <span class="yacht__name">{{yacht.name}}</span><br>
                 <span class="yacht__price">Гос.стоимость - {{yacht.price|intcomma}} ₽</span>
             </div>
@@ -125,11 +125,75 @@
     <div class="houses">
         <span class="type-property">Недвижимость</span>
         {% for house in houses %}
-            <div class="house frosted_glass" id="{{house.id}}">
+            <div class="house frosted_glass" id="{{house.id}}" data-modal-id="{{house.id}}" data-modal-type="house" numerical-order="{{ forloop.counter }}">
                 <span class="house__name">{{house.district_info.name|translite}} {{house.type}} №{{house.id}}</span><br>
                 <span class="house__price">Гос.стоимость - {{house.price|intcomma}} ₽</span>
             </div>
         {% endfor %}
+    </div>
+
+    <div id="transportModal" class="transport-modal">
+        <div class="transport-modal-content">
+            <div class="loader">
+                <div class="inner one"></div>
+                <div class="inner two"></div>
+                <div class="inner three"></div>
+            </div>
+            <div class="info__car">
+                <span class="transport-name">Renault Logan</span><br>
+                <span class="transport-price">30 000 000 Р</span><br>
+                <span class="transport-produced">Произведено: 3000</span><br>
+                <span class="transport-quantity">В наличии: 2</span>
+            </div>
+            <div class="buttons">
+                <button type="button" id="acceptSellTransportToPlayer">Продать игроку</button>
+                <button type="button" id="acceptSellTransport">Продать</button>
+            </div>
+        </div>
+    </div>
+    <div id="houseModal" class="house-modal">
+        <div class="house-modal-content">
+            <div class="loader">
+                <div class="inner one"></div>
+                <div class="inner two"></div>
+                <div class="inner three"></div>
+            </div>
+            <div class="info__house">
+                <span class="house-district-name">Арбат</span><br>
+                <div class="type_and_number_house">
+                    <span class="house-type">Квартира</span>
+                    <span id="house_id_district"> №1</span><br>
+                </div>
+                <table>
+                    <tr>
+                        <td class="table-left" id="house_id_header">ID</td>
+                        <td class="table-right" id="house_id">1</td>
+                    </tr>
+                    <tr>
+                        <td class="table-left" id="house_price_header">Гос. цена</td>
+                        <td class="table-right" id="house_price">30 000 000 ₽</td>
+                    </tr> 
+                    <tr>
+                        <td class="table-left" id="house_basement_header">Подвал</td>
+                        <td class="table-right" id="house_basement"><span id="basement_built">Имеется[</span><span style="color: rgb(255, 28, 28);" id="house_basement_level">lvl</span>=<span id="level_basement">1</span>]</td>
+                    </tr>
+                    <tr>
+                        <td class="table-left" id="house_floors_header">Этажей</td>
+                        <td class="table-right" id="house_floors">3</td>
+                    </tr>
+                    <tr>
+                        <td class="table-left" id="house_class_header">Класс</td>
+                        <td class="table-right" id="house_class">Elite</td>
+                    </tr>
+                </table>
+                
+
+            </div>
+            <div class="buttons">
+                <button type="button" id="acceptSellHouseToPlayer">Продать игроку</button>
+                <button type="button" id="acceptSellHouse">Продать</button>
+            </div>
+        </div>
     </div>
 </div>
 

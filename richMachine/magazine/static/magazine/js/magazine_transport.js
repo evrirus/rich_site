@@ -4,6 +4,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const acceptBuyTransportButton = document.getElementById('accept_buy_transport');
     const infoCar = modal.querySelector('.info__car');
 
+    const loadingIndicator = modal.querySelector('.loader');
+
     // Создаем объект кеша
     const cache = {};
 
@@ -19,7 +21,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         function openModal(event, item) {
-            const loadingIndicator = modal.querySelector('.loading');
             const infoCar = modal.querySelector('.info__car'); // New container for the actual content
             
             loadingIndicator.style.visibility = 'visible';
@@ -57,7 +58,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         function updateModalContent(data) {
-            const loadingIndicator = modal.querySelector('.loading');
 
             document.querySelector('.transport-name').textContent = `${data.name}`;
             document.querySelector('.transport-price').textContent = `${data.price} ₽`;
@@ -72,6 +72,7 @@ document.addEventListener('DOMContentLoaded', () => {
         function closeModal() {
             modal.style.visibility = 'hidden';
             infoCar.style.visibility = 'hidden';
+            loadingIndicator.style.visibility = 'hidden';
         }
 
         window.addEventListener('click', (event) => {
