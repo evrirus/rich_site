@@ -8,9 +8,14 @@ app_name = 'users'
 
 urlpatterns = [
     path('register/', views.register, name='register'),
-    path('profile/<int:server_id>/', views.profile, name='profile'),
-    path('change-nickname/', views.change_nickname, name='change_nickname'),
+    path('<int:server_id>/', views.profile, name='profile'),
+    path('change_nickname/', views.change_nickname, name='change_nickname'),
+    path('change_language/', views.change_language, name='language'),
     path('login/', views.login_user, name='login'),
     path('logout/', LogoutView.as_view(next_page='users:login'), name='logout'),
     path('sell_transport/<str:type>/<int:id>/<int:numerical_order>/', views.sell_transport, name='sell_transport'),
+    path('get_transport_profile/<str:type>/<int:id>/<int:numerical_order>/', views.get_transport_profile, name='get_transport_profile'),
+    path('get_house_profile/<int:id>/', views.get_house_profile, name='get_house_profile'),
+    path('sell_house/<int:id>/', views.sell_house, name='sell_house'),
+    path('telegram/', views.accept, name='accept'),
 ]

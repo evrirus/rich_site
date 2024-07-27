@@ -8,13 +8,15 @@ from django.contrib.auth.backends import ModelBackend
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 from django.contrib.auth.models import User
+from django.contrib.humanize.templatetags.humanize import intcomma
 from django.db.models import Q
 from django.http import HttpResponse, HttpResponseNotFound, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
 from django.views.generic.edit import CreateView
 from icecream import ic
-from utils import coll, db_cars, db_yachts, get_district_by_id, get_house_by_id, give_money
+from utils import (coll, db_cars, db_yachts, get_district_by_id,
+                   get_house_by_id, give_money, db_houses)
 
 from .forms import CustomUserCreationForm, LoginUserForm
 from .models import CustomUser
@@ -73,6 +75,7 @@ def profile(request: WSGIRequestHandler, server_id: int):
     
     return render(request, 'profile.html', data)
 
+
 def login_user(request: WSGIRequestHandler):
     if request.method == 'POST':
         form = LoginUserForm(request, data=request.POST)
@@ -105,19 +108,42 @@ class LoginView(CreateView):
 
 @login_required(login_url="/users/login/")
 def change_nickname(request: WSGIRequestHandler):
+    ic(request.method)
     if request.method == 'POST':
         new_nickname = request.POST.get('new_nickname')
-        if new_nickname:
-            user = request.user
-            user.nickname['name'] = new_nickname
-            user.save()
-            messages.success(request, 'Profile updated successfully')
-            return JsonResponse({'success': True, 'new_nickname': new_nickname})
+        if not new_nickname:
+            return JsonResponse({'success': False, 'error': 'Invalid new nickname'})
+        if len(new_nickname) <= 3:
+            return JsonResponse({'success': False, 'error': 'Название никнейма слишком короткое'})
+        
+        user_info = coll.find_one({'server_id': request.user.server_id})
+        
+        if len(new_nickname) > user_info['nickname']['max']:
+            return JsonResponse({'success': False, 'error': 'Название никнейма слишком длинное'})
+        
+        coll.update_one({'server_id': request.user.server_id},
+                        {'$set': {'nickname.name': new_nickname}})
+
+        messages.success(request, 'Profile updated successfully')
+            
+        return JsonResponse({'success': True, 'new_nickname': new_nickname})
     return JsonResponse({'success': False, 'error': 'Неверный метод запроса'})
 
+@login_required(login_url="/users/login/")
+def change_language(request: WSGIRequestHandler):
+    languages = ['ru', 'en']
+    language = request.user.language
+    index = languages.index(language)
+    
+    new_language_index = index + 1 if len(languages) - 1 >= index + 1 else 0
 
-# @login_required(login_url="/users/login/")
-def sell_transport(request: WSGIRequestHandler, type: type, id: int, numerical_order: int):
+    coll.update_one({'server_id': request.user.server_id},
+                    {'$set': {'language': languages[new_language_index]}})
+    ic(languages[new_language_index])
+    return JsonResponse({'success': True, 'new_language': languages[new_language_index]})
+
+@login_required(login_url="/users/login/")
+def sell_transport(request: WSGIRequestHandler, type: str, id: int, numerical_order: int):
     
     if type not in ('car', 'yacht'):
         return JsonResponse({'success': False, 'error': 'Неверный тип транспорта'})
@@ -140,3 +166,71 @@ def sell_transport(request: WSGIRequestHandler, type: type, id: int, numerical_o
     give_money(request.user.server_id, transport_info['price'] // 2)
     
     return JsonResponse({'success': True, 'message': 'Транспорт успешно продан!'})
+
+@login_required(login_url="/users/login/")
+def get_transport_profile(request: WSGIRequestHandler, type: str, id: int, numerical_order: int):
+    
+    if type not in ('car', 'yacht'):
+        return JsonResponse({'success': False, 'error': 'Неверный тип транспорта'})
+    
+    user_info = coll.find_one({'server_id': request.user.server_id})
+    if not user_info:
+        return JsonResponse({'success': False, 'error': 'Пользователь не найден'})
+    
+    transport_info = user_info[f'{type}'][f'{type}s'][numerical_order-1]
+    if not transport_info:
+        return JsonResponse({'success': False, 'error': 'Транспорт не найден'})
+    
+    if type == 'car':
+        global_trasport_info = db_cars.find_one({'id': transport_info['id']})
+    else: 
+        global_trasport_info = db_yachts.find_one({'id': transport_info['id']})
+    
+    ic(transport_info)
+    
+    return JsonResponse({
+        'success': True,
+        'type': type,
+        'id': transport_info['id'],
+        'numerical_order': numerical_order,
+        'maxQuantity': global_trasport_info['maxQuantity'],
+        'quantity': global_trasport_info['quantity'],
+        'price': intcomma(transport_info['price']),
+        'name': transport_info['name'],
+        'plate': transport_info['plate'] if transport_info['plate'] else 'Отсутствуют',
+    })
+    
+    
+def get_house_profile(request: WSGIRequestHandler, id: int):
+    ic(id)
+    house_info = get_house_by_id(id)
+    district_info = get_district_by_id(house_info['district_id'])
+
+    house_info['district_info'] = district_info
+    house_info['basement'] = f"Имеется[<span style='color: rgb(255, 28, 28);'>lvl</span>={house_info['basement']['level']}]" if house_info['basement'] else "Отсутствует"
+    house_info['price'] = intcomma(house_info['price'])
+    house_info['type'] = 'Дом' if house_info['type'] == 'house' else 'Квартира'
+    return JsonResponse({'success': True, 'message': 'ok',
+                         **house_info})
+    
+def sell_house(request: WSGIRequestHandler, id: int):
+    house_info = get_house_by_id(id)
+    
+    result = coll.update_one({'server_id': request.user.server_id},
+                    {'$pull': {'house.houses': {'id': house_info['id']}}})
+    
+    if result.modified_count < 1:
+        return JsonResponse({'success': False, 'error': 'Не удалось удалить дом'})
+    
+    db_houses.update_one({'id': house_info['id']},
+                         {'$set': {'owner': None}})
+    give_money(request.user.server_id, house_info['price'] // 2)
+    
+    return JsonResponse({'success': True, 'message': 'Продажа прошла успешно!'})
+
+
+def accept(request: WSGIRequestHandler):
+    ic('telegraaaaaam')
+    return JsonResponse({'ok': True})
+    
+    # return JsonResponse({'address': request.client_address})

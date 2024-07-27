@@ -267,5 +267,3 @@ def log_action(user_id: int | str, situation: str, balance: bool = False, **kwar
     if balance:
         log_entry['balance'] = user.get('money')
     db_log.insert_one(log_entry)
-
-
