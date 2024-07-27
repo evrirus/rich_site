@@ -193,7 +193,7 @@
     /* display: none; */
     flex-direction: column;
     /* justify-content: center; */
-    background: #1D1D1D;
+    background: #1C1C1C;
     z-index: 100;
     height: max-content;
     width: 22.5em;
@@ -258,18 +258,6 @@
     text-align: center;
 }
 
-.loading {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    font-size: 1.5em;
-    color: #000;
-}
-.loading img {
-    width: 60px;
-    height: auto;
-}
 
 .info__house {
     display: flex;
@@ -302,7 +290,7 @@ table {
 
 .loader {
     position: absolute;
-    top: calc(50% - 32px);
+    top: 90px;
     left: calc(50% - 32px);
     width: 64px;
     height: 64px;

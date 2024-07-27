@@ -77,22 +77,26 @@ def get_transport_info(request: WSGIRequestHandler, type: str, id: int):
 @login_required(login_url="/users/login")
 def buy_transport(request: WSGIRequestHandler, type, id):
     if request.method == 'POST':
+        
+        user_info = coll.find_one({'server_id': request.user.server_id})
         if type == 'yachts':
             trasport_info = db_yachts.find_one({'id': id})
+            if user_info.get('yacht', {}).get('maxPlaces', 2) <= len(user_info.get('yacht', {}).get('yachts', {})):
+                return JsonResponse({'success': False, 'message': 'Превышено максимальное количество мест в вашем флоте.'}, status=400)
+            
         elif type == 'cars':
             trasport_info = db_cars.find_one({'id': id})
+            if user_info.get('car', {}).get('maxPlaces', 2) <= len(user_info.get('car', {}).get('cars', {})):
+                return JsonResponse({'success': False, 'message': 'Превышено максимальное количество мест в вашем гараже.'}, status=400)
         else:
             return JsonResponse({'success': False, 'message': 'Invalid type'}, status=405)
         
         if trasport_info.get('quantity') <= 0:
             return JsonResponse({'success': False, 'message': 'Транспорт раскуплен.'}, status=400)
         
-        user_info = coll.find_one({'server_id': request.user.server_id})
+        
         if user_info.get('money', {}).get('cash', {}) < trasport_info.get('price'):
             return JsonResponse({'success': False, 'message': 'Недостаточно средств.'}, status=400)
-        
-        if user_info.get('car', {}).get('maxPlaces', 2) <= len(user_info.get('car', {}).get('cars', {})):
-            return JsonResponse({'success': False, 'message': 'Превышено максимальное количество мест в вашем гараже.'}, status=400)
         
         
         sample = {
@@ -109,7 +113,6 @@ def buy_transport(request: WSGIRequestHandler, type, id):
             db_cars.update_one({'id': trasport_info.get('id')},
                                {'$inc': {'quantity': -1}})
         else:
-            del sample['plate']
             coll.update_one({'server_id': request.user.server_id},
                             {'$push': {'yacht.yachts': sample}})
             db_yachts.update_one({'id': trasport_info.get('id')},

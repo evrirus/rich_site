@@ -34,6 +34,7 @@ INSTALLED_APPS = [
     'users',
     'magazine',
     'django_filters',
+    'corsheaders',
     'django.contrib.humanize',
     'django.contrib.admin',
     'django.contrib.auth',
@@ -41,6 +42,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    
 ]
 
 MIDDLEWARE = [
@@ -50,7 +52,9 @@ MIDDLEWARE = [
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
+    # 'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'users.middleware.ContentSecurityPolicyMiddleware',
 ]
 
 ROOT_URLCONF = 'richMachine.urls'
@@ -141,4 +145,13 @@ AUTH_USER_MODEL = "users.CustomUser"
 
 LOGIN_REDIRECT_URL = "home"
 LOGOUT_REDIRECT_URL = "home"
-CSRF_TRUSTED_ORIGINS = ['https://e903-91-134-18-137.ngrok-free.app']
+CSRF_TRUSTED_ORIGINS = ['https://2b9b-89-189-115-119.ngrok-free.app']
+SECURE_CROSS_ORIGIN_OPENER_POLICY = 'same-origin-allow-popups'
+CORS_ORIGIN_WHITELIST = (
+'http://localhost:8000',  # for localhost (REACT Default)
+'https://2b9b-89-189-115-119.ngrok-free.app', # for network
+)
+# В файле settings.py вашего Django-приложения
+CSP_FRAME_ANCESTORS = ("'self'", "https://*.t.me")
+# X_FRAME_OPTIONS = 'DENY'
+# CSRF_COOKIE_SAMESITE = None

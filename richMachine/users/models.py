@@ -176,6 +176,8 @@ class CustomUser(AbstractUser):
     is_new_user = models.BooleanField(default=True)
     objects = CustomUserManager()
 
+    # ic()
+
     def str(self):
         return self.username
     
@@ -184,6 +186,5 @@ class CustomUser(AbstractUser):
             self.is_new_user = False
         if not self.server_id:
             max_server_id = CustomUser.objects.all().aggregate(Max('server_id'))#['server_id__max']
-            ic(max_server_id['server_id__max'])
             self.server_id = max_server_id['server_id__max'] + 1
         super().save(*args, **kwargs)
