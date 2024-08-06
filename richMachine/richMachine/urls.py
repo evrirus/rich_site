@@ -14,11 +14,12 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
-from django.contrib import admin
-from django.urls import path, include
-
 from django.conf import settings
 from django.conf.urls.static import static
+from django.contrib import admin
+from django.urls import include, path
+from users.views import profile, self_profile
+from other_functions.views import inventory
 
 app_name = 'richMachine'
 
@@ -27,5 +28,8 @@ urlpatterns = [
     path('', include('homePage.urls', namespace='homePage')),
     path('users/', include('users.urls', namespace='users')),
     path('magazine/', include('magazine.urls', namespace='magazine')),
+    path('profile/', self_profile, name='self_profile'),
+    path('profile/<int:server_id>', profile, name='profile'),
+    path('inventory/', inventory, name='inventory'),
     
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

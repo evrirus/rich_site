@@ -33,6 +33,7 @@ INSTALLED_APPS = [
     'djongo',
     'users',
     'magazine',
+    'other_functions',
     'django_filters',
     'corsheaders',
     'django.contrib.humanize',
@@ -140,6 +141,7 @@ STATICFILES_DIRS = [
     BASE_DIR / 'homePage' / 'static',
     BASE_DIR / 'magazine' / 'static/',
     BASE_DIR / 'users' /'static/',
+    BASE_DIR / 'other_functions' /'static/',
     
 ]
 

@@ -75,6 +75,13 @@ body {
     color: #B7B7B7;
     font-size: 18px;
 }
+.header__buttons li a:hover {
+    color:rgb(129, 129, 129)
+}
+
+.button-functions:hover  {
+    display: flex;
+}
 
 .pashalko {
     position: absolute;
@@ -104,7 +111,7 @@ body {
 }
 .intro__topic {
     font-size: 3rem;
-    margin-bottom: 2vh;
+    margin-bottom: 5vh;
 }
 .intro .money {
     color: transparent;    
@@ -134,7 +141,7 @@ body {
 .button_start {
     position:relative;
     left: 6vw;
-    top: 7vh;
+    top: 10vh;
 }
 .start_button {
     border: none;
@@ -292,5 +299,4 @@ body {
     padding: 1em .5em;
     width: 17em;
     margin-bottom: 5px;
-    color: #d1d1d1
 }
