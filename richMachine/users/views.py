@@ -1,7 +1,9 @@
 # users/views.py
 
+import json
 from wsgiref.simple_server import WSGIRequestHandler
 
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.backends import ModelBackend
@@ -15,33 +17,47 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
 from django.views.generic.edit import CreateView
 from icecream import ic
-from utils import (coll, db_cars, db_yachts, get_district_by_id,
-                   get_house_by_id, give_money, db_houses)
+from pymongo.errors import ConnectionFailure, OperationFailure
+from utils import (client, coll, db_cars, db_houses, db_yachts,
+                   get_district_by_id, get_house_by_id, give_money,
+                   verify_telegram_auth, get_messages)
 
 from .forms import CustomUserCreationForm, LoginUserForm
 from .models import CustomUser
 
 
-def register(request: WSGIRequestHandler):
+def register(request):
     if request.method == 'POST':
         form = CustomUserCreationForm(request.POST)
         username = form.data['username']
+        ic(request.POST)
+        telegram_id = request.POST.get('telegram_id')
 
-        if coll.find_one({'username': username}):
-            messages.error(request, 'A user with that username or email already exists.')
+        if not telegram_id:
+            messages.error(request, 'Telegram authentication is required.')
             return render(request, 'registration/signup.html', {'form': form})
+        
+        
+        if CustomUser.objects.filter(username=username).exists():
+            messages.error(request, 'A user with that username already exists.')
+            return render(request, 'registration/signup.html', {'form': form})
+        
+        
         if form.is_valid():
-            
-
-            user = form.save()
+            user = form.save(commit=False)
+            user.telegram_id = telegram_id
+            user.save()
             login(request, user)
             return redirect('users:profile', server_id=user.server_id)
     else:
         form = CustomUserCreationForm()
     return render(request, 'registration/signup.html', {'form': form})
 
+
 @login_required(login_url="/users/login/")
 def profile(request: WSGIRequestHandler, server_id: int):
+    if request.user.server_id != server_id:
+        return HttpResponseNotFound(render(request, '404.html'))
     user = coll.find_one({'server_id': server_id})
     
     if not user:
@@ -75,14 +91,34 @@ def profile(request: WSGIRequestHandler, server_id: int):
     
     return render(request, 'profile.html', data)
 
+@login_required(login_url="/users/login/")
+def self_profile(request: WSGIRequestHandler):
+    return redirect(reverse('users:profile', kwargs={'server_id': request.user.server_id}))
 
-def login_user(request: WSGIRequestHandler):
+def login_user(request):
     if request.method == 'POST':
         form = LoginUserForm(request, data=request.POST)
+        
         if form.is_valid():
             username = form.cleaned_data.get('username')
             password = form.cleaned_data.get('password')
-            user = authenticate(username=username, password=password)
+            if request.POST.get('telegram_auth_data'):
+                telegram_auth_data = json.loads(request.POST.get('telegram_auth_data'))
+            else: telegram_auth_data = None
+
+            user = None
+            
+            if username and password:
+                user = authenticate(request, username=username, password=password)
+            elif telegram_auth_data:
+                try:
+                    if verify_telegram_auth(telegram_auth_data, settings.TELEGRAM_BOT_TOKEN):
+                        telegram_id = telegram_auth_data['id']
+                        user = authenticate(request, telegram_id=telegram_id)
+                except (json.JSONDecodeError, KeyError):
+                    messages.error(request, "Invalid Telegram data.")
+                    return render(request, 'registration/login.html', {'form': form})
+
             if user is not None:
                 login(request, user)
                 return redirect(reverse('users:profile', kwargs={'server_id': user.server_id}))
@@ -93,6 +129,7 @@ def login_user(request: WSGIRequestHandler):
     else:
         form = LoginUserForm()
     return render(request, 'registration/login.html', {'form': form})
+
 
 class SignUpView(CreateView):
     form_class = CustomUserCreationForm
@@ -118,15 +155,17 @@ def change_nickname(request: WSGIRequestHandler):
         
         user_info = coll.find_one({'server_id': request.user.server_id})
         
-        if len(new_nickname) > user_info['nickname']['max']:
-            return JsonResponse({'success': False, 'error': 'Название никнейма слишком длинное'})
+        # if len(new_nickname) > user_info['nickname']['max']:
+        #     return JsonResponse({'success': False, 'error': 'Название никнейма слишком длинное'})
         
         coll.update_one({'server_id': request.user.server_id},
                         {'$set': {'nickname.name': new_nickname}})
 
-        messages.success(request, 'Profile updated successfully')
-            
-        return JsonResponse({'success': True, 'new_nickname': new_nickname})
+        messages.success(request, f'Никнейм изменён с \'{user_info['nickname']['name']}\' на \'{new_nickname}\'')
+        
+        return JsonResponse({'success': True, 'new_nickname': new_nickname, 'messages': get_messages(request)})
+        
+        # return JsonResponse({'success': True, 'new_nickname': new_nickname})
     return JsonResponse({'success': False, 'error': 'Неверный метод запроса'})
 
 @login_required(login_url="/users/login/")
@@ -139,8 +178,9 @@ def change_language(request: WSGIRequestHandler):
 
     coll.update_one({'server_id': request.user.server_id},
                     {'$set': {'language': languages[new_language_index]}})
-    ic(languages[new_language_index])
-    return JsonResponse({'success': True, 'new_language': languages[new_language_index]})
+    messages.success(request, f"Вы поменяли язык на {'Русский' if languages[new_language_index] == 'ru' else 'Английский'}")
+    
+    return JsonResponse({'success': True, 'new_language': languages[new_language_index], 'messages': get_messages(request)})
 
 @login_required(login_url="/users/login/")
 def sell_transport(request: WSGIRequestHandler, type: str, id: int, numerical_order: int):
@@ -159,11 +199,20 @@ def sell_transport(request: WSGIRequestHandler, type: str, id: int, numerical_or
     items = user_info.get(f'{type}', {}).get(f'{type}s', [])
     items.pop(numerical_order-1)
     
-    coll.update_one(
-        {'server_id': request.user.server_id},
-        {'$set': {f'{type}.{type}s': items}}
-    )
-    give_money(request.user.server_id, transport_info['price'] // 2)
+    session = client.start_session()
+    try:
+        session.start_transaction()
+        coll.update_one(
+            {'server_id': request.user.server_id},
+            {'$set': {f'{type}.{type}s': items}}, session=session
+        )
+        give_money(request.user.server_id, transport_info['price'] // 2, session=session)
+        session.commit_transaction()
+    except (ConnectionFailure, OperationFailure) as e:
+        session.abort_transaction()
+        return JsonResponse({'success': False, 'message': e.code})
+    finally:
+        session.end_session()
     
     return JsonResponse({'success': True, 'message': 'Транспорт успешно продан!'})
 
@@ -222,12 +271,25 @@ def sell_house(request: WSGIRequestHandler, id: int):
     if result.modified_count < 1:
         return JsonResponse({'success': False, 'error': 'Не удалось удалить дом'})
     
-    db_houses.update_one({'id': house_info['id']},
-                         {'$set': {'owner': None}})
-    give_money(request.user.server_id, house_info['price'] // 2)
+    session = client.start_session()
+    try: 
+        session.start_transaction()
+        db_houses.update_one({'id': house_info['id']},
+                             {'$set': {'owner': None}}, session=session)
+        give_money(request.user.server_id, house_info['price'] // 2, session=session)
+        session.commit_transaction()
+    except (ConnectionFailure, OperationFailure) as e:
+        session.abort_transaction()
+        return JsonResponse({'success': False, 'message': e.code})
+    finally:
+        session.end_session()
     
     return JsonResponse({'success': True, 'message': 'Продажа прошла успешно!'})
 
+
+def inventory(request: WSGIRequestHandler):
+    ic('inventory!!')
+    return JsonResponse({'success': True, 'message': 'inventory!!'})
 
 def accept(request: WSGIRequestHandler):
     ic('telegraaaaaam')
