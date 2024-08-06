@@ -6,21 +6,17 @@ from wsgiref.simple_server import WSGIRequestHandler
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import authenticate, login
-from django.contrib.auth.backends import ModelBackend
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
-from django.contrib.auth.models import User
 from django.contrib.humanize.templatetags.humanize import intcomma
-from django.db.models import Q
-from django.http import HttpResponse, HttpResponseNotFound, JsonResponse
-from django.shortcuts import get_object_or_404, redirect, render
+from django.http import HttpResponseNotFound, JsonResponse
+from django.shortcuts import redirect, render
 from django.urls import reverse, reverse_lazy
 from django.views.generic.edit import CreateView
 from icecream import ic
 from pymongo.errors import ConnectionFailure, OperationFailure
 from utils import (client, coll, db_cars, db_houses, db_yachts,
-                   get_district_by_id, get_house_by_id, give_money,
-                   verify_telegram_auth, get_messages)
+                   get_district_by_id, get_house_by_id, get_messages,
+                   give_money, verify_telegram_auth)
 
 from .forms import CustomUserCreationForm, LoginUserForm
 from .models import CustomUser
@@ -48,7 +44,7 @@ def register(request):
             user.telegram_id = telegram_id
             user.save()
             login(request, user)
-            return redirect('users:profile', server_id=user.server_id)
+            return redirect('profile', server_id=user.server_id)
     else:
         form = CustomUserCreationForm()
     return render(request, 'registration/signup.html', {'form': form})
@@ -58,6 +54,7 @@ def register(request):
 def profile(request: WSGIRequestHandler, server_id: int):
     if request.user.server_id != server_id:
         return HttpResponseNotFound(render(request, '404.html'))
+    
     user = coll.find_one({'server_id': server_id})
     
     if not user:
@@ -93,7 +90,7 @@ def profile(request: WSGIRequestHandler, server_id: int):
 
 @login_required(login_url="/users/login/")
 def self_profile(request: WSGIRequestHandler):
-    return redirect(reverse('users:profile', kwargs={'server_id': request.user.server_id}))
+    return redirect(reverse('profile', kwargs={'server_id': request.user.server_id}))
 
 def login_user(request):
     if request.method == 'POST':
@@ -121,7 +118,7 @@ def login_user(request):
 
             if user is not None:
                 login(request, user)
-                return redirect(reverse('users:profile', kwargs={'server_id': user.server_id}))
+                return redirect(reverse('profile', kwargs={'server_id': user.server_id}))
             else:
                 messages.error(request, "Invalid username or password.")
         else:
@@ -286,10 +283,10 @@ def sell_house(request: WSGIRequestHandler, id: int):
     
     return JsonResponse({'success': True, 'message': 'Продажа прошла успешно!'})
 
+def page_not_found(request, exception):
+    ic(exception)
+    return render(request, "404.html")
 
-def inventory(request: WSGIRequestHandler):
-    ic('inventory!!')
-    return JsonResponse({'success': True, 'message': 'inventory!!'})
 
 def accept(request: WSGIRequestHandler):
     ic('telegraaaaaam')

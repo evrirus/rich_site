@@ -35,7 +35,7 @@
 </div>
 <div class="intro">
     <p class="intro__topic"><span class="intro__big_text">Окунись в мир 
-        <span class="money">
+        <span class="money" title="денег">
             Money
         </span></span>
         <br>
@@ -56,7 +56,7 @@
             Контролируй рынок<br>
             Владей недвижимостью<br>
             Майни крипту<br>
-            Тя обзывали нищим? Покажи им свой профиль в <span class="intro__rich">Rich Machine</span>.
+            Тя обзывали нищим? Покажи им свой профиль в <span class="intro__rich" title="Рич Машин">Rich Machine</span>.
         </p>
     </div>
 </div>
@@ -80,7 +80,7 @@
 
 <div class="button_start">
     {% if my_server_id %}
-        <a class="start_button" href="users/profile/{{my_server_id}}">Начать</a>
+        <a class="start_button" href="{% url 'profile' server_id=my_server_id %}">Начать</a>
     {% else %}
         <a class="start_button" href="users/login">Начать</a>
     {% endif %}
