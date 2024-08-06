@@ -52,7 +52,7 @@
                   <form id="nickname-form" method="POST">
                     {% csrf_token %}
                     <label for="new_nickname" class="label_new_nickname">Введите новый никнейм</label>
-                    <input type="text" id="new_nickname" name="new_nickname" placeholder="Никнейм" required>
+                    <input type="text" id="new_nickname" name="new_nickname" placeholder="Никнейм" required maxlength="{{nickname.max}}">
                     <div class="buttons">
                       <button type="button" id="close_nickname">Закрыть</button>
                       <button type="reset" id="accept_nickname">Подтвердить</button>

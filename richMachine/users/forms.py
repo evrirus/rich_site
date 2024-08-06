@@ -11,38 +11,26 @@ class CustomUserChangeForm(UserChangeForm):
 
     class Meta:
         model = CustomUser
-        fields = ("username", "email")
-
-# users/forms.py
-
-
-# forms.py
-
+        fields = ("username", 'telegram_id')
 
 
 class CustomUserCreationForm(UserCreationForm):
-    def __init__(self, *args, **kwargs):
-        super(CustomUserCreationForm, self).__init__(*args, **kwargs)
+    telegram_id = forms.CharField(max_length=100, required=True, widget=forms.HiddenInput())
 
-        # Удаляем лишние сообщения о пароле
-        # self.fields['password1'].help_text = ''
-        # self.fields['password2'].help_text = ''
-        # self.fields['username'].help_text = ''
-        
-        # self.fields['username'].widget.attrs.update({'placeholder': 'Логин'})
-        # self.fields['password1'].widget.attrs.update({'placeholder': 'Пароль'})
-        # self.fields['password2'].widget.attrs.update({'placeholder': 'Подтвердите пароль'})
     class Meta:
         model = CustomUser
-        fields = ('username', 'password1', 'password2')
-
-
+        fields = ['username', 'password1', 'password2', 'telegram_id']
 
 
 class LoginUserForm(AuthenticationForm):
-    username = UsernameField(widget=forms.TextInput(attrs={"autofocus": True, "placeholder": "Логин"}))
+    username = UsernameField(widget=forms.TextInput(attrs={"autofocus": True, "placeholder": "Логин"}), required=False)
     password = forms.CharField(
         label="Password",
         strip=False,
         widget=forms.PasswordInput(attrs={"autocomplete": "current-password", "placeholder": "Пароль"}),
+        required=False
     )
+    telegram_id = forms.CharField(max_length=100, required=False, widget=forms.HiddenInput())
+    
+    class Meta:
+        fields = ['username', 'password', 'telegram_id']

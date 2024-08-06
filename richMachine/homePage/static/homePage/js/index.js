@@ -17,5 +17,4 @@ document.addEventListener('DOMContentLoaded', () => {
             otherFunctions.style.display = 'none'; // Скрываем элемент
         }
     });
-
 });

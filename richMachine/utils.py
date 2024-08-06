@@ -1,6 +1,10 @@
 import datetime
+import hashlib
+import hmac
 import re
+import time
 
+from django.contrib import messages
 from icecream import ic
 from pymongo import MongoClient
 
@@ -29,6 +33,21 @@ db_test = db.get_collection('tests')
 db_admin = db.get_collection('admin')
 
 
+def get_messages(request):
+    return [{'level': message.level, 'message': message.message, 'extra_tags': message.extra_tags} for message in messages.get_messages(request)]
+
+
+def verify_telegram_auth(data, token):
+    check_hash = data.pop('hash', None)
+    data_check_string = '\n'.join([f'{k}={v}' for k, v in sorted(data.items())])
+    secret_key = hashlib.sha256(token.encode()).digest()
+    hash = hmac.new(secret_key, data_check_string.encode(), hashlib.sha256).hexdigest()
+    
+    if hash != check_hash:
+        return False
+    if time.time() - int(data['auth_date']) > 86400:
+        return False
+    return True
 
 
 def get_next_sequence_value(sequence_name: str):
@@ -63,12 +82,14 @@ def get_car_by_id(car_id: int):
 def get_yacht_by_id(yacht_id: int):
     return db_yachts.find_one({'id': yacht_id})
 
-def give_money(server_id: int, sum: int, type_money: str = 'cash'):
+def give_money(request, server_id: int, sum: int, type_money: str = 'cash', session = None):
     result = coll.update_one(
         {'server_id': server_id},
-        {'$inc': {f'money.{type_money}': sum}}
+        {'$inc': {f'money.{type_money}': sum}},
+        session=session
     )
     if result.modified_count > 0:
+        messages.success(request, f"На баланс начислено: {sum}")
         return True
     return False
 

@@ -98,12 +98,13 @@ body {
     font-weight: bold;
     display: flex;
     left: 6vw;
-    top: 2em;
+    top: 2vh;
     flex-wrap: wrap;
     width: 581px;
 }
 .intro__topic {
     font-size: 3rem;
+    margin-bottom: 2vh;
 }
 .intro .money {
     color: transparent;    
@@ -133,7 +134,7 @@ body {
 .button_start {
     position:relative;
     left: 6vw;
-    top: 7em;
+    top: 7vh;
 }
 .start_button {
     border: none;
@@ -267,4 +268,29 @@ body {
 }
 .functions .bckgd-func.admin a {
     border-radius: 0px 0px 10px 10px;
+}
+
+
+/* Уведомления */
+#messages-container {
+    /* background-color: rgb(29, 29, 29); */
+    position: fixed;
+    bottom: 2em;
+    right: 2em;
+    display: flex;
+    flex-direction: column-reverse;
+    z-index: 3;
+}
+
+#messages-container .alert {
+    display: flex;
+    flex-direction: column;
+    text-align: center;
+    justify-content: center;
+    background-color: rgba(26, 26, 26, 0.8);
+    border-radius: 10px;
+    padding: 1em .5em;
+    width: 17em;
+    margin-bottom: 5px;
+    color: #d1d1d1
 }

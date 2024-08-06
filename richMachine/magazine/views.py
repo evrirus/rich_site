@@ -14,8 +14,10 @@ from django.urls import reverse, reverse_lazy
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic.edit import CreateView
 from icecream import ic
-from utils import (coll, db_cars, db_districts, db_houses, db_yachts,
-                   get_district_by_id, get_house_by_id, give_money)
+from pymongo.errors import ConnectionFailure, OperationFailure
+from utils import (client, coll, db_cars, db_districts, db_houses, db_yachts,
+                   get_district_by_id, get_house_by_id, get_messages,
+                   give_money)
 
 # Create your views here.
 
@@ -96,7 +98,10 @@ def buy_transport(request: WSGIRequestHandler, type, id):
         
         
         if user_info.get('money', {}).get('cash', {}) < trasport_info.get('price'):
-            return JsonResponse({'success': False, 'message': 'Недостаточно средств.'}, status=400)
+            messages.error(request, 'Недостаточно средств.')
+
+                
+            return JsonResponse({'success': False, 'messages': get_messages(request)}, status=400)
         
         
         sample = {
@@ -106,18 +111,25 @@ def buy_transport(request: WSGIRequestHandler, type, id):
             'plate': None
         }
         
-        give_money(request.user.server_id, -trasport_info.get('price'))
-        if type == 'cars':
-            coll.update_one({'server_id': request.user.server_id},
-                            {'$push': {'car.cars': sample}})
-            db_cars.update_one({'id': trasport_info.get('id')},
-                               {'$inc': {'quantity': -1}})
-        else:
-            coll.update_one({'server_id': request.user.server_id},
-                            {'$push': {'yacht.yachts': sample}})
-            db_yachts.update_one({'id': trasport_info.get('id')},
-                               {'$inc': {'quantity': -1}})
-        ic(type, id, "loh")
+        session = client.start_session()
+        try:
+            session.start_transaction()
+            give_money(request.user.server_id, -trasport_info.get('price'), session=session)
+            if type == 'cars':
+                coll.update_one({'server_id': request.user.server_id},
+                                {'$push': {'car.cars': sample}}, session=session)
+                db_cars.update_one({'id': trasport_info.get('id')},
+                                   {'$inc': {'quantity': -1}}, session=session)
+            else:
+                coll.update_one({'server_id': request.user.server_id},
+                                {'$push': {'yacht.yachts': sample}}, session=session)
+                db_yachts.update_one({'id': trasport_info.get('id')},
+                                   {'$inc': {'quantity': -1}}, session=session)
+        except (ConnectionFailure, OperationFailure) as e:
+            session.abort_transaction()
+            return JsonResponse({'success': False, 'message': e.code})
+        finally:
+            session.end_session()
 
         return JsonResponse({'success': True, 'message': 'Покупка прошла успешно!'}, status=200)
     else:
@@ -154,13 +166,22 @@ def buy_house(request: WSGIRequestHandler, id: int):
     if user_info.get('car', {}).get('maxPlaces', 2) <= len(user_info.get('car', {}).get('cars', {})):
         return JsonResponse({'success': False, 'message': 'Превышено максимальное количество.'}, status=400)
     
-    give_money(request.user.server_id, -house_info['price'])
+    session = client.start_session()
+    try:
+        session.start_transaction()
+        give_money(request.user.server_id, -house_info['price'], session=session)
 
-    coll.update_one({'server_id': request.user.server_id},
-                    {'$push': {'house.houses': {'id': house_info['id']}}})
+        coll.update_one({'server_id': request.user.server_id},
+                        {'$push': {'house.houses': {'id': house_info['id']}}}, session=session)
 
-    db_houses.update_one({'id': house_info['id']},
-                               {'$set': {'owner': request.user.server_id}})
+        db_houses.update_one({'id': house_info['id']},
+                                   {'$set': {'owner': request.user.server_id}}, session=session)
+        session.commit_transaction()
+    except (ConnectionFailure, OperationFailure) as e:
+        session.abort_transaction()
+        return JsonResponse({'success': False, 'message': e.code})
+    finally:
+        session.end_session()
 
     return JsonResponse({"message": "Дом успешно приобретен!"}, status=200)
 

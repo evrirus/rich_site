@@ -1,11 +1,39 @@
 <!DOCTYPE html>
 <html>
 <title>Wrong address</title>
-<body>
+<style type="text/css">
+    body {
+        background-color: #131313;
+        display: flex;
+        flex-direction: column;
+        text-align: center;
+        justify-content: center;
+        font-family: 'Montserrat', sans-serif;
+    }
+    h1 { 
+     font-size: 3em; 
+     font-family: Verdana, Arial, Helvetica, sans-serif; 
+     color: #a0a0a0;
+    }
+    h2 {
+        color: #a0a0a0;
+    }
+    a {
+        color:rgb(0, 150, 209)
+    }
+    a:visited {
+        color:#0063e4
+    }
+    a:hover {
+        color:#0048a7
+    }
+   </style>
+<body link="#ff0000" alink="#ff0000">
+<div class="container">
 
-<h1>404 error</h1>
+    <h1>404 error</h1>
 
-<h2>Page not found</h2>
-
+    <h2>Страница не найдена, либо недоступна | <a href="{% url 'users:self_profile' %}">Вернуться в профиль</a></h2>
+</div>
 </body>
 </html> 

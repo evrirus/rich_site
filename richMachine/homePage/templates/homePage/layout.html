@@ -18,8 +18,10 @@
     <link rel="stylesheet" href="{% static 'homePage/styles/style.css' %}">
     {% block stylesheet %} {% endblock %}
     
-    {% block script %}
+    
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <script src="{% static 'homePage/js/index.js' %}" defer></script>
+    {% block script %}
     {% endblock %}
 </head>
 
@@ -27,14 +29,14 @@
     <div class="container">
         <header class="a_cap">
             <div class="header__logo">
-                <a href="#">
+                <a href="{% url 'homePage:home' %}">
                     <img class="logo__icon" src="{% static 'homePage/img/logo.svg' %}">
                 </a>
                 <div class="logo__text">Rich<br>Machine</div>
             </div>
             <ul class="header__buttons">
                 {% if my_server_id %}
-                    <li><a href="/users/{{ my_server_id }}">Профиль</a></li>
+                    <li><a href="/users/profile/">Профиль</a></li>
                     <li><a href="/users/logout">Выйти</a></li>
                 {% else %}
                     <li><a href="/users/login/">Войти</a></li>
@@ -62,8 +64,8 @@
             {% block content %}
             {% endblock %}
         </div>
-
-        
+        <div id="messages-container">
+        </div>
     </div>
     {% block modals %}{% endblock %}
 </body>

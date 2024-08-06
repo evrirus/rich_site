@@ -11,24 +11,40 @@
 <div class="frame">
     <p class="main-text">Авторизация</p>
     <div class="form">
-        <form id="registrationForm" method="post">
-            {% csrf_token %}
+        <form id="registrationForm" method="post" onsubmit="return validateTelegramAuth()">
+            <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
             <input type="text" id="id_username" name="username" placeholder="Логин">
             <input type="password" id="id_password1" name="password" placeholder="Пароль">
-            <!-- <input style="visibility: hidden;"> -->
-
+            <input type="hidden" id="telegram_auth_data" name="telegram_auth_data">
             <script async src="https://telegram.org/js/telegram-widget.js?22" data-telegram-login="evrirus_bot" data-size="large" data-onauth="onTelegramAuth(user)" data-request-access="write"></script>
+            <script type="text/javascript">
+              var telegramAuthenticated = false;
 
+              function onTelegramAuth(user) {
+                document.getElementById('telegram_auth_data').value = JSON.stringify(user);
+                telegramAuthenticated = true;
+                alert('Logged in as ' + user.first_name + ' ' + user.last_name + ' (' + user.id + (user.username ? ', @' + user.username : '') + ')');
+              }
+
+              function validateTelegramAuth() {
+                var username = document.getElementById('id_username').value;
+                var password = document.getElementById('id_password1').value;
+                var telegram_auth_data = document.getElementById('telegram_auth_data').value;
+                
+                if (!username && !password && !telegram_auth_data) {
+                  alert('Please enter username and password or log in with Telegram to register.');
+                  return false;
+                }
+                return true;
+              }
+            </script>
             <button class="button-authorizacia" type="submit">Авторизоваться</button>
             <a class="no-account" href="../register">Нет аккаунта?</a>
         </form>
-        
-        <script type="text/javascript">
-            function onTelegramAuth(user) {alert('Logged in as ' + user.first_name + ' ' + user.last_name + ' (' + user.id + (user.username ? ', @' + user.username : '') + ')');}
-        </script>
-        
     </div>   
 </div>
+
+
 
 <img src="{% static 'users/img/graffiti1.svg' %}" class="graffiti_one">
 <img src="{% static 'users/img/graffiti2.svg' %}" class="graffiti_two">
