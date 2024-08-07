@@ -16,7 +16,7 @@ from icecream import ic
 from pymongo.errors import ConnectionFailure, OperationFailure
 from utils import (client, coll, db_cars, db_houses, db_yachts,
                    get_district_by_id, get_house_by_id, get_messages,
-                   give_money, verify_telegram_auth)
+                   give_money, verify_telegram_auth, db_inv)
 
 from .forms import CustomUserCreationForm, LoginUserForm
 from .models import CustomUser
@@ -43,6 +43,7 @@ def register(request):
             user = form.save(commit=False)
             user.telegram_id = telegram_id
             user.save()
+            
             login(request, user)
             return redirect('profile', server_id=user.server_id)
     else:
@@ -196,20 +197,13 @@ def sell_transport(request: WSGIRequestHandler, type: str, id: int, numerical_or
     items = user_info.get(f'{type}', {}).get(f'{type}s', [])
     items.pop(numerical_order-1)
     
-    session = client.start_session()
-    try:
-        session.start_transaction()
-        coll.update_one(
-            {'server_id': request.user.server_id},
-            {'$set': {f'{type}.{type}s': items}}, session=session
-        )
-        give_money(request.user.server_id, transport_info['price'] // 2, session=session)
-        session.commit_transaction()
-    except (ConnectionFailure, OperationFailure) as e:
-        session.abort_transaction()
-        return JsonResponse({'success': False, 'message': e.code})
-    finally:
-        session.end_session()
+    
+    coll.update_one(
+        {'server_id': request.user.server_id},
+        {'$set': {f'{type}.{type}s': items}}
+    )
+    give_money(request.user.server_id, transport_info['price'] // 2)
+    
     
     return JsonResponse({'success': True, 'message': 'Транспорт успешно продан!'})
 
@@ -268,18 +262,9 @@ def sell_house(request: WSGIRequestHandler, id: int):
     if result.modified_count < 1:
         return JsonResponse({'success': False, 'error': 'Не удалось удалить дом'})
     
-    session = client.start_session()
-    try: 
-        session.start_transaction()
-        db_houses.update_one({'id': house_info['id']},
-                             {'$set': {'owner': None}}, session=session)
-        give_money(request.user.server_id, house_info['price'] // 2, session=session)
-        session.commit_transaction()
-    except (ConnectionFailure, OperationFailure) as e:
-        session.abort_transaction()
-        return JsonResponse({'success': False, 'message': e.code})
-    finally:
-        session.end_session()
+    db_houses.update_one({'id': house_info['id']},
+                         {'$set': {'owner': None}})
+    give_money(request.user.server_id, house_info['price'] // 2)
     
     return JsonResponse({'success': True, 'message': 'Продажа прошла успешно!'})
 

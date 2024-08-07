@@ -6,7 +6,7 @@ import time
 
 from django.contrib import messages
 from icecream import ic
-from pymongo import MongoClient
+from pymongo import MongoClient, client_session
 
 client = MongoClient('mongodb://localhost:27017')
 db = client.get_database('lalka')
@@ -82,22 +82,28 @@ def get_car_by_id(car_id: int):
 def get_yacht_by_id(yacht_id: int):
     return db_yachts.find_one({'id': yacht_id})
 
-def give_money(request, server_id: int, sum: int, type_money: str = 'cash', session = None):
+def give_money(request, server_id: int, sum: int, type_money: str = 'cash'):
+    ic('g1')
+    ic(server_id)
+
     result = coll.update_one(
         {'server_id': server_id},
         {'$inc': {f'money.{type_money}': sum}},
-        session=session
     )
+    ic('g2')
     if result.modified_count > 0:
+        ic('g3')
         messages.success(request, f"На баланс начислено: {sum}")
+        ic('g4')
         return True
+    ic('g5')
     return False
 
 
 def calculate_total_quantity(house_id: int):
     house = get_house_by_id(house_id)
-
     quantity = 0
+    
     for videocard in house['house_info'].get('basement', {})['videocards']:
         for name, value in videocard.items():
             ic(name, value)
@@ -170,9 +176,8 @@ def add_videocard_in_house(house_id: int, id_videocard: int, qty: int = 1):
     
 
 def get_item_by_id(item_id: int):
-    item_info = db_items.find_one({'_id': item_id})
+    return db_items.find_one({'id': item_id})
 
-    return item_info
 
 
 def get_item_by_name(item_name: str):
@@ -288,3 +293,4 @@ def log_action(user_id: int | str, situation: str, balance: bool = False, **kwar
     if balance:
         log_entry['balance'] = user.get('money')
     db_log.insert_one(log_entry)
+

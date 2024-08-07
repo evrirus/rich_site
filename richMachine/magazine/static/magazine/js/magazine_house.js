@@ -2,6 +2,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const houseItemsContainer = document.querySelector('.property'); 
     const modal = document.querySelector('#houseModal');
     const acceptBuyHouseButton = document.getElementById('accept_buy_house');
+    const infoHouse = modal.querySelector('.info__house');
 
     const loadingIndicator = modal.querySelector('.loader');
     // Создаем объект кеша
@@ -44,10 +45,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         function openModal(event, item) {
 
-            // loadingIndicator.style.visibility = 'visible';
+            loadingIndicator.style.visibility = 'visible';
+            infoHouse.style.visibility = 'hidden';
             modal.style.visibility = 'visible';
-            modal.style.left = `${event.layerX}px`; 
-            modal.style.top = `${event.layerY}px`; 
+            
             const id = item.getAttribute('data-modal-id');
             const type = item.getAttribute('data-type');
 
@@ -73,7 +74,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 });
             }
-            
+            modal.style.left = `${event.layerX}px`; 
+            modal.style.top = `${event.layerY}px`; 
             
         }
 
@@ -83,22 +85,15 @@ document.addEventListener('DOMContentLoaded', () => {
             document.querySelector('.house-type').textContent = `${data.house_type} №`;
             document.querySelector('#house_id_district').textContent = `${data.house_id_for_district}`;
 
-            // document.querySelector('#house_id_header').textContent = `${data.quantity}`;
             document.querySelector('#house_id').textContent = `${data.house_id}`;
-
-            // document.querySelector('#house_price_header').textContent = `${data.name}`;
             document.querySelector('#house_price').textContent = `${data.house_price} ₽`;
-
-            // document.querySelector('#house_basement_header').textContent = `${data.produced}`;
             document.querySelector('#house_basement').innerHTML = `${data.house_basement}`;
-            // document.querySelector('#level_basement').textContent = `${data.house_basement_level}`;
-            
-            // document.querySelector('#house_floors_header').textContent = `${data.quantity}`;
             document.querySelector('#house_floors').textContent = `${data.house_floor}`;
-            
-            // document.querySelector('#house_class_header').textContent = `${data.quantity}`;
             document.querySelector('#house_class').textContent = `${data.house_class}`;
+            
             loadingIndicator.style.visibility = 'hidden';
+            infoHouse.style.visibility = 'visible';
+            modal.style.visibility = 'visible';
         }
 
         function closeModal() {

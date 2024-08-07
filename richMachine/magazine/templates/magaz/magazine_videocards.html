@@ -22,52 +22,47 @@
 {% block script %}
     
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-    <script src="{% static 'magazine/js/magazine_transport.js' %}" defer></script>
+    <script src="{% static 'magazine/js/magazine_videocards.js' %}" defer></script>
 {% endblock %}
 
 
 {% block content %}
 <div class="main-block">
-    <p class="trasport-type">
-        {% if type == 'cars' %}
-            Автомобили
-        {% else %}
-            Яхты
-        {% endif %}
-    </p>
+    <p class="videocard-title">Видеокарты</p>
     <div class="property">
-        {% for item in transport %}
-            <div class="transport_item {{type}}" data-modal-id="{{ item.id }}" data-type="{{ type }}" 
+        {% for item in videocards %}
+            <div class="videocard_item" data-modal-id="{{ item.id }}" data-type="{{ type }}" 
                  data-name="{{ item.name }}" data-price="{{ item.price|intcomma }} ₽" 
                  data-produced="{{ item.produced }}" data-quantity="{{ item.quantity }}">
-                <div class="property-icon">
+                <div class="videocard-icon">
                     {{ icon|safe }}
                 </div>
-                <div class="property-class">
+                <div class="videocard-name">
                     {{ item.name }}
                 </div>
-                <div class="property-price">
-                    {{ item.price|intcomma }} ₽
+                <div class="videocard-price">
+                    {{ item.price|intcomma }} $
                 </div>
             </div>
         {% endfor %}
     </div>
     
-    <div id="transportModal" class="modal">
+    <div id="videocardModal" class="modal">
         <div class="modal-content">
             <div class="loader">
                 <div class="inner one"></div>
                 <div class="inner two"></div>
                 <div class="inner three"></div>
             </div>
-            <div class="info__car">
-                <span class="transport-name"></span><br>
-                <span class="transport-price"></span><br>
-                <span class="transport-produced"></span><br>
-                <span class="transport-quantity"></span>
+            <div class="info__videocard">
+                <span class="info-videocard-name"></span><br>
+                <span class="info-videocard-price"></span><br>
+                <span class="info-videocard-performance"></span><br>
+                <span class="info-videocard-currency"></span><br>
+                <span class="info-videocard-quantity"></span>
             </div>
             <div class="buttons">
-                <button type="button" id="accept_buy_transport">Купить</button>
+                <button type="button" id="accept_buy_videocard">Купить</button>
             </div>
         </div>
     </div>
