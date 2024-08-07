@@ -16,8 +16,8 @@ from django.views.generic.edit import CreateView
 from icecream import ic
 from pymongo.errors import ConnectionFailure, OperationFailure
 from utils import (client, coll, db_cars, db_districts, db_houses, db_yachts,
-                   get_district_by_id, get_house_by_id, get_messages,
-                   give_money)
+                   get_district_by_id, get_house_by_id, get_item_by_id, get_messages,
+                   give_money, db_items, db_inv)
 
 # Create your views here.
 
@@ -64,7 +64,7 @@ def get_transport_info(request: WSGIRequestHandler, type: str, id: int):
     elif type == 'yachts':
         transport = db_yachts.find_one({'id': id})
     else:
-        return JsonResponse({'error': 'Invalid type'}, status=400)
+        return JsonResponse({'error': 'Invalid type'})
 
     data = {
         'name': transport.get('name'),
@@ -84,25 +84,22 @@ def buy_transport(request: WSGIRequestHandler, type, id):
         if type == 'yachts':
             trasport_info = db_yachts.find_one({'id': id})
             if user_info.get('yacht', {}).get('maxPlaces', 2) <= len(user_info.get('yacht', {}).get('yachts', {})):
-                return JsonResponse({'success': False, 'message': 'Превышено максимальное количество мест в вашем флоте.'}, status=400)
+                return JsonResponse({'success': False, 'message': 'Превышено максимальное количество мест в вашем флоте.'})
             
         elif type == 'cars':
             trasport_info = db_cars.find_one({'id': id})
             if user_info.get('car', {}).get('maxPlaces', 2) <= len(user_info.get('car', {}).get('cars', {})):
-                return JsonResponse({'success': False, 'message': 'Превышено максимальное количество мест в вашем гараже.'}, status=400)
+                return JsonResponse({'success': False, 'message': 'Превышено максимальное количество мест в вашем гараже.'})
         else:
-            return JsonResponse({'success': False, 'message': 'Invalid type'}, status=405)
+            return JsonResponse({'success': False, 'message': 'Invalid type'})
         
         if trasport_info.get('quantity') <= 0:
-            return JsonResponse({'success': False, 'message': 'Транспорт раскуплен.'}, status=400)
+            return JsonResponse({'success': False, 'message': 'Транспорт раскуплен.'})
         
         
         if user_info.get('money', {}).get('cash', {}) < trasport_info.get('price'):
             messages.error(request, 'Недостаточно средств.')
-
-                
-            return JsonResponse({'success': False, 'messages': get_messages(request)}, status=400)
-        
+            return JsonResponse({'success': False, 'messages': get_messages(request)})
         
         sample = {
             'id': trasport_info.get('id'),
@@ -111,29 +108,23 @@ def buy_transport(request: WSGIRequestHandler, type, id):
             'plate': None
         }
         
-        session = client.start_session()
-        try:
-            session.start_transaction()
-            give_money(request.user.server_id, -trasport_info.get('price'), session=session)
-            if type == 'cars':
-                coll.update_one({'server_id': request.user.server_id},
-                                {'$push': {'car.cars': sample}}, session=session)
-                db_cars.update_one({'id': trasport_info.get('id')},
-                                   {'$inc': {'quantity': -1}}, session=session)
-            else:
-                coll.update_one({'server_id': request.user.server_id},
-                                {'$push': {'yacht.yachts': sample}}, session=session)
-                db_yachts.update_one({'id': trasport_info.get('id')},
-                                   {'$inc': {'quantity': -1}}, session=session)
-        except (ConnectionFailure, OperationFailure) as e:
-            session.abort_transaction()
-            return JsonResponse({'success': False, 'message': e.code})
-        finally:
-            session.end_session()
 
-        return JsonResponse({'success': True, 'message': 'Покупка прошла успешно!'}, status=200)
+        give_money(request, request.user.server_id, -trasport_info.get('price'))
+        if type == 'cars':
+            coll.update_one({'server_id': request.user.server_id},
+                            {'$push': {'car.cars': sample}})
+            db_cars.update_one({'id': trasport_info.get('id')},
+                               {'$inc': {'quantity': -1}})
+        else:
+            coll.update_one({'server_id': request.user.server_id},
+                            {'$push': {'yacht.yachts': sample}})
+            db_yachts.update_one({'id': trasport_info.get('id')},
+                               {'$inc': {'quantity': -1}})
+
+
+        return JsonResponse({'success': True, 'message': 'Покупка прошла успешно!'})
     else:
-        return JsonResponse({'success': False, 'message': 'Метод не поддерживается.'}, status=405)
+        return JsonResponse({'success': False, 'message': 'Метод не поддерживается.'})
 
 
 @login_required(login_url="/users/login")
@@ -157,34 +148,69 @@ def get_house_info(request: WSGIRequestHandler, id: int):
 def buy_house(request: WSGIRequestHandler, id: int):
     house_info = get_house_by_id(id)
     if house_info['owner']:
-        return JsonResponse({'success': False, 'message': "Дом уже занят!"}, status=422)
+        return JsonResponse({'success': False, 'message': "Дом уже занят!"})
     
     user_info = coll.find_one({'server_id': request.user.server_id})
     if user_info.get('money', {}).get('cash', {}) < house_info.get('price'):
-        return JsonResponse({'success': False, 'message': 'Недостаточно средств.'}, status=400)
+        return JsonResponse({'success': False, 'message': 'Недостаточно средств.'})
     
     if user_info.get('car', {}).get('maxPlaces', 2) <= len(user_info.get('car', {}).get('cars', {})):
-        return JsonResponse({'success': False, 'message': 'Превышено максимальное количество.'}, status=400)
+        return JsonResponse({'success': False, 'message': 'Превышено максимальное количество.'})
     
-    session = client.start_session()
-    try:
-        session.start_transaction()
-        give_money(request.user.server_id, -house_info['price'], session=session)
+    
+    give_money(request, request.user.server_id, -house_info['price'])
 
-        coll.update_one({'server_id': request.user.server_id},
-                        {'$push': {'house.houses': {'id': house_info['id']}}}, session=session)
+    coll.update_one({'server_id': request.user.server_id},
+                    {'$push': {'house.houses': {'id': house_info['id']}}})
 
-        db_houses.update_one({'id': house_info['id']},
-                                   {'$set': {'owner': request.user.server_id}}, session=session)
-        session.commit_transaction()
-    except (ConnectionFailure, OperationFailure) as e:
-        session.abort_transaction()
-        return JsonResponse({'success': False, 'message': e.code})
-    finally:
-        session.end_session()
+    db_houses.update_one({'id': house_info['id']},
+                        {'$set': {'owner': request.user.server_id}})
+    
+    return JsonResponse({"message": "Дом успешно приобретен!"})
 
-    return JsonResponse({"message": "Дом успешно приобретен!"}, status=200)
 
+@login_required(login_url="/users/login/")
+def get_videocard_info(request: WSGIRequestHandler, videocard_id: int):
+    ic(videocard_id)
+    videocard = db_items.find_one({'id': videocard_id})
+    ic(videocard)
+    
+    data = {
+        'name': videocard.get('name'),
+        'price': intcomma(videocard.get('price')),
+        'currency': 'USD',
+        'performance': intcomma(videocard.get('attributes', {}).get('performance')),
+        'maxQuantity': intcomma(videocard.get('maxQuantity')),
+        'type': videocard.get('type')
+    }
+    ic(data)
+    return JsonResponse(data)
+
+@login_required(login_url="/users/login")
+def buy_videocard(request: WSGIRequestHandler, videocard_id: int):
+    videocard_info = get_item_by_id(videocard_id)
+    ic(videocard_info, 111)
+    
+    user_info = coll.find_one({'server_id': request.user.server_id})
+    if user_info.get('money', {}).get('dollar', {}) < videocard_info.get('price'):
+        ic(user_info.get('money', {}).get('dollar', {}))
+        ic(videocard_info.get('price'))
+        messages.error(request, 'Недостаточно средств.')
+        return JsonResponse({'success': False, 'message': 'Недостаточно средств.', 'messages': get_messages(request)})
+    
+    user_inventory = db_inv.find_one({'server_id': request.user.server_id})
+    
+    if len(user_inventory.get('inventory', {})) >= user_inventory.get('maxQuantity', 30):
+        messages.error(request, 'Ваш инвентарь полон. Недостаточно места.')
+        return JsonResponse({'success': False, 'message': 'Ваш инвентарь полон. Недостаточно места.', 'messages': get_messages(request)})
+
+    give_money(request, request.user.server_id, -videocard_info['price'])
+
+    db_inv.update_one({'server_id': request.user.server_id},
+                      {'$push': {'inventory': {'id': videocard_info['id'], 'type': videocard_info['type']}}})
+
+
+    return JsonResponse({"message": "Видеокарта куплена!", 'messages': get_messages(request)})
 
 class Magazine:
     def __init__(self, db):
@@ -201,6 +227,11 @@ class Magazine:
     
     def get_free_houses_by_district_id(self, district_id):
         return [x for x in self.db.find({'district_id': district_id}) if not x.get('owner')]
+    
+    def get_videocards(self):
+        p = [x for x in self.db.find() if x.get('type') == 'videocard']
+        ic(p)
+        return p
     
     
 def get_cars(request: WSGIRequestHandler):
@@ -226,6 +257,15 @@ def get_houses(request: WSGIRequestHandler, district_id: int):
         'houses': Magazine(db_houses).get_free_houses_by_district_id(district_id),
         'my_server_id': request.user.server_id if not request.user.is_anonymous else False,
         'title': 'Houses'})
+    
+def get_videocards(request: WSGIRequestHandler):
+    with open(r'C:\Users\kovalskiy\Documents\GitHub\rich_site\richMachine\magazine\static\magazine\img\videocard.svg', 'r') as file:
+        icon_content = file.read()
+    return render(request, 'magaz/magazine_videocards.html', {'type': 'videocard', 'icon': icon_content,
+                                                              'my_server_id': request.user.server_id if not request.user.is_anonymous else False,
+                                                              'title': 'Videocards',
+                                                              'videocards': Magazine(db_items).get_videocards()})
+
     
     
 # def render_free_cars(request: WSGIRequestHandler, car_id: int):

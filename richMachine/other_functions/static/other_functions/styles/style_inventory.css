@@ -50,16 +50,26 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    /* justify-content: center; */
     color: #A0A0A0;
     box-sizing: border-box; /* Включаем padding и border в размеры элемента */
-    /* line-height: 25px; */
-    /* background-color: #fff; Цвет фона ячеек */
+    cursor: pointer;
+    height: 150px;
+}
+.cell-inventory:hover {
+    border: 1px solid #979797;
+    color: #696969;
+}
+.cell-inventory:hover .name-videocard {
+    color: #d8d8d8;
 }
 
-.videocard img {
+.videocard .image-videocard {
     height: 30px;
     margin-bottom: 5px;
+}
+.auto-plate .image-plate {
+    height: 22px;
+    margin-bottom: .8em;
 }
 .name-videocard {
     font-size: 16px;
