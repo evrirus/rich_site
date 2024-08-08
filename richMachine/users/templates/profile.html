@@ -106,7 +106,7 @@
         <span class="type-property">Автомобили</span>
 
         {% for car in car.cars %}
-            <div class="car frosted_glass" id="{{car.id}}" data-modal-id="{{car.id}}" data-modal-type="car" numerical-order="{{ forloop.counter }}">
+            <div class="car frosted_glass" id="{{car.id}}" data-modal-id="{{car.id}}" data-modal-type="car" numerical-order="{{ forloop.counter }}" ucode="{{ car.ucode }}">
                 <span class="car__name">{{car.name}}</span><br>
                 <span class="car__price">Гос.стоимость - {{car.price|intcomma}} ₽</span>
             </div>
@@ -115,7 +115,7 @@
     <div class="yachts">
         <span class="type-property">Яхты</span>
         {% for yacht in yacht.yachts %}
-            <div class="yacht frosted_glass" id="{{yacht.id}}" data-modal-id="{{yacht.id}}" data-modal-type="yacht" numerical-order="{{ forloop.counter }}">
+            <div class="yacht frosted_glass" id="{{yacht.id}}" data-modal-id="{{yacht.id}}" data-modal-type="yacht" numerical-order="{{ forloop.counter }}" ucode="{{ car.ucode }}">
                 <span class="yacht__name">{{yacht.name}}</span><br>
                 <span class="yacht__price">Гос.стоимость - {{yacht.price|intcomma}} ₽</span>
             </div>

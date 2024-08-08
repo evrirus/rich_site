@@ -54,8 +54,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const id = item.getAttribute('data-modal-id');
             const type = item.getAttribute('data-type');
+            
             currentTransportType = type;
             currentTransportId = id;
+
             const cacheKey = `${type}-${id}`;  // Ключ для кеша
 
             // Проверяем кеш
@@ -132,8 +134,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     alert('Произошла ошибка: ' + error.message);
                 });
             });
-        } else {
-            console.error('Кнопка покупки не найдена');
         }
     } else {
         console.error('Один из элементов не найден: transportItemsContainer или modal');

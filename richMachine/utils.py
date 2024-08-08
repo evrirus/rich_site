@@ -1,12 +1,15 @@
 import datetime
 import hashlib
 import hmac
+import random
 import re
+import string
 import time
 
 from django.contrib import messages
+from django.contrib.humanize.templatetags.humanize import intcomma
 from icecream import ic
-from pymongo import MongoClient, client_session
+from pymongo import MongoClient
 
 client = MongoClient('mongodb://localhost:27017')
 db = client.get_database('lalka')
@@ -31,6 +34,17 @@ db_log = db.get_collection('logging')
 db_test = db.get_collection('tests')
 
 db_admin = db.get_collection('admin')
+
+
+
+def generate_ucode():
+    """Генерирует уникальный код длиной 9 символов."""
+
+    chars = string.ascii_letters + string.digits
+
+    ucode = ''.join(random.choices(chars, k=9))
+
+    return ucode
 
 
 def get_messages(request):
@@ -82,21 +96,27 @@ def get_car_by_id(car_id: int):
 def get_yacht_by_id(yacht_id: int):
     return db_yachts.find_one({'id': yacht_id})
 
+def get_symbol_money(type_money: str = "cash"):
+    if type_money in ("cash", "bank") : symbol = "₽"
+    elif type_money == 'dollar': symbol = "$"
+    elif type_money == 'bitcoin': symbol = "₿"
+    else: symbol = "(?)"
+    return symbol
+
 def give_money(request, server_id: int, sum: int, type_money: str = 'cash'):
-    ic('g1')
-    ic(server_id)
 
     result = coll.update_one(
         {'server_id': server_id},
         {'$inc': {f'money.{type_money}': sum}},
     )
-    ic('g2')
     if result.modified_count > 0:
-        ic('g3')
-        messages.success(request, f"На баланс начислено: {sum}")
-        ic('g4')
+        symbol = get_symbol_money(type_money)
+        
+        if sum > 0:
+            messages.success(request, f"На баланс начислено: {intcomma(sum)} {symbol}")
+        elif sum < 0:
+            messages.success(request, f"С баланса списано: {intcomma(sum)} {symbol}")
         return True
-    ic('g5')
     return False
 
 
@@ -177,6 +197,11 @@ def add_videocard_in_house(house_id: int, id_videocard: int, qty: int = 1):
 
 def get_item_by_id(item_id: int):
     return db_items.find_one({'id': item_id})
+
+def get_item_in_inventory_user_by_id(server_id: int, item_id: int):
+    return db_inv.find_one({'server_id': server_id, 'inventory.id': item_id})
+def get_item_in_inventory_user_by_type(server_id: int, item_type: str):
+    return db_inv.find_one({'server_id': server_id, 'inventory.type': item_type})
 
 
 

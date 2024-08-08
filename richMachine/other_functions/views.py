@@ -13,7 +13,7 @@ from django.views.generic.edit import CreateView
 from icecream import ic
 from pymongo.errors import ConnectionFailure, OperationFailure
 from utils import (client, coll, db_cars, db_houses, db_yachts,
-                   get_district_by_id, get_house_by_id, get_item_by_id, get_messages,
+                   get_district_by_id, get_house_by_id, get_item_by_id, get_item_in_inventory_user_by_id, get_messages,
                    give_money, verify_telegram_auth, db_inv)
 
 # Create your views here.
@@ -33,6 +33,11 @@ def inventory(request: WSGIRequestHandler):
                 'performance': videocard_info['attributes']['performance'],
                 'type': videocard_info['type']
             })
+        if item['type'] == 'plate':
+            show_items.append({
+                'num': item['attributes']['value'],
+                'type': item['type'],
+            })
 
     # Определение разности между максимальным количеством и текущим количеством предметов
     max_quantity = inventory_user.get('maxQuantity', 0)
@@ -42,9 +47,11 @@ def inventory(request: WSGIRequestHandler):
         difference = max_quantity - current_quantity
         # Заполнение оставшегося места пустыми элементами
         show_items.extend([{'type': 'empty'}] * difference)
-    ic(show_items)
+
     # Возвращение отрендеренного шаблона с данными
     return render(request, 'other_functions/inventory.html', {
         'my_server_id': request.user.server_id,
         'items': show_items
     })
+
+

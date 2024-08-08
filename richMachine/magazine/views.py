@@ -15,7 +15,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.generic.edit import CreateView
 from icecream import ic
 from pymongo.errors import ConnectionFailure, OperationFailure
-from utils import (client, coll, db_cars, db_districts, db_houses, db_yachts,
+from utils import (client, coll, db_cars, db_districts, db_houses, db_yachts, generate_ucode,
                    get_district_by_id, get_house_by_id, get_item_by_id, get_messages,
                    give_money, db_items, db_inv)
 
@@ -84,17 +84,20 @@ def buy_transport(request: WSGIRequestHandler, type, id):
         if type == 'yachts':
             trasport_info = db_yachts.find_one({'id': id})
             if user_info.get('yacht', {}).get('maxPlaces', 2) <= len(user_info.get('yacht', {}).get('yachts', {})):
-                return JsonResponse({'success': False, 'message': 'Превышено максимальное количество мест в вашем флоте.'})
+                messages.error(request, 'Превышено максимальное количество мест в вашем флоте.')
+                return JsonResponse({'success': False, 'message': 'Превышено максимальное количество мест в вашем флоте.', 'messages': get_messages(request)})
             
         elif type == 'cars':
             trasport_info = db_cars.find_one({'id': id})
             if user_info.get('car', {}).get('maxPlaces', 2) <= len(user_info.get('car', {}).get('cars', {})):
-                return JsonResponse({'success': False, 'message': 'Превышено максимальное количество мест в вашем гараже.'})
+                messages.error(request, 'Превышено максимальное количество мест в вашем гараже.')
+                return JsonResponse({'success': False, 'message': 'Превышено максимальное количество мест в вашем гараже.', 'messages': get_messages(request)})
         else:
             return JsonResponse({'success': False, 'message': 'Invalid type'})
         
         if trasport_info.get('quantity') <= 0:
-            return JsonResponse({'success': False, 'message': 'Транспорт раскуплен.'})
+            messages.error(request, 'Транспорт раскуплен.')
+            return JsonResponse({'success': False, 'message': 'Транспорт раскуплен.', 'messages': get_messages(request)})
         
         
         if user_info.get('money', {}).get('cash', {}) < trasport_info.get('price'):
@@ -105,7 +108,8 @@ def buy_transport(request: WSGIRequestHandler, type, id):
             'id': trasport_info.get('id'),
             'name': trasport_info.get('name'),
             'price': trasport_info.get('price'),
-            'plate': None
+            'plate': None,
+            'ucode': generate_ucode()
         }
         
 
@@ -121,8 +125,8 @@ def buy_transport(request: WSGIRequestHandler, type, id):
             db_yachts.update_one({'id': trasport_info.get('id')},
                                {'$inc': {'quantity': -1}})
 
-
-        return JsonResponse({'success': True, 'message': 'Покупка прошла успешно!'})
+        messages.success(request, 'Покупка прошла успешно!')
+        return JsonResponse({'success': True, 'message': 'Покупка прошла успешно!', 'messages': get_messages(request)})
     else:
         return JsonResponse({'success': False, 'message': 'Метод не поддерживается.'})
 
@@ -148,14 +152,17 @@ def get_house_info(request: WSGIRequestHandler, id: int):
 def buy_house(request: WSGIRequestHandler, id: int):
     house_info = get_house_by_id(id)
     if house_info['owner']:
-        return JsonResponse({'success': False, 'message': "Дом уже занят!"})
+        messages.error(request, "Дом уже занят!")
+        return JsonResponse({'success': False, 'message': "Дом уже занят!", 'messages': get_messages(request)})
     
     user_info = coll.find_one({'server_id': request.user.server_id})
     if user_info.get('money', {}).get('cash', {}) < house_info.get('price'):
-        return JsonResponse({'success': False, 'message': 'Недостаточно средств.'})
+        messages.error(request, 'Недостаточно средств.')
+        return JsonResponse({'success': False, 'message': 'Недостаточно средств.', 'messages': get_messages(request)})
     
     if user_info.get('car', {}).get('maxPlaces', 2) <= len(user_info.get('car', {}).get('cars', {})):
-        return JsonResponse({'success': False, 'message': 'Превышено максимальное количество.'})
+        messages.error(request, 'Превышено максимальное количество.')
+        return JsonResponse({'success': False, 'message': 'Превышено максимальное количество.', 'messages': get_messages(request)})
     
     
     give_money(request, request.user.server_id, -house_info['price'])
@@ -166,7 +173,8 @@ def buy_house(request: WSGIRequestHandler, id: int):
     db_houses.update_one({'id': house_info['id']},
                         {'$set': {'owner': request.user.server_id}})
     
-    return JsonResponse({"message": "Дом успешно приобретен!"})
+    messages.success(request, "Дом успешно приобретен!")
+    return JsonResponse({"message": "Дом успешно приобретен!", 'messages': get_messages(request)})
 
 
 @login_required(login_url="/users/login/")
@@ -204,13 +212,13 @@ def buy_videocard(request: WSGIRequestHandler, videocard_id: int):
         messages.error(request, 'Ваш инвентарь полон. Недостаточно места.')
         return JsonResponse({'success': False, 'message': 'Ваш инвентарь полон. Недостаточно места.', 'messages': get_messages(request)})
 
-    give_money(request, request.user.server_id, -videocard_info['price'])
+    give_money(request, request.user.server_id, -videocard_info['price'], type_money='dollar')
 
     db_inv.update_one({'server_id': request.user.server_id},
                       {'$push': {'inventory': {'id': videocard_info['id'], 'type': videocard_info['type']}}})
 
-
-    return JsonResponse({"message": "Видеокарта куплена!", 'messages': get_messages(request)})
+    messages.success(request, "Видеокарта куплена!")
+    return JsonResponse({"success": True, "message": "Видеокарта куплена!", 'messages': get_messages(request)})
 
 class Magazine:
     def __init__(self, db):
@@ -229,9 +237,7 @@ class Magazine:
         return [x for x in self.db.find({'district_id': district_id}) if not x.get('owner')]
     
     def get_videocards(self):
-        p = [x for x in self.db.find() if x.get('type') == 'videocard']
-        ic(p)
-        return p
+        return [x for x in self.db.find() if x.get('type') == 'videocard']
     
     
 def get_cars(request: WSGIRequestHandler):

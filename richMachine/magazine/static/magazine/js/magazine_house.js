@@ -98,6 +98,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         function closeModal() {
             modal.style.visibility = 'hidden';
+            infoHouse.style.visibility = 'hidden';
         }
 
         window.addEventListener('click', (event) => {
@@ -109,38 +110,33 @@ document.addEventListener('DOMContentLoaded', () => {
         // Добавляем обработчик для кнопки покупки
         if (acceptBuyHouseButton) {
             acceptBuyHouseButton.addEventListener('click', function() {
-
+        
                 loadingIndicator.style.visibility = 'visible'; // Показываем индикатор загрузки
-
+        
                 const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-
-                fetch(`../buy_house/${currentHouseId}/`, {
-                    method: 'POST',
+        
+                $.ajax({
+                    url: '../buy_house/' + currentHouseId + '/',
+                    type: 'POST',
                     headers: {
-                        'Content-Type': 'application/json',
                         'X-CSRFToken': csrfToken
                     },
-                    body: JSON.stringify({
+                    data: {
                         id: currentHouseId
-                    })
-                }).then(response => response.json())
-                  .then(data => {
-                      loadingIndicator.style.visibility = 'hidden'; // Скрываем индикатор загрузки
-
-                      if (data.success) {
-                          alert('Покупка прошла успешно!');
-                          closeModal();
-                      } else {
-                          alert('Произошла ошибка при покупке: ' + data.message);
-                      }
-                  }).catch(error => {
-                      loadingIndicator.style.visiblity = 'hidden'; // Скрываем индикатор загрузки
-                      alert('Произошла ошибка: ' + error.message);
-                  });
+                    },
+                    success: function(data) {
+                        loadingIndicator.style.visibility = 'hidden'; // Скрываем индикатор загрузки
+                        handleMessages(data.messages);
+                        closeModal();
+                    },
+                    error: function(error) {
+                        loadingIndicator.style.visiblity = 'hidden'; // Скрываем индикатор загрузки
+                        alert('Произошла ошибка: ' + error.responseJSON.message || 'Неизвестная ошибка');
+                    }
+                });
             });
-        } else {
-            console.error('Кнопка покупки не найдена');
         }
+        
     } else {
         console.error('Один из элементов не найден: houseItemsContainer или modal');
     }

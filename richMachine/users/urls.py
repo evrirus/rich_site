@@ -19,8 +19,8 @@ urlpatterns = [
     path('change_language/', views.change_language, name='language'),
     path('login/', views.login_user, name='login'),
     path('logout/', LogoutView.as_view(next_page='users:login'), name='logout'),
-    path('sell_transport/<str:type>/<int:id>/<int:numerical_order>/', views.sell_transport, name='sell_transport'),
-    path('get_transport_profile/<str:type>/<int:id>/<int:numerical_order>/', views.get_transport_profile, name='get_transport_profile'),
+    path('sell_transport/<str:type>/<str:ucode>/', views.sell_transport, name='sell_transport'),
+    path('get_transport_profile/<str:type>/<str:ucode>/', views.get_transport_profile, name='get_transport_profile'),
     path('get_house_profile/<int:id>/', views.get_house_profile, name='get_house_profile'),
     path('sell_house/<int:id>/', views.sell_house, name='sell_house'),
 
