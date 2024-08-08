@@ -44,6 +44,12 @@ def register(request):
             user.telegram_id = telegram_id
             user.save()
             
+            example = {"server_id": user.server_id,
+                       "maxQuantity": 30,
+                       "inventory": [{'type': 'empty'}] * 30
+            }
+            db_inv.insert(example)
+            
             login(request, user)
             return redirect('profile', server_id=user.server_id)
     else:
@@ -181,7 +187,7 @@ def change_language(request: WSGIRequestHandler):
     return JsonResponse({'success': True, 'new_language': languages[new_language_index], 'messages': get_messages(request)})
 
 @login_required(login_url="/users/login/")
-def sell_transport(request: WSGIRequestHandler, type: str, id: int, numerical_order: int):
+def sell_transport(request: WSGIRequestHandler, type: str, ucode: str):
     
     if type not in ('car', 'yacht'):
         return JsonResponse({'success': False, 'error': 'Неверный тип транспорта'})
@@ -190,25 +196,36 @@ def sell_transport(request: WSGIRequestHandler, type: str, id: int, numerical_or
     if not user_info:
         return JsonResponse({'success': False, 'error': 'Пользователь не найден'})
     
-    transport_info = user_info[f'{type}'][f'{type}s'][numerical_order-1]
-    if not transport_info:
-        return JsonResponse({'success': False, 'error': 'Транспорт не найден'})
+    transports = user_info[f'{type}'][f'{type}s']
+    ic(transports)
+    num = 0
+    for k, tr in enumerate(transports):
+        if tr['ucode'] == ucode: 
+            num = k
+    ic(num)
+
+    
     
     items = user_info.get(f'{type}', {}).get(f'{type}s', [])
-    items.pop(numerical_order-1)
+    transport_info = items[num]
+    ic(transport_info)
+    items.pop(num)
+    ic(items)
     
     
     coll.update_one(
         {'server_id': request.user.server_id},
         {'$set': {f'{type}.{type}s': items}}
     )
-    give_money(request.user.server_id, transport_info['price'] // 2)
-    
-    
-    return JsonResponse({'success': True, 'message': 'Транспорт успешно продан!'})
+    give_money(request, request.user.server_id, transport_info['price'] // 2)
+    ic('Транспорт успешно продан!')
+    messages.success(request, 'Транспорт успешно продан!')
+    return JsonResponse({'success': True, 'message': 'Транспорт успешно продан!', 'messages': get_messages(request)})
+     
+
 
 @login_required(login_url="/users/login/")
-def get_transport_profile(request: WSGIRequestHandler, type: str, id: int, numerical_order: int):
+def get_transport_profile(request: WSGIRequestHandler, type: str, ucode: int):
     
     if type not in ('car', 'yacht'):
         return JsonResponse({'success': False, 'error': 'Неверный тип транспорта'})
@@ -217,9 +234,16 @@ def get_transport_profile(request: WSGIRequestHandler, type: str, id: int, numer
     if not user_info:
         return JsonResponse({'success': False, 'error': 'Пользователь не найден'})
     
-    transport_info = user_info[f'{type}'][f'{type}s'][numerical_order-1]
-    if not transport_info:
+    transports = user_info[f'{type}'][f'{type}s']
+    ic(transports, 11)
+    if not transports:
         return JsonResponse({'success': False, 'error': 'Транспорт не найден'})
+    
+    num = 0
+    for k, tr in enumerate(transports):
+        if tr['ucode'] == ucode: 
+            num = k
+    transport_info = transports[num]
     
     if type == 'car':
         global_trasport_info = db_cars.find_one({'id': transport_info['id']})
@@ -232,7 +256,6 @@ def get_transport_profile(request: WSGIRequestHandler, type: str, id: int, numer
         'success': True,
         'type': type,
         'id': transport_info['id'],
-        'numerical_order': numerical_order,
         'maxQuantity': global_trasport_info['maxQuantity'],
         'quantity': global_trasport_info['quantity'],
         'price': intcomma(transport_info['price']),
@@ -264,17 +287,11 @@ def sell_house(request: WSGIRequestHandler, id: int):
     
     db_houses.update_one({'id': house_info['id']},
                          {'$set': {'owner': None}})
-    give_money(request.user.server_id, house_info['price'] // 2)
-    
-    return JsonResponse({'success': True, 'message': 'Продажа прошла успешно!'})
+    give_money(request, request.user.server_id, house_info['price'] // 2)
+    messages.success(request, 'Продажа прошла успешно!')
+    return JsonResponse({'success': True, 'message': 'Продажа прошла успешно!', 'messages': get_messages(request)})
 
 def page_not_found(request, exception):
     ic(exception)
     return render(request, "404.html")
 
-
-def accept(request: WSGIRequestHandler):
-    ic('telegraaaaaam')
-    return JsonResponse({'ok': True})
-    
-    # return JsonResponse({'address': request.client_address})

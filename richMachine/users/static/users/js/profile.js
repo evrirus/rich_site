@@ -56,6 +56,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             loadingIndicatorTransport.style.visibility = 'hidden';
             infoCar.style.visibility = 'visible';
+            console.log("ahghaha")
         } else if (type === 'house') {
             document.querySelector('.house-district-name').textContent = data.district_info.name;
             document.querySelector('.house-type').textContent = `${data.type} №`;
@@ -77,6 +78,7 @@ document.addEventListener('DOMContentLoaded', () => {
         currentTransportId = item.getAttribute('data-modal-id');
         currentTransportType = item.getAttribute('data-modal-type');
         currentTransportNumerical = item.getAttribute('numerical-order');
+        currentTransportUcode = item.getAttribute('ucode');
 
         const cacheKey = `${currentTransportType}-${currentTransportId}`;
 
@@ -88,7 +90,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             $.ajax({
                 type: 'GET',
-                url: `/users/get_transport_profile/${currentTransportType}/${currentTransportId}/${currentTransportNumerical}/`,
+                url: `/users/get_transport_profile/${currentTransportType}/${currentTransportUcode}/`,
                 success: function(response) {
                     cache[cacheKey] = response;
                     updateModalContent(response, 'transport');
@@ -168,6 +170,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     url: "/users/change_nickname/",
                     data: formData,
                     success: function(response) {
+
                         if (response.success) {
                             $('#current-name').text(response.new_nickname);
                             closeAllModals();
@@ -203,29 +206,35 @@ document.addEventListener('DOMContentLoaded', () => {
         if (acceptSellTransportButton) {
             acceptSellTransportButton.addEventListener('click', function() {
                 const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-                fetch(`/users/sell_transport/${currentTransportType}/${currentTransportId}/${currentTransportNumerical}/`, {
-                    method: 'POST',
+                const url = `/users/sell_transport/${currentTransportType}/${currentTransportUcode}/`;
+                const data = {
+                    id: currentTransportId,
+                    type: currentTransportType
+                };
+        
+                // Using jQuery AJAX
+                $.ajax({
+                    url: url,
+                    type: 'POST',
                     headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': csrfToken
+                        'X-CSRFToken': csrfToken,
+                        'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({
-                        id: currentTransportId,
-                        type: currentTransportType
-                    })
-                }).then(response => response.json())
-                  .then(data => {
-                    loadingIndicatorTransport.style.visibility = 'hidden';
-                      if (data.success) {
-                          alert('Покупка прошла успешно!');
-                          closeAllModals();
-                      } else {
-                          alert('Произошла ошибка при покупке: ' + data.message);
-                      }
-                  }).catch(error => {
-                    loadingIndicatorTransport.style.visibility = 'hidden';
-                      alert('Произошла ошибка: ' + error.message);
-                  });
+                    data: JSON.stringify(data),
+                    success: function(response) {
+                        loadingIndicatorTransport.style.visibility = 'hidden';
+                        if (response.success) {
+                            const transportDiv = document.querySelector(`.car.frosted_glass[ucode="${currentTransportUcode}"][data-modal-type="${currentTransportType}"][numerical-order="${currentTransportNumerical}"]`);
+                            transportDiv.remove();
+                        }
+                        handleMessages(response.messages);
+                        closeAllModals();
+                    },
+                    error: function(error) {
+                        loadingIndicatorTransport.style.visibility = 'hidden';
+                        alert('Произошла ошибка: ' + error.responseJSON.message || error.message); 
+                    }
+                });
             });
         }
     }
@@ -248,12 +257,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 }).then(response => response.json())
                   .then(data => {
                     loadingIndicatorTransport.style.visibility = 'hidden';
-                      if (data.success) {
-                          alert('Продажа прошла успешно!');
-                          closeAllModals();
-                      } else {
-                          alert('Произошла ошибка при продаже: ' + data.message);
-                      }
+                    if (data.success) {
+                        const houseDiv = document.querySelector(`.house.frosted_glass[id="${currentHouseId}"][data-modal-type="house"]`);
+                        houseDiv.remove();
+                    }
+
+                    handleMessages(data.messages)
+                    closeAllModals();
                   }).catch(error => {
                     loadingIndicatorTransport.style.visibility = 'hidden';
                       alert('Произошла ошибка: ' + error.message);
