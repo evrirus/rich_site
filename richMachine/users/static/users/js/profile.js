@@ -224,7 +224,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     success: function(response) {
                         loadingIndicatorTransport.style.visibility = 'hidden';
                         if (response.success) {
-                            const transportDiv = document.querySelector(`.car.frosted_glass[ucode="${currentTransportUcode}"][data-modal-type="${currentTransportType}"][numerical-order="${currentTransportNumerical}"]`);
+                            const transportDiv = document.querySelector(`.${currentTransportType}.frosted_glass[ucode="${currentTransportUcode}"][data-modal-type="${currentTransportType}"][numerical-order="${currentTransportNumerical}"]`);
                             transportDiv.remove();
                         }
                         handleMessages(response.messages);

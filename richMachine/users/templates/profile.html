@@ -115,7 +115,7 @@
     <div class="yachts">
         <span class="type-property">Яхты</span>
         {% for yacht in yacht.yachts %}
-            <div class="yacht frosted_glass" id="{{yacht.id}}" data-modal-id="{{yacht.id}}" data-modal-type="yacht" numerical-order="{{ forloop.counter }}" ucode="{{ car.ucode }}">
+            <div class="yacht frosted_glass" id="{{yacht.id}}" data-modal-id="{{yacht.id}}" data-modal-type="yacht" numerical-order="{{ forloop.counter }}" ucode="{{ yacht.ucode }}">
                 <span class="yacht__name">{{yacht.name}}</span><br>
                 <span class="yacht__price">Гос.стоимость - {{yacht.price|intcomma}} ₽</span>
             </div>

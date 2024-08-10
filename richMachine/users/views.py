@@ -218,6 +218,13 @@ def sell_transport(request: WSGIRequestHandler, type: str, ucode: str):
         {'$set': {f'{type}.{type}s': items}}
     )
     give_money(request, request.user.server_id, transport_info['price'] // 2)
+    if type == 'car':
+        db_cars.update_one({'id': transport_info['id']},
+                           {'$inc': {'quantity': 1}})
+    elif type == 'yacht':
+        db_yachts.update_one({'id': transport_info['id']},
+                           {'$inc': {'quantity': 1}})
+    else: ic('ASHIBKA')
     ic('Транспорт успешно продан!')
     messages.success(request, 'Транспорт успешно продан!')
     return JsonResponse({'success': True, 'message': 'Транспорт успешно продан!', 'messages': get_messages(request)})

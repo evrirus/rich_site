@@ -1,0 +1,38 @@
+{% extends "homePage/layout.html" %}
+{% load static %}
+
+{% block title %}Slot Machine{% endblock %}
+
+{% block stylesheet %}
+<link rel="stylesheet" href="{% static 'other_functions/styles/style_casino.css' %}">
+{% endblock %}
+
+{% block script %}
+<script src="{% static 'other_functions/js/casino_slot_machine.js' %}" defer></script>
+{% endblock %}
+
+{% block content %}
+<div id="app">
+    <div class="doors">
+      <div class="door">
+        <div class="boxes"></div>
+      </div>
+      <div class="door">
+        <div class="boxes"></div>
+      </div>
+      <div class="door">
+        <div class="boxes"></div>
+      </div>
+    </div>
+    <form id="userForm" method="post">
+      {% csrf_token %}
+      <input type="number" name="user_input" placeholder="Enter bid" required>
+      <select name="user_choice">
+          <option value="cash">₽</option>
+          <option value="dollar">$</option>
+      </select>
+      <button type="submit">Submit</button>
+    </form>
+    <p class="info"></p>
+</div>
+{% endblock %}
