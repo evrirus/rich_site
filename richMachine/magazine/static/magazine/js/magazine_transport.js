@@ -55,8 +55,11 @@ document.addEventListener('DOMContentLoaded', () => {
             const id = item.getAttribute('data-modal-id');
             const type = item.getAttribute('data-type');
             
+            
             currentTransportType = type;
             currentTransportId = id;
+            
+
 
             const cacheKey = `${type}-${id}`;  // Ключ для кеша
 
@@ -65,6 +68,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 updateModalContent(cache[cacheKey]);
             } else {
                 // Подгрузка данных из БД с использованием AJAX
+                console.log(type, id);
                 $.ajax({
                     type: 'GET',
                     url: `get_transport_info/${type}/${id}/`,  // URL вашего API эндпоинта
