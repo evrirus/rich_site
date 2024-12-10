@@ -1,0 +1,173 @@
+#main {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 60vw;
+    margin-left: 9vw;
+    margin-top: 6rem;
+}
+
+
+body {
+    font-family: 'Montserrat', sans-serif;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    /* background-color: #f9f9f9; Цвет фона для улучшенного контраста */
+}
+
+
+#celltable {
+    width: 100%;
+    /* overflow-y: auto; */
+    /* max-height: 108vh;  */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    /* margin-bottom: 3vw; */
+}
+
+.cells {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 4fr)); /* Адаптивное количество колонок */
+    gap: 25px 10px; 
+    width: 60%;
+}
+
+
+.cell-inventory {
+    border: 1px solid #ddd;
+    border-radius: 20px;
+    padding: 20px;
+    text-align: center;
+    max-height: 150px;
+    max-width: 150px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    color: #A0A0A0;
+    box-sizing: border-box; 
+    cursor: pointer;
+    height: 150px;
+    user-select: none;
+}
+.cell-inventory:hover {
+    border: 1px solid #979797;
+    color: #696969;
+}
+.cell-inventory:hover .name-videocard {
+    color: #d8d8d8;
+}
+
+.videocard .image-videocard {
+    height: 30px;
+    margin-bottom: 5px;
+}
+
+.name-videocard {
+    font-size: 16px;
+    color: white;
+    font-weight: 500;
+    margin-bottom: .5em;
+}
+.performance {
+    font-size: 14px;
+}
+
+.empty {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-shadow: rgb(151, 151, 151) 1px 0 10px;
+    color: white;
+}
+
+#aside {
+    position: absolute;
+    top: calc(60px + 4.75rem);
+    right: 9vw;
+    /* height: calc(100vh - 60px); */
+}
+
+#statistic-basement, #statistic-videocards {
+    background-color: #222222;
+    height: min-content;
+    width: 12.5em;
+    margin-bottom: 1em;
+    border-radius: 10px;
+    padding: 1rem 1rem 1rem 1rem ;
+}
+
+.statistic-videocards {
+    width: 100%;
+}
+.statistic-basement {
+    width: 100%;
+}
+.statistic-basement tr th {
+    text-align: left;
+}
+.statistic-basement tr td {
+    text-align: right;
+}
+
+.header-statistic {
+    display: flex;
+    justify-content: space-between;
+    color: rgb(231, 231, 231);
+    justify-content: center;
+    align-items: center;
+    font-size: 20px;
+    font-weight: 600;
+    margin-bottom: 1rem;
+}
+
+table tr td {
+    text-align: right;
+    color: rgb(209, 209, 209);
+}
+table tr th {
+    text-align: left;
+    color: rgb(240, 240, 240);
+    font-weight:500;
+}
+
+.statistic-videocards tr th {
+    font-weight:400;
+}
+
+button#take-profit, button#create-basement, button#update-basement {
+    
+    border: none;
+    border-radius: 15px;
+    color: white;
+    height: 40px;
+    width: calc(14.35em + 3px);
+    font-size: 16px;
+    cursor: pointer;
+    margin-bottom: .5em;
+}
+
+
+button#create-basement {
+    background-color: #466877;
+}
+button#create-basement:hover {
+    background-color: #354f5a;
+}
+
+button#take-profit, button#update-basement {
+    background-color: #65558f;
+}
+button#take-profit:hover, button#update-basement:hover {
+    background-color: #544677;
+}
+
+
+
+
+
+

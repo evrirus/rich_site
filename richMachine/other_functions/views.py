@@ -20,7 +20,8 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.generic.edit import CreateView
 from icecream import ic
 from pymongo.errors import ConnectionFailure, OperationFailure
-from utils import (client, coll, db_cars, db_houses, db_inv, db_yachts,
+import requests
+from utils import (DOMEN, client, coll, db_cars, db_houses, db_inv, db_yachts,
                    generate_ucode, get_district_by_id, get_house_by_id,
                    get_item_by_id, get_item_in_inventory_user_by_id,
                    get_messages, give_money, verify_telegram_auth, get_symbol_money)
@@ -158,29 +159,42 @@ coefficients = {
 
 # Create your views here.
 def inventory(request: WSGIRequestHandler):
-    # Получение информации о пользователе и его инвентаре
-    inventory_user = db_inv.find_one({'server_id': request.user.server_id})
+    
+    url_get_inventory = DOMEN + 'api/get_inventory/'
+    data = {"action": "get_inventory", "server_id": request.user.server_id, "source": "web"}
+    response = requests.get(url_get_inventory, json=data).json()
 
     # Список для хранения информации о предметах, которые будут отображаться
     show_items = []
 
     # Заполнение списка информацией о видеокартах
-    for item in inventory_user.get('inventory', []):
+    for item in response.get('inventory', []):
         if item['type'] == 'videocard':
-            videocard_info = get_item_by_id(item['id'])
-            show_items.append({
-                'name': videocard_info['name'],
-                'performance': videocard_info['attributes']['performance'],
-                'type': videocard_info['type']
-            })
-        if item['type'] == 'plate':
+
+            for i in show_items:
+                if item['id'] == i['id']:
+                    show_items.append({
+                        'name': i['name'], 'performance': i['performance'],
+                        'type': i['type'], 'id': item['id']
+                    })
+                    break
+
+            else: 
+                videocard_info = get_item_by_id(item['id'])
+                show_items.append({
+                    'name': videocard_info['name'],
+                    'performance': videocard_info['attributes']['performance'],
+                    'type': videocard_info['type'], 'id': item['id']
+                })
+                
+        elif item['type'] == 'plate':
             show_items.append({
                 'num': item['attributes']['value'],
                 'type': item['type'],
             })
 
     # Определение разности между максимальным количеством и текущим количеством предметов
-    max_quantity = inventory_user.get('maxQuantity', 0)
+    max_quantity = response.get('maxQuantity', 0)
     current_quantity = len(show_items)
     
     if current_quantity < max_quantity:
@@ -213,7 +227,6 @@ class GenerateCombinationView(View):
         # Получение информации о пользователе
         user_info = coll.find_one({'server_id': request.user.server_id})
         balance = user_info.get('money', {}).get(user_choice, 0)
-        ic(balance)
         
         # Проверка достаточности средств
         if balance < bid:
@@ -225,24 +238,21 @@ class GenerateCombinationView(View):
         combination = random.choices(items, k=3)  # Генерация комбинации из трех символов
         coefficient = self.get_coefficient(combination)
         # coefficient = 0 # КОЭФ
-        ic(coefficient)
         
         # Рассчет выигрыша
-        ic(bid)
         winnings = int(coefficient * bid) - bid
-        ic(winnings)
+        
         
         # Обновление баланса и отправка уведомления в зависимости от коэффициента
-        ic(balance)
-        ic(-bid+(winnings*3))
         if coefficient > 1:
-            balance += winnings
+
+            balance += -bid+(winnings*3)
             give_money(request, request.user.server_id, -bid+(winnings*3), type_money=user_choice, 
                        comment=f"Уведомление | Ваша ставка принята, ваш выигрыш составил {intcomma(winnings)} {get_symbol_money(user_choice)}. \nКоэффициент x{coefficient}.\nОстаточный баланс: {intcomma(balance)} {get_symbol_money(user_choice)}")
         elif coefficient < 1:
-            loss = -(bid + winnings)
-            ic(loss)
+
             balance += winnings
+            
             give_money(request, request.user.server_id, winnings, type_money=user_choice, 
                        comment=f"Уведомление | Ваша ставка проигрышна, вы потеряли {intcomma(winnings)} {get_symbol_money(user_choice)}. \nКоэффициент x{coefficient}.\nОстаточный баланс: {intcomma(balance)} {get_symbol_money(user_choice)}")
         elif coefficient == 1:
@@ -251,7 +261,6 @@ class GenerateCombinationView(View):
 
         
         return JsonResponse({'combination': combination, 'success': True, 'user_input': user_input, 'user_choice': user_choice, 'messages': get_messages(request)})
-
 
 
     def random_with_probability(self, probability):
@@ -285,5 +294,9 @@ class GenerateCombinationView(View):
             return 0.5
         return 0
 
+def casino(request):
+    return render(request, 'other_functions/casino_main.html', {'my_server_id': request.user.server_id})
+
 def slot_machine(request):
     return render(request, 'other_functions/casino_slot.html', {'my_server_id': request.user.server_id})
+

@@ -36,6 +36,8 @@ INSTALLED_APPS = [
     'other_functions',
     'django_filters',
     'corsheaders',
+    'API',
+    'rest_framework',
     'django.contrib.humanize',
     'django.contrib.admin',
     'django.contrib.auth',
@@ -43,7 +45,6 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    
 ]
 
 MIDDLEWARE = [
@@ -56,6 +57,8 @@ MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     # 'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'users.middleware.ContentSecurityPolicyMiddleware',
+    'users.middleware.RequestSourceMiddleware',
+    'users.middleware.AuthenticationUserMiddleware',
 ]
 
 AUTHENTICATION_BACKENDS = [
@@ -100,7 +103,7 @@ DATABASES = {
 }
 
 
-SESSION_ENGINE = 'django.contrib.sessions.backends.db'  # Use database-backed sessions
+SESSION_ENGINE = 'django.contrib.sessions.backends.file'  # Use database-backed sessions
 SESSION_COOKIE_NAME = 'sessionid'
 
 
