@@ -1,0 +1,151 @@
+.a_cap {
+    background-color: #37408F;
+}
+.header__buttons li a {
+    color: #cacaca;
+}
+
+.header__buttons li a:hover {
+    color: rgb(160, 160, 160);
+}
+
+body {
+    background-color: #347B92;
+    color: white;
+}
+
+#main {
+    display: flex;
+    flex-direction: row;
+    height: calc(100vh - 51px); /* Добавьте высоту, чтобы #main-content был правильной высоты */
+}
+
+#aside-inform {
+    width: 20%;
+    height: 100%;
+    background-color: #333866;
+    position: fixed;
+    left: 0;
+    top: 51px; 
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between; /* Разделяем пространство между верхним и нижним контентом */
+    flex-shrink: 0;
+    z-index: 2;
+}
+
+#top-content {
+    width: 100%;
+    text-align: center;
+    margin-top: 3vh;
+}
+
+#max_winnigs {
+    width: 100%;
+    text-align: center;
+    margin-bottom: 7vh;
+}
+
+
+
+#title-content {
+    font-size: 3vw;
+    margin-top: 0;
+    margin-bottom: .8rem;
+    margin-left: 2vw;
+}
+
+#main-content {
+    position: relative;
+    width: 80%;
+    flex: 1;
+    padding-left: 20%; 
+    overflow-y: auto; 
+    display: flex;
+    flex-direction: column;
+    top: 3vw;
+    left: 10vh;
+    z-index: 1;
+}
+
+.bangers {
+    font-family: "Bangers", system-ui;
+}
+.game-title {
+    font-size: 2.5vw;
+    margin-top: 2.5vw;
+    margin-bottom: 5px;
+}
+.game-description {
+    font-size: 1vw;
+}
+.game-image {
+    margin-top: 3rem;
+}
+.game-image img {
+    height: 7vw;
+}
+
+#content-games {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(15vw, 1fr));
+    gap: 20px;
+    max-width: 70vw;
+}
+
+.rectangle-game {
+    background-color: #23274E;
+    border-radius: 30px;
+    display: flex;
+    height: 392px;
+    flex-direction: column;
+    align-items: center;
+    text-decoration: none;
+    /* min-width: 300px; */
+}
+
+.rectangle-game:link {
+    color: inherit;
+}
+.rectangle-game:visited {
+    color: inherit;
+}
+.rectangle-game:active {
+    color: inherit;
+}
+
+.rectangle-game:hover {
+    background-color: #21254b;
+}
+
+/* Media queries */
+@media screen and (max-width: 1024px) {
+    #content-games {
+        grid-template-columns: repeat(auto-fit, minmax(15vw, 1fr));
+    }
+}
+
+@media screen and (max-width: 1053px) {
+    #aside-inform {
+        display: none;
+    }
+    #main-content {
+        width: 100%;
+        padding-left: 5vw;
+        padding-right: 5vw;
+    }
+    .rectangle-game {
+        height: 20vh;
+        /* width: 80vw; */
+    }
+}
+
+@media screen and (max-width: 900px) {
+    #content-games {
+        grid-template-columns: 1fr;
+        /* max-width: 600px;
+        min-width: none; */
+    }
+    
+}

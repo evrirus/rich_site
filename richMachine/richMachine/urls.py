@@ -19,11 +19,14 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path
 from users.views import profile, self_profile
-from other_functions.views import inventory, slot_machine, GenerateCombinationView
+from other_functions.views import inventory, slot_machine, GenerateCombinationView, casino
+from users.views import basement
 
 app_name = 'richMachine'
 
 urlpatterns = [
+    path('api/', include('API.urls', namespace='api')), 
+    
     path('admin/', admin.site.urls, name='admin'),
     path('', include('homePage.urls', namespace='homePage')),
     path('users/', include('users.urls', namespace='users')),
@@ -31,6 +34,10 @@ urlpatterns = [
     path('profile/', self_profile, name='self_profile'),
     path('profile/<int:server_id>', profile, name='profile'),
     path('inventory/', inventory, name='inventory'),
+    
+    path('basement/<int:id_house>/', basement, name='basement'),
+    
+    path('casino/', casino, name='casino'),
     path('casino/slot/', slot_machine, name='slot_machine'),
     path('casino/slot/generate_combination/', GenerateCombinationView.as_view(), name='generate_combination'),
     

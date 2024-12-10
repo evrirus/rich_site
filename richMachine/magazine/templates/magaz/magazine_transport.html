@@ -36,21 +36,25 @@
         {% endif %}
     </p>
     <div class="property">
-        {% for item in transport %}
-            <div class="transport_item {{type}}" data-modal-id="{{ item.id }}" data-type="{{ type }}" 
-                 data-name="{{ item.name }}" data-price="{{ item.price|intcomma }} ₽" 
-                 data-produced="{{ item.produced }}" data-quantity="{{ item.quantity }}">
-                <div class="property-icon">
-                    {{ icon|safe }}
+        {% if transport %}
+            {% for item in transport %}
+                <div class="transport_item {{type}}" data-modal-id="{{ item.id }}" data-type="{{ type }}" 
+                     data-name="{{ item.name }}" data-price="{{ item.price|intcomma }} ₽" 
+                     data-produced="{{ item.produced }}" data-quantity="{{ item.quantity }}">
+                    <div class="property-icon">
+                        {{ icon|safe }}
+                    </div>
+                    <div class="property-class">
+                        {{ item.name }}
+                    </div>
+                    <div class="property-price">
+                        {{ item.price|intcomma }} ₽
+                    </div>
                 </div>
-                <div class="property-class">
-                    {{ item.name }}
-                </div>
-                <div class="property-price">
-                    {{ item.price|intcomma }} ₽
-                </div>
-            </div>
-        {% endfor %}
+            {% endfor %}
+        {% else %}
+            <p>Нет доступных {% if type == 'cars' %} автомобилей {% else %} яхт {% endif %}</p>
+        {% endif %}
     </div>
     
     <div id="transportModal" class="modal">

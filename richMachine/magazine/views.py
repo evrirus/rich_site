@@ -79,7 +79,7 @@ def get_transport_info(request: WSGIRequestHandler, type: str, id: int):
 @login_required(login_url="/users/login")
 def buy_transport(request: WSGIRequestHandler, type, id):
     if request.method == 'POST':
-        
+        # user_server_id = request.POST.get('server_id') or request.user.server_id
         user_info = coll.find_one({'server_id': request.user.server_id})
         if type == 'yachts':
             trasport_info = db_yachts.find_one({'id': id})
@@ -126,7 +126,7 @@ def buy_transport(request: WSGIRequestHandler, type, id):
                                {'$inc': {'quantity': -1}})
 
         messages.success(request, 'Покупка прошла успешно!')
-        return JsonResponse({'success': True, 'message': 'Покупка прошла успешно!', 'messages': get_messages(request)})
+        return JsonResponse({'success': True, 'message': 'Покупка прошла успешно!', 'messages': get_messages(request), 'type': type, 'id': id})
     else:
         return JsonResponse({'success': False, 'message': 'Метод не поддерживается.'})
 
@@ -160,7 +160,7 @@ def buy_house(request: WSGIRequestHandler, id: int):
         messages.error(request, 'Недостаточно средств.')
         return JsonResponse({'success': False, 'message': 'Недостаточно средств.', 'messages': get_messages(request)})
     
-    if user_info.get('car', {}).get('maxPlaces', 2) <= len(user_info.get('car', {}).get('cars', {})):
+    if user_info.get('house', {}).get('maxPlaces', 2) <= len(user_info.get('house', {}).get('houses', {})):
         messages.error(request, 'Превышено максимальное количество.')
         return JsonResponse({'success': False, 'message': 'Превышено максимальное количество.', 'messages': get_messages(request)})
     

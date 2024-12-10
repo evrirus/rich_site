@@ -33,20 +33,24 @@
         Дома
     </p>
     <div class="property">
-        {% for item in houses %}
-            <div class="house_item" data-modal-id="{{ item.id }}">
-                <div class="property-icon">
-                    {{ icon|safe }}
-                </div>
-                <div class="property-class">
-                    {% if item.type == 'house' %}Дом {% else %}Квартира {% endif %}№{{ item.id }}
-                </div>
-                <div class="property-price">
-                    {{ item.price|intcomma }} ₽
-                </div>
+        {% if houses %}
+            {% for item in houses %}
+                <div class="house_item" data-modal-id="{{ item.id }}">
+                    <div class="property-icon">
+                        {{ icon|safe }}
+                    </div>
+                    <div class="property-class">
+                        {% if item.type == 'house' %}Дом {% else %}Квартира {% endif %}№{{ item.id }}
+                    </div>
+                    <div class="property-price">
+                        {{ item.price|intcomma }} ₽
+                    </div>
 
-            </div>
-        {% endfor %}
+                </div>
+            {% endfor %}
+        {% else %}
+            <p>Нет доступных домов</p>
+        {% endif %}
     </div>
     <div id="houseModal" class="modal">
         <div class="modal-content">

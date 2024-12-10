@@ -3,6 +3,7 @@
 from django.contrib.auth.models import BaseUserManager
 from django.db.models import Max
 from icecream import ic
+from djongo import models as djongo_models 
 
 
 def default_nickname():
@@ -123,3 +124,20 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
             max_server_id = CustomUser.objects.all().aggregate(Max('server_id')).get('server_id__max') or 0
             self.server_id = max_server_id + 1
         super().save(*args, **kwargs)
+
+# def none_field():
+#     return {}
+
+# class InventoryModel(models.Model):
+#     # Определение полей модели
+#     server_id = models.IntegerField(default=0)
+#     maxQuantity = models.IntegerField(default=30)
+#     inventory = models.ArrayField(
+#       djongo_models.JSONField(), # используйте djongo_models.JSONField
+#       default=list,
+#       db_index=False
+#     )
+
+#     class Meta:
+#         app_label = 'inventory'
+#         db_table = 'inventory' # (Необязательно)

@@ -25,6 +25,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let currentTransportId, currentTransportType, currentTransportNumerical;
 
+    function formatNumberWithSpaces(number) {
+        return number.toLocaleString('ru-RU'); // Используем локаль 'ru-RU' для формата с пробелами
+    }
+
     function openModal(modal, event, xOffset = -200, yOffset = 0) {
         // Close all other modals
         closeAllModals();
@@ -47,25 +51,33 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function updateModalContent(data, type) {
+
         if (type === 'transport') {
-            document.querySelector('.transport-name').textContent = `${data.name}`;
-            document.querySelector('.transport-price').textContent = `${data.price} ₽`;
-            document.querySelector('.transport-produced').textContent = `Произведено: ${data.maxQuantity}`;
-            document.querySelector('.transport-quantity').textContent = `В продаже: ${data.quantity}`;
-            document.querySelector('.transport-plate').textContent = `Номера: ${data.plate}`;
+
+            document.querySelector('.transport-name').textContent = `${data.info.name}`;
+            document.querySelector('.transport-price').textContent = `${formatNumberWithSpaces(data.info.price)} ₽`;
+            document.querySelector('.transport-produced').textContent = `Произведено: ${data.info.maxQuantity}`;
+            document.querySelector('.transport-quantity').textContent = `В продаже: ${data.info.quantity}`;
+            document.querySelector('.transport-plate').textContent = `Номера: ${data.info.plate}`;
 
             loadingIndicatorTransport.style.visibility = 'hidden';
             infoCar.style.visibility = 'visible';
-            console.log("ahghaha")
+
         } else if (type === 'house') {
+            let basement = "Отсутствует";
+            if (data.basement > 0) {
+                basement = `Имеется[<span style='color: rgb(255, 28, 28);'>lvl</span>=${data.basement}]`;
+            }
+
             document.querySelector('.house-district-name').textContent = data.district_info.name;
             document.querySelector('.house-type').textContent = `${data.type} №`;
             document.querySelector('#house_id_district').textContent = data.id_for_district;
             document.querySelector('#house_id').textContent = data.id;
-            document.querySelector('#house_price').textContent = `${data.price} ₽`;
-            document.querySelector('#house_basement').innerHTML = data.basement;
+            document.querySelector('#house_price').textContent = `${formatNumberWithSpaces(data.price)} ₽`;
+            document.querySelector('#house_basement').innerHTML = basement;
             document.querySelector('#house_floors').textContent = data.floors;
             document.querySelector('#house_class').textContent = data.class;
+            document.querySelector('#basement').setAttribute('house_id', data.id);
             
             loadingIndicatorHouse.style.visibility = 'hidden';
             infoHouse.style.visibility = 'visible';
@@ -80,7 +92,7 @@ document.addEventListener('DOMContentLoaded', () => {
         currentTransportNumerical = item.getAttribute('numerical-order');
         currentTransportUcode = item.getAttribute('ucode');
 
-        const cacheKey = `${currentTransportType}-${currentTransportId}`;
+        const cacheKey = `${currentTransportType}-${currentTransportId}-${currentTransportUcode}`;
 
         infoCar.style.visibility = 'hidden';
         loadingIndicatorTransport.style.visibility = 'visible';
@@ -90,9 +102,10 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             $.ajax({
                 type: 'GET',
-                url: `/users/get_transport_profile/${currentTransportType}/${currentTransportUcode}/`,
+                url: `/api/transport_info?type=${currentTransportType}&ucode=${currentTransportUcode}&id=${currentTransportId}`,
                 success: function(response) {
                     cache[cacheKey] = response;
+                    console.log(response);
                     updateModalContent(response, 'transport');
                 },
                 error: function(xhr, status, error) {
@@ -111,13 +124,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
         infoHouse.style.visibility = 'hidden';
         loadingIndicatorHouse.style.visibility = 'visible';
-
+        
         if (cache[cacheKey]) {
             updateModalContent(cache[cacheKey], 'house');
         } else {
             $.ajax({
                 type: 'GET',
-                url: `/users/get_house_profile/${currentHouseId}/`,
+                url: `/api/get_house_profile/${currentHouseId}/`,
                 success: function(response) {
                     cache[cacheKey] = response;
                     updateModalContent(response, 'house');
@@ -167,7 +180,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 $.ajax({
                     type: 'POST',
-                    url: "/users/change_nickname/",
+                    url: "/api/change_nickname/",
                     data: formData,
                     success: function(response) {
 
@@ -175,9 +188,6 @@ document.addEventListener('DOMContentLoaded', () => {
                             $('#current-name').text(response.new_nickname);
                             closeAllModals();
                             $('#new_nickname').val(""); // очищаем input поле
-                        } else {
-                            console.log(response.success)
-                            alert(response.error);
                         }
                         handleMessages(response.messages);
                     },
@@ -242,6 +252,12 @@ document.addEventListener('DOMContentLoaded', () => {
     if (houseDivs && modalHouse) {
         houseDivs.forEach(element => element.addEventListener('click', (event) => openHouseModal(event, element)));
 
+        // Перенаправляет на страницу подвала по ID дома
+        document.getElementById('basement').addEventListener('click', function(event) {
+            let houseId = event.explicitOriginalTarget.attributes.house_id.textContent;
+            window.location.assign(`//127.0.0.1:8000/basement/${houseId}`);
+        });
+
         if (acceptSellHouseButton) {
             acceptSellHouseButton.addEventListener('click', function() {
                 const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
@@ -288,7 +304,7 @@ document.addEventListener('DOMContentLoaded', () => {
         icon_language.addEventListener('dblclick', (event) => {
             const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
             
-            fetch(`/users/change_language/`, {
+            fetch(`/api/change_language/`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

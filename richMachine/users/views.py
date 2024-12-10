@@ -5,6 +5,7 @@ from wsgiref.simple_server import WSGIRequestHandler
 
 from django.conf import settings
 from django.contrib import messages
+from django.contrib.auth.views import logout_then_login
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
 from django.contrib.humanize.templatetags.humanize import intcomma
@@ -20,35 +21,43 @@ from utils import (client, coll, db_cars, db_houses, db_yachts,
 
 from .forms import CustomUserCreationForm, LoginUserForm
 from .models import CustomUser
+import requests
 
+DOMEN = 'http://127.0.0.1:8000/'
 
 def register(request):
     if request.method == 'POST':
         form = CustomUserCreationForm(request.POST)
         username = form.data['username']
-        ic(request.POST)
+        
         telegram_id = request.POST.get('telegram_id')
 
         if not telegram_id:
             messages.error(request, 'Telegram authentication is required.')
             return render(request, 'registration/signup.html', {'form': form})
         
-        
         if CustomUser.objects.filter(username=username).exists():
             messages.error(request, 'A user with that username already exists.')
             return render(request, 'registration/signup.html', {'form': form})
         
-        
         if form.is_valid():
-            user = form.save(commit=False)
-            user.telegram_id = telegram_id
-            user.save()
             
-            example = {"server_id": user.server_id,
-                       "maxQuantity": 30,
-                       "inventory": [{'type': 'empty'}] * 30
-            }
-            db_inv.insert(example)
+            if CustomUser.objects.filter(telegram_id=telegram_id).exists():
+                coll.update_one({'telegram_id': telegram_id}, {'username': username})
+                messages.info(request, 'Синхронизация данных | У вас уже имеется аккаунт зарегистрированный на этот телеграм.\nСвязываем телеграм и сайт.')
+            
+            else:
+                user = form.save(commit=False)
+                user.telegram_id = telegram_id
+                user.save()
+            
+                example = {"server_id": user.server_id,
+                           "maxQuantity": 30,
+                           "inventory": [{'type': 'empty'}] * 30
+                }
+                db_inv.insert(example)
+                
+            #log authorizacia
             
             login(request, user)
             return redirect('profile', server_id=user.server_id)
@@ -57,43 +66,21 @@ def register(request):
     return render(request, 'registration/signup.html', {'form': form})
 
 
+
+
+
 @login_required(login_url="/users/login/")
-def profile(request: WSGIRequestHandler, server_id: int):
-    if request.user.server_id != server_id:
-        return HttpResponseNotFound(render(request, '404.html'))
+def profile(request, server_id: int):
+    # if request.user.server_id != server_id:
+    #     return HttpResponseNotFound(render(request, '404.html'))
+
+    url_get_profile = DOMEN + 'api/get_profile/'
+    data = {"action": "get_profile", "server_id": server_id, "source": "web"}
+    response = requests.post(url_get_profile, json=data).json()
+    response['title'] = f'User profile ID: {response['server_id']}'
     
-    user = coll.find_one({'server_id': server_id})
-    
-    if not user:
-        return HttpResponseNotFound(render(request, '404.html'))
-    
-    houses_id = user['house']['houses']
-    houses = []
-    for x in houses_id:
-        house_info = get_house_by_id(x['id'])
-        district_info = get_district_by_id(house_info['district_id'])
-        house_info['district_info'] = district_info
-        houses.append(house_info)
-    
-    data = {
-        "nickname": user.get('nickname'),
-        "money": user.get('money'),
-        "donate_balance": user.get('donate_balance'),
-        "job": user.get('job', {}).get('title') if user.get('job', {}).get('title') else 'Безработный',
-        "car": user.get('car'),
-        "yacht": user.get('yacht'),
-        "houses": houses,
-        "couple": user.get('couple'),
-        "registration": user.get('registration'),
-        "language": user.get('language'),
-        "username": user.get('username'),
-        "my_username": request.user.username,
-        "server_id": user.get('server_id'),
-        "my_server_id": request.user.server_id,
-        "is_authenticated": user.get('is_authenticated'),
-    }
-    
-    return render(request, 'profile.html', data)
+    return render(request, 'profile.html', response)
+
 
 @login_required(login_url="/users/login/")
 def self_profile(request: WSGIRequestHandler):
@@ -123,7 +110,7 @@ def login_user(request):
                     messages.error(request, "Invalid Telegram data.")
                     return render(request, 'registration/login.html', {'form': form})
 
-            if user is not None:
+            if user:
                 login(request, user)
                 return redirect(reverse('profile', kwargs={'server_id': user.server_id}))
             else:
@@ -146,45 +133,9 @@ class LoginView(CreateView):
     success_url = reverse_lazy("login")
     template_name = "registration/login.html"
 
-
-@login_required(login_url="/users/login/")
-def change_nickname(request: WSGIRequestHandler):
-    ic(request.method)
-    if request.method == 'POST':
-        new_nickname = request.POST.get('new_nickname')
-        if not new_nickname:
-            return JsonResponse({'success': False, 'error': 'Invalid new nickname'})
-        if len(new_nickname) <= 3:
-            return JsonResponse({'success': False, 'error': 'Название никнейма слишком короткое'})
-        
-        user_info = coll.find_one({'server_id': request.user.server_id})
-        
-        # if len(new_nickname) > user_info['nickname']['max']:
-        #     return JsonResponse({'success': False, 'error': 'Название никнейма слишком длинное'})
-        
-        coll.update_one({'server_id': request.user.server_id},
-                        {'$set': {'nickname.name': new_nickname}})
-
-        messages.success(request, f'Никнейм изменён с \'{user_info['nickname']['name']}\' на \'{new_nickname}\'')
-        
-        return JsonResponse({'success': True, 'new_nickname': new_nickname, 'messages': get_messages(request)})
-        
-        # return JsonResponse({'success': True, 'new_nickname': new_nickname})
-    return JsonResponse({'success': False, 'error': 'Неверный метод запроса'})
-
-@login_required(login_url="/users/login/")
-def change_language(request: WSGIRequestHandler):
-    languages = ['ru', 'en']
-    language = request.user.language
-    index = languages.index(language)
-    
-    new_language_index = index + 1 if len(languages) - 1 >= index + 1 else 0
-
-    coll.update_one({'server_id': request.user.server_id},
-                    {'$set': {'language': languages[new_language_index]}})
-    messages.success(request, f"Вы поменяли язык на {'Русский' if languages[new_language_index] == 'ru' else 'Английский'}")
-    
-    return JsonResponse({'success': True, 'new_language': languages[new_language_index], 'messages': get_messages(request)})
+def loguot_user(request):
+    messages.success(request, "Вы вышли с аккаунта")
+    return logout_then_login(request, login_url='/profile/')
 
 @login_required(login_url="/users/login/")
 def sell_transport(request: WSGIRequestHandler, type: str, ucode: str):
@@ -197,21 +148,14 @@ def sell_transport(request: WSGIRequestHandler, type: str, ucode: str):
         return JsonResponse({'success': False, 'error': 'Пользователь не найден'})
     
     transports = user_info[f'{type}'][f'{type}s']
-    ic(transports)
     num = 0
     for k, tr in enumerate(transports):
         if tr['ucode'] == ucode: 
             num = k
-    ic(num)
-
-    
     
     items = user_info.get(f'{type}', {}).get(f'{type}s', [])
     transport_info = items[num]
-    ic(transport_info)
     items.pop(num)
-    ic(items)
-    
     
     coll.update_one(
         {'server_id': request.user.server_id},
@@ -233,7 +177,6 @@ def sell_transport(request: WSGIRequestHandler, type: str, ucode: str):
 
 @login_required(login_url="/users/login/")
 def get_transport_profile(request: WSGIRequestHandler, type: str, ucode: int):
-    
     if type not in ('car', 'yacht'):
         return JsonResponse({'success': False, 'error': 'Неверный тип транспорта'})
     
@@ -271,23 +214,13 @@ def get_transport_profile(request: WSGIRequestHandler, type: str, ucode: int):
     })
     
     
-def get_house_profile(request: WSGIRequestHandler, id: int):
-    ic(id)
-    house_info = get_house_by_id(id)
-    district_info = get_district_by_id(house_info['district_id'])
 
-    house_info['district_info'] = district_info
-    house_info['basement'] = f"Имеется[<span style='color: rgb(255, 28, 28);'>lvl</span>={house_info['basement']['level']}]" if house_info['basement'] else "Отсутствует"
-    house_info['price'] = intcomma(house_info['price'])
-    house_info['type'] = 'Дом' if house_info['type'] == 'house' else 'Квартира'
-    return JsonResponse({'success': True, 'message': 'ok',
-                         **house_info})
     
 def sell_house(request: WSGIRequestHandler, id: int):
     house_info = get_house_by_id(id)
     
     result = coll.update_one({'server_id': request.user.server_id},
-                    {'$pull': {'house.houses': {'id': house_info['id']}}})
+                             {'$pull': {'house.houses': {'id': house_info['id']}}})
     
     if result.modified_count < 1:
         return JsonResponse({'success': False, 'error': 'Не удалось удалить дом'})
@@ -302,3 +235,31 @@ def page_not_found(request, exception):
     ic(exception)
     return render(request, "404.html")
 
+def basement(request, id_house: int):
+    
+    url_get_basement = DOMEN + 'api/get_basement/' + str(id_house) + '/'
+    data = {"action": "get_basement", "server_id": request.user.server_id, "source": "web"}
+    ic(url_get_basement)
+    response: dict = requests.get(url_get_basement, json=data).json()
+
+    income = 0
+    current_videocards = len(response.get('videocards', []))
+    ic(response)
+    limit_videocards = response['house_info']['basement'].get('maxQuantity', 0)
+    for k in response['videocards']:
+        income += k['performance']
+    
+    
+    response.update({'my_server_id': request.user.server_id, 'income': income,
+                     'quantity_videocards': current_videocards, 'limit_videocards': limit_videocards,
+                     'mix_videocards': response['mix_videocards']})
+    # response.update()
+    ic(response)
+    
+    # if not response['house_info']['basement']:
+        
+    
+    if not response.get('videocards', {}):
+        response['success'] = False 
+
+    return render(request, 'basement.html', response)

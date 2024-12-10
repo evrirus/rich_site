@@ -8,6 +8,7 @@ body {
   -webkit-box-sizing: border-box;
   -moz-box-sizing: border-box;
   box-sizing: border-box;
+  background-color: #fff;
 }
 
 *,
@@ -22,7 +23,7 @@ body {
   width: 100%;
   height: 100%;
 
-  background: #212121;
+  background: #347B92;
 
   display: flex;
   flex-direction: column;
@@ -55,7 +56,6 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-
   font-size: 3rem;
 }
 
@@ -78,4 +78,13 @@ button {
   width: 100%;
   text-align: center;
 }
+
+.a_cap {
+    background-color: #37408F;
+}
+
+/* #messages-container .alert {
+    background-color:rgb(147, 143, 158);
+    border: #8b8b8b 1px solid;
+} */
 

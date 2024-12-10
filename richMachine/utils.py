@@ -1,214 +1,4 @@
 # from itertools import product
-from icecream import ic
-# for k, i in enumerate(product("🍭🦄💵🦖👻", repeat=3), start=1):
-  
-#     print(f"{k}: {i}")
-
-# import random
-# import plotly.graph_objs as go
-# from icecream import ic
-
-# # Настройки
-# startmoney = 10_000_000  # Начальная сумма
-# bet_amount = 100_000     # Сумма ставки
-# num_bets = 10_000         # Количество ставок
-
-# # Определение коэффициентов
-# coefficients = {
-#         1: ['🍭', '🍭', '🍭'], # x4
-#         2: ['🍭', '🍭', '🦄'], # x2
-#         3: ['🍭', '🍭', '💵'], # x2
-#         4: ['🍭', '🍭', '🦖'], # x2
-#         5: ['🍭', '🍭', '👻'], # x2
-#         6: ['🍭', '🦄', '🍭'],
-#         7: ['🍭', '🦄', '🦄'], # x2
-#         8: ['🍭', '🦄', '💵'],
-#         9: ['🍭', '🦄', '🦖'],
-#         10: ['🍭', '🦄', '👻'],
-#         11: ['🍭', '💵', '🍭'],
-#         12: ['🍭', '💵', '🦄'],
-#         13: ['🍭', '💵', '💵'], # x2
-#         14: ['🍭', '💵', '🦖'],
-#         15: ['🍭', '💵', '👻'],
-#         16: ['🍭', '🦖', '🍭'],
-#         17: ['🍭', '🦖', '🦄'],
-#         18: ['🍭', '🦖', '💵'],
-#         19: ['🍭', '🦖', '🦖'], # x2
-#         20: ['🍭', '🦖', '👻'],
-#         21: ['🍭', '👻', '🍭'],
-#         22: ['🍭', '👻', '🦄'],
-#         23: ['🍭', '👻', '💵'],
-#         24: ['🍭', '👻', '🦖'],
-#         25: ['🍭', '👻', '👻'], # x3
-#         26: ['🦄', '🍭', '🍭'],
-#         27: ['🦄', '🍭', '🦄'],
-#         28: ['🦄', '🍭', '💵'],
-#         29: ['🦄', '🍭', '🦖'],
-#         30: ['🦄', '🍭', '👻'],
-#         31: ['🦄', '🦄', '🍭'], # x2
-#         32: ['🦄', '🦄', '🦄'], # x4
-#         33: ['🦄', '🦄', '💵'], # x2
-#         34: ['🦄', '🦄', '🦖'], # x2
-#         35: ['🦄', '🦄', '👻'], # x2
-#         36: ['🦄', '💵', '🍭'],
-#         37: ['🦄', '💵', '🦄'],
-#         38: ['🦄', '💵', '💵'], # x2
-#         39: ['🦄', '💵', '🦖'],
-#         40: ['🦄', '💵', '👻'],
-#         41: ['🦄', '🦖', '🍭'],
-#         42: ['🦄', '🦖', '🦄'],
-#         43: ['🦄', '🦖', '💵'],
-#         44: ['🦄', '🦖', '🦖'], # x2
-#         45: ['🦄', '🦖', '👻'],
-#         46: ['🦄', '👻', '🍭'],
-#         47: ['🦄', '👻', '🦄'],
-#         48: ['🦄', '👻', '💵'],
-#         49: ['🦄', '👻', '🦖'],
-#         50: ['🦄', '👻', '👻'], # x3
-#         51: ['💵', '🍭', '🍭'],
-#         52: ['💵', '🍭', '🦄'],
-#         53: ['💵', '🍭', '💵'],
-#         54: ['💵', '🍭', '🦖'],
-#         55: ['💵', '🍭', '👻'],
-#         56: ['💵', '🦄', '🍭'],
-#         57: ['💵', '🦄', '🦄'], # x2
-#         58: ['💵', '🦄', '💵'],
-#         59: ['💵', '🦄', '🦖'],
-#         60: ['💵', '🦄', '👻'],
-#         61: ['💵', '💵', '🍭'], # x2
-#         62: ['💵', '💵', '🦄'], # x2
-#         63: ['💵', '💵', '💵'], # x4
-#         64: ['💵', '💵', '🦖'], # x2
-#         65: ['💵', '💵', '👻'], # x2
-#         66: ['💵', '🦖', '🍭'],
-#         67: ['💵', '🦖', '🦄'],
-#         68: ['💵', '🦖', '💵'],
-#         69: ['💵', '🦖', '🦖'], # x2
-#         70: ['💵', '🦖', '👻'],
-#         71: ['💵', '👻', '🍭'],
-#         72: ['💵', '👻', '🦄'],
-#         73: ['💵', '👻', '💵'],
-#         74: ['💵', '👻', '🦖'],
-#         75: ['💵', '👻', '👻'], # x3
-#         76: ['🦖', '🍭', '🍭'], 
-#         77: ['🦖', '🍭', '🦄'],
-#         78: ['🦖', '🍭', '💵'],
-#         79: ['🦖', '🍭', '🦖'],
-#         80: ['🦖', '🍭', '👻'],
-#         81: ['🦖', '🦄', '🍭'],
-#         82: ['🦖', '🦄', '🦄'], # x2
-#         83: ['🦖', '🦄', '💵'],
-#         84: ['🦖', '🦄', '🦖'],
-#         85: ['🦖', '🦄', '👻'],
-#         86: ['🦖', '💵', '🍭'],
-#         87: ['🦖', '💵', '🦄'],
-#         88: ['🦖', '💵', '💵'], # x2
-#         89: ['🦖', '💵', '🦖'],
-#         90: ['🦖', '💵', '👻'],
-#         91: ['🦖', '🦖', '🍭'], # x2
-#         92: ['🦖', '🦖', '🦄'], # x2
-#         93: ['🦖', '🦖', '💵'], # x2
-#         94: ['🦖', '🦖', '🦖'], # x4
-#         95: ['🦖', '🦖', '👻'], # x2
-#         96: ['🦖', '👻', '🍭'],
-#         97: ['🦖', '👻', '🦄'],
-#         98: ['🦖', '👻', '💵'],
-#         99: ['🦖', '👻', '🦖'],
-#         100: ['🦖', '👻', '👻'], # x3
-#         101: ['👻', '🍭', '🍭'],
-#         102: ['👻', '🍭', '🦄'],
-#         103: ['👻', '🍭', '💵'],
-#         104: ['👻', '🍭', '🦖'],
-#         105: ['👻', '🍭', '👻'],
-#         106: ['👻', '🦄', '🍭'],
-#         107: ['👻', '🦄', '🦄'], # x2
-#         108: ['👻', '🦄', '💵'],
-#         109: ['👻', '🦄', '🦖'],
-#         110: ['👻', '🦄', '👻'],
-#         111: ['👻', '💵', '🍭'],
-#         112: ['👻', '💵', '🦄'],
-#         113: ['👻', '💵', '💵'], # x2
-#         114: ['👻', '💵', '🦖'],
-#         115: ['👻', '💵', '👻'],
-#         116: ['👻', '🦖', '🍭'],
-#         117: ['👻', '🦖', '🦄'],
-#         118: ['👻', '🦖', '💵'],
-#         119: ['👻', '🦖', '🦖'], # x2
-#         120: ['👻', '🦖', '👻'],
-#         121: ['👻', '👻', '🍭'], # x3
-#         122: ['👻', '👻', '🦄'], # x3
-#         123: ['👻', '👻', '💵'], # x3
-#         124: ['👻', '👻', '🦖'], # x3
-#         125: ['👻', '👻', '👻'], # x7
-# }
-
-# def random_with_probability(probability):
-#     return random.random() < probability
-
-# def get_keys_by_value(d, value):
-#     return [k for k, v in d.items() if v == value]
-
-# def get_coefficient(combination: list):
-#     num = get_keys_by_value(coefficients, combination)
-#     # ic(num)
-#     if not num:
-#         return 0
-
-#     if num[0] in (1, 32, 63, 94):
-#         return 4
-#     elif num[0] == 125:
-#         return 7
-#     elif 121 <= num[0] <= 124 or num[0] in (100, 75, 50, 25):
-#         return 3
-#     elif 2 <= num[0] <= 5 or 31 <= num[0] <= 35 or 61 <= num[0] <= 65 or 91 <= num[0] <= 95 or num[0] in (7, 13, 19, 38, 44, 57, 69, 75, 82, 88, 107, 113, 119):
-#         return 2
-
-#     probability = 0.17  # 42% вероятность
-#     if random_with_probability(probability):
-#         return 1
-    
-#     probability = 0.22  # 20% вероятность
-#     if random_with_probability(probability):
-#         return 0.5
-#     return 0
-
-# # Игра
-# money = startmoney
-# balance = []
-# games = []
-
-# for i in range(num_bets):
-#     if money < bet_amount:
-#         print(f"Недостаточно средств для ставки. Игра завершена на ставке {i+1}.")
-#         break
-    
-#     # Создание случайной комбинации символов
-#     combination = random.choice(list(coefficients.values()))
-#     # ic(combination)
-#     coefficient = get_coefficient(combination)
-#     # ic(coefficient)
-    
-#     # Рассчитайте изменение суммы с учетом ставки
-#     money += bet_amount * (coefficient - 1)  # Учтём изменение суммы
-    
-#     # Запись текущего баланса и номера ставки
-#     balance.append(money)
-#     games.append(i + 1)
-
-# # Построение графика
-# fig = go.Figure()
-
-# fig.add_trace(go.Scatter(x=games, y=balance, mode='lines+markers', name='Баланс'))
-# fig.update_layout(title='Изменение баланса игрока по мере ставки',
-#                   xaxis_title='Количество ставок',
-#                   yaxis_title='Баланс',
-#                   template='plotly_dark')
-
-# fig.show()
-# input()
-
-
-
 import datetime
 import hashlib
 import hmac
@@ -216,11 +6,14 @@ import random
 import re
 import string
 import time
+import uuid
 
 from django.contrib import messages
 from django.contrib.humanize.templatetags.humanize import intcomma
-
+from icecream import ic
 from pymongo import MongoClient
+
+DOMEN = 'http://127.0.0.1:8000/'
 
 client = MongoClient('mongodb://localhost:27017')
 db = client.get_database('lalka')
@@ -296,6 +89,13 @@ def get_crypto_info(name: str):
     return {'name': data['name'], 'owner': data['owner'],
             'quantity': data['quantity'], 'symbol': data['symbol']}
 
+def get_full_houses_info(house_id: int) -> list[dict]:
+    house_info = get_house_by_id(house_id)
+    district_info = get_district_by_id(house_info['district_id'])
+    house_info['district_info'] = district_info
+    return house_info
+
+#* ID
 def get_house_by_id(house_id: int):
     return db_houses.find_one({'id': house_id}, projection={'_id': False})
 
@@ -308,6 +108,15 @@ def get_car_by_id(car_id: int):
 def get_yacht_by_id(yacht_id: int):
     return db_yachts.find_one({'id': yacht_id})
 
+#* ucode
+def get_transport_by_ucode(type: str, ucode: str):
+    ic(type, ucode)
+    return coll.find_one({
+        f'{type}.{type}s': {'$elemMatch': {'ucode': ucode}}},
+        projection={'_id': False, f'{type}.{type}s.$': True} 
+    )[type][type+'s'][0]
+
+
 def get_symbol_money(type_money: str = "cash"):
     if type_money in ("cash", "bank") : symbol = "₽"
     elif type_money == 'dollar': symbol = "$"
@@ -317,24 +126,22 @@ def get_symbol_money(type_money: str = "cash"):
 
 def give_money(request, server_id: int, sum: int, type_money: str = 'cash', comment=None):
 
-
     result = coll.update_one(
         {'server_id': server_id},
         {'$inc': {f'money.{type_money}': sum}},
     )
-    ic(result.modified_count > 0)
-    ic(result.modified_count)
+    ic(comment, type_money, sum, server_id)
     if result.modified_count > 0 or (result.modified_count <= 0 and sum == 0):
         symbol = get_symbol_money(type_money)
 
         if sum > 0 and not comment:
-            ic(sum > 0 and not comment)
+            # ic(sum > 0 and not comment)
             messages.success(request, f"На баланс начислено: {intcomma(sum)} {symbol}")
         elif sum < 0 and not comment:
-            ic(sum < 0 and not comment)
+            # ic(sum < 0 and not comment)
             messages.success(request, f"С баланса списано: {intcomma(sum)} {symbol}")
         elif comment:
-            ic(comment)
+            # ic(comment)
             messages.success(request, comment)
         return True
     return False
@@ -434,17 +241,21 @@ def get_item_by_name(item_name: str):
             'id': video_info['items'][0]['_id']}
 
 
-def add_inventory(user_id: int, id_item: str, quantity: int = 1):
+def add_inventory(user_id: int, id_item: str, quantity: int = False, type_item: str = None):
     user_inv = db_inv.find_one({'user_id': user_id})
     
-    if user_inv['inventory'].get(f'{id_item}'):
-        return db_inv.update_one({'user_id': user_id},
-                                       {'$inc': {f'inventory.{id_item}': quantity}})
+    if not user_inv:
+        return False
     
-    db_inv.update_one({'user_id': user_id},
-                            {'$set': {f'inventory.{id_item}': quantity}})
+    data = {'id': id_item, 'type': type_item}
+    if quantity:
+        data.update({'quantity': quantity})
+    data.update({'ucode': ic(uuid.uuid5(uuid.NAMESPACE_DNS, f"{type_item}_{id_item}"))})
+    
+    return db_inv.update_one({'user_id': user_id},
+                             {'$push': {'inventory': data}})
+    
 
-    
 def delete_inventory(user_id: int, id_item: str, quantity: int = 1):
     user_inv = db_inv.find_one({'user_id': user_id})
     

@@ -1,0 +1,50 @@
+{% extends "homePage/layout.html" %}
+{% load static %}
+
+{% block title %}Casino{% endblock %}
+
+{% block stylesheet %}
+<link rel="stylesheet" href="{% static 'other_functions/styles/style_casino_main.css' %}">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bangers&display=swap" rel="stylesheet">    
+{% endblock %}
+
+{% block script %}
+<!-- <script src="{% static 'other_functions/js/casino.js' %}" defer></script> -->
+{% endblock %}
+
+{% block content %}
+<aside id="aside-inform">
+    <div id="top-content">
+        <p id="bonuses">Бонус</p>
+        <p id="rules">Правила</p>
+        <p id="statistics">Статистика</p>
+    </div>
+    <span id="max_winnigs">
+        <p id="max_winnigs__text">Максимальный<br>выигрыш:</p>
+        <p id="max_winnigs__integer">100 000 <span id="max_winnigs_currency">$</span></p>
+    </span>
+</aside>
+
+
+<div id="main-content">
+    <span id="title-content" class="bangers">ALL GAMES</span>
+    <div id="content-games">
+        <div class="rectangle-game" id="game-roulette">
+            <div class="game-title bangers">roulette wheel</div>
+            <div class="game-description">Крути барабан</div>
+            <div class="game-image">
+                <img src="{% static 'other_functions/img/roulettes.png' %}" alt="roulette">
+            </div>
+        </div>
+        <a href="{% url 'slot_machine' %}" class="rectangle-game" id="game-bandit">
+            <div class="game-title bangers">One-armed bandit</div>
+            <div class="game-description">Дёргай ручку</div>
+            <div class="game-image">
+                <img src="{% static 'other_functions/img/slots.png' %}" alt="slots">
+            </div>
+        </a>
+    </div>
+</div>
+{% endblock %}
