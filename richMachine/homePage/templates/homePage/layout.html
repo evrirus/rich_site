@@ -17,12 +17,14 @@
 
     <link rel="stylesheet" href="{% static 'homePage/styles/style.css' %}">
     {% block stylesheet %} {% endblock %}
-    
+
+
     
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <script src="{% static 'homePage/js/index.js' %}" defer></script>
     {% block script %}
     {% endblock %}
+
 </head>
 
 <body>
@@ -42,25 +44,35 @@
                     <li><a href="/users/login/" class="header__button">Войти</a></li>
                 {% endif %}
                 <li><a href="/magazine" class="header__button">Магазин</a></li>
-                <li><a class="button-functions" class="header__button">Функции</a></li>
-                <svg width="23" height="23" viewBox="0 0 23 23" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M16.1856 9.27869C16.3262 9.13807 16.5474 9.11839 16.7106 9.23198L16.847 9.3269C17.057 9.47303 17.0838 9.77353 16.9029 9.95444L11.7904 15.0669C11.63 15.2273 11.37 15.2273 11.2096 15.0669L6.09714 9.95444C5.91623 9.77353 5.94297 9.47303 6.15298 9.3269L6.28939 9.23198C6.45262 9.1184 6.67378 9.13807 6.81439 9.27869L11.2096 13.6739C11.37 13.8343 11.63 13.8343 11.7904 13.6739L16.1856 9.27869Z" fill="#B7B7B7"/>
-                </svg>
+                <li>
+                    <select id="functions" name="fruits" class="header__button" onchange="navigateToPage()">
+                        <option value="">Выберите</option>
+                        <option class="bckgd-func" value="/donate">Донат</option>
+                        <option class="bckgd-func" value="/casino">Казино</option>
+                        <option class="bckgd-func" value="/jobs">Работа</option>
+                        <option class="bckgd-func" value="/property">Имущество</option>
+                        <option class="bckgd-func" value="/car_plate">Номер</option>
+                        <option class="bckgd-func" value="/inventory">Инвентарь</option>
+                        <option class="bckgd-func" value="/stock">Биржа</option>
+                        {% if is_staff %}
+                            <option class="bckgd-func admin" value="admin-panel" id="admin-panel">Админ панель</option>
+{#                            <div class="bckgd-func admin"><a href="/admin-panel" id="admin-panel">Админ панель</a></div>#}
+                        {% endif %}
+                    </select>
+                <script>
+                    function navigateToPage() {
+                        var select = document.getElementById("functions");
+                        if (select)
+                        var url = select.value;
+
+                        if (url) {
+                            window.location.href = url; // Перенаправление на выбранную страницу
+                        }
+                    }
+                </script>
+                </li>
+
             </ul>
-            <div class="other-functions">
-                <div class="functions">
-                    <div class="bckgd-func"><a href="/donate">Донат</a></div>
-                    <div class="bckgd-func"><a href="/casino">Казино</a></div>
-                    <div class="bckgd-func"><a href="/jobs">Работы</a></div>
-                    <div class="bckgd-func"><a href="/property">Имущество</a></div>
-                    <div class="bckgd-func"><a href="/car_plate">Номера</a></div>
-                    <div class="bckgd-func"><a href="/inventory">Инвентарь</a></div>
-                    <div class="bckgd-func"><a href="/stock">Биржа</a></div>
-                    {% if is_staff %}
-                        <div class="bckgd-func admin"><a href="/admin-panel" id="admin-panel">Админ панель</a></div>
-                    {% endif %}
-                </div>
-            </div>
         </header>
         <div id="main"> 
             {% block content %}
@@ -69,5 +81,4 @@
         <div id="messages-container">
         </div>
     </div>
-    {% block modals %}{% endblock %}
 </body>

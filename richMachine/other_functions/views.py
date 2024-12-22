@@ -1,9 +1,11 @@
 import json
 import random
+
 import uuid
 from datetime import timedelta
 from wsgiref.simple_server import WSGIRequestHandler
-
+from authentication import SiteAuthentication, TelegramAuthentication
+from rest_framework.authentication import SessionAuthentication
 import matplotlib.pyplot as plt
 from django.conf import settings
 from django.contrib import messages
@@ -26,7 +28,7 @@ from utils import (DOMEN, client, coll, db_cars, db_houses, db_inv, db_yachts,
                    get_item_by_id, get_item_in_inventory_user_by_id,
                    get_messages, give_money, verify_telegram_auth, get_symbol_money)
 
-from .models import UserToken
+# from .models import UserToken
 
 coefficients = {
         1: ['🍭', '🍭', '🍭'],
@@ -163,7 +165,7 @@ def inventory(request: WSGIRequestHandler):
     url_get_inventory = DOMEN + 'api/get_inventory/'
     data = {"action": "get_inventory", "server_id": request.user.server_id, "source": "web"}
     response = requests.get(url_get_inventory, json=data).json()
-
+    ic(response)
     # Список для хранения информации о предметах, которые будут отображаться
     show_items = []
 
@@ -212,8 +214,12 @@ def inventory(request: WSGIRequestHandler):
 
 
 class GenerateCombinationView(View):
-    @method_decorator(csrf_exempt)
+    authentication_classes = [SessionAuthentication, TelegramAuthentication, SiteAuthentication]
+    permission_classes = []
+
+    @csrf_exempt
     def post(self, request):
+        ic(request)
         data = json.loads(request.body)
         user_input = data.get('user_input')
         user_choice = data.get('user_choice')
@@ -223,11 +229,9 @@ class GenerateCombinationView(View):
         if bid <= 0:
             messages.error(request, 'Ставка не может быть меньше единицы')
             return JsonResponse({'success': False, 'message': 'Ставка не может быть меньше единицы', 'messages': get_messages(request)})
-        
-        # Получение информации о пользователе
-        user_info = coll.find_one({'server_id': request.user.server_id})
-        balance = user_info.get('money', {}).get(user_choice, 0)
-        
+
+        balance = request.user.money[user_choice]
+
         # Проверка достаточности средств
         if balance < bid:
             messages.error(request, 'Недостаточно средств. | Пополнить счёт можно в Донате')
@@ -241,30 +245,31 @@ class GenerateCombinationView(View):
         
         # Рассчет выигрыша
         winnings = int(coefficient * bid) - bid
-        
-        
+
         # Обновление баланса и отправка уведомления в зависимости от коэффициента
         if coefficient > 1:
 
             balance += -bid+(winnings*3)
             give_money(request, request.user.server_id, -bid+(winnings*3), type_money=user_choice, 
                        comment=f"Уведомление | Ваша ставка принята, ваш выигрыш составил {intcomma(winnings)} {get_symbol_money(user_choice)}. \nКоэффициент x{coefficient}.\nОстаточный баланс: {intcomma(balance)} {get_symbol_money(user_choice)}")
+
         elif coefficient < 1:
 
             balance += winnings
-            
-            give_money(request, request.user.server_id, winnings, type_money=user_choice, 
+            give_money(request, request.user.server_id, winnings, type_money=user_choice,
                        comment=f"Уведомление | Ваша ставка проигрышна, вы потеряли {intcomma(winnings)} {get_symbol_money(user_choice)}. \nКоэффициент x{coefficient}.\nОстаточный баланс: {intcomma(balance)} {get_symbol_money(user_choice)}")
+
         elif coefficient == 1:
             give_money(request, request.user.server_id, 0, type_money=user_choice,
                        comment=f"Уведомление | Ваша ставка не принесла выигрыша.\n Коэффициент x{coefficient}.\nОстаточный баланс: {intcomma(balance)} {get_symbol_money(user_choice)}")
 
-        
         return JsonResponse({'combination': combination, 'success': True, 'user_input': user_input, 'user_choice': user_choice, 'messages': get_messages(request)})
+
 
 
     def random_with_probability(self, probability):
         return random.random() < probability
+
 
     def get_keys_by_value(self, d, value):
         return [k for k, v in d.items() if v == value]

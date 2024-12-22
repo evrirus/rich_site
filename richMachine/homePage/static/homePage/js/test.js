@@ -1,20 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
 
-    const buttonFunctions = document.querySelector('.button-functions');
-    const otherFunctions = document.querySelector('.other-functions');
-
-    // Обработчик клика на документе
-    if (otherFunctions) {
-        document.addEventListener('click', (event) => {
-            otherFunctions.style.display = 'flex';
-            // Предотвращаем всплытие события клика на кнопку
-            event.stopPropagation();
-            // Проверяем, был ли клик вне элемента otherFunctions и кнопки
-            if (!otherFunctions.contains(event.target) && !buttonFunctions.contains(event.target)) {
-                otherFunctions.style.display = 'none'; // Скрываем элемент
-            }
-        });
-    }
 
     const logoutButton = document.getElementById('logout-button')
     if (logoutButton) {

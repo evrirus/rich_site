@@ -6,8 +6,9 @@ from rest_framework.authentication import SessionAuthentication
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from utils import (coll, get_district_by_id, get_full_houses_info,
+from utils import (get_district_by_id, get_full_houses_info,
                    get_house_by_id, get_messages)
+from users.models import CustomUser
 
 
 # API смены никнейма
@@ -47,8 +48,9 @@ class ChangeNicknameView(APIView):
             messages.error(request, f"Указанное имя совпадает с предыдущим.")
             return Response({"success": False, "error": "nickname_is_the_same", "messages": get_messages(request)})
         
-        coll.update_one({'server_id': server_id},
-                        {'$set': {'nickname.name': new_nickname}})
+        user = CustomUser.objects.get(server_id=server_id)
+        user.nickname['name'] = new_nickname
+        user.save()
         
         messages.success(request, f"Теперь вы известны как {new_nickname}")
         return Response({"success": True, 
@@ -79,15 +81,22 @@ class ProfileView(APIView):
             return Response({"success": False, "error": "user_not_found"})
 
         houses = [get_full_houses_info(x['id']) for x in user_info.house['houses']]
+        # ic(houses[0].id)
+        houses_standard_view = []
+        for house in houses:
 
+            houses_standard_view.append({'id': house.id, 'district_info': {'name': house.district_info.name},
+                                        'price': house.price})
+
+        ic(user_info.car)
         response_data = {
             "success": True,
             # "_id": user_info.get('_id'),
             "cars": user_info.car['cars'],
-            "yacht": user_info.yacht,
+            # "yacht": user_info.yacht,
             "couple": user_info.couple,
             "donate_balance": user_info.donate_balance,
-            "house": houses,
+            "house": houses_standard_view,
             "is_active": user_info.is_active,
             "is_staff": user_info.is_staff,
             "is_superuser": user_info.is_superuser,
@@ -109,6 +118,8 @@ class ProfileView(APIView):
         response_data.update(user_info.yacht)
         response_data['my_server_id'] = my_server_id
         
+        # ic(user_info.car)
+
         if not request.user.is_anonymous:
             response_data['my_server_id'] = request.user.server_id
             response_data['my_username'] = request.user.username
@@ -136,9 +147,9 @@ class ChangeLanguageView(APIView):
         new_language_index = index + 1 if len(languages) - 1 >= index + 1 else 0
         new_language = languages[new_language_index]
 
-        coll.update_one({"server_id": server_id},
-                        {"$set": {"language": new_language}}
-                         )
+        user = CustomUser.objects.get(server_id=server_id)
+        user.language = new_language
+        user.save()
         
         result = {"success": True, "old_language": language, "new_language": new_language}
         if not request.user.is_anonymous:

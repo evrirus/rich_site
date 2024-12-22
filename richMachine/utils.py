@@ -7,11 +7,15 @@ import re
 import string
 import time
 import uuid
+from wsgiref.simple_server import WSGIRequestHandler
 
 from django.contrib import messages
 from django.contrib.humanize.templatetags.humanize import intcomma
 from icecream import ic
 from pymongo import MongoClient
+
+from magazine.models import Car, Districts, Houses, Yacht
+from users.models import CustomUser
 
 DOMEN = 'http://127.0.0.1:8000/'
 
@@ -38,6 +42,7 @@ db_log = db.get_collection('logging')
 db_test = db.get_collection('tests')
 
 db_admin = db.get_collection('admin')
+
 
 
 
@@ -91,30 +96,42 @@ def get_crypto_info(name: str):
 
 def get_full_houses_info(house_id: int) -> list[dict]:
     house_info = get_house_by_id(house_id)
-    district_info = get_district_by_id(house_info['district_id'])
-    house_info['district_info'] = district_info
+    district_info = get_district_by_id(house_info.district_id)
+    house_info.district_info = district_info
     return house_info
 
 #* ID
 def get_house_by_id(house_id: int):
-    return db_houses.find_one({'id': house_id}, projection={'_id': False})
+    return Houses.objects.get(id=house_id)
+    # return db_houses.find_one({'id': house_id}, projection={'_id': False})
 
 def get_district_by_id(dis_id: int):
-    return db_districts.find_one({'district_id': dis_id}, projection={'_id': False})
+    return Districts.objects.get(district_id=dis_id)
+    # return db_districts.find_one({'district_id': dis_id}, projection={'_id': False})
 
 def get_car_by_id(car_id: int):
-    return db_cars.find_one({'id': car_id})
+    return Car.objects.get(id=car_id)
 
 def get_yacht_by_id(yacht_id: int):
-    return db_yachts.find_one({'id': yacht_id})
+    return Yacht.objects.get(id=yacht_id)
+
 
 #* ucode
-def get_transport_by_ucode(type: str, ucode: str):
-    ic(type, ucode)
-    return coll.find_one({
-        f'{type}.{type}s': {'$elemMatch': {'ucode': ucode}}},
-        projection={'_id': False, f'{type}.{type}s.$': True} 
-    )[type][type+'s'][0]
+def get_transport_by_ucode(server_id: int, type: str, ucode: str):
+    ic(server_id, type, ucode)
+    user = CustomUser.objects.get(server_id=server_id)
+    ic(user.car['cars'])
+    ic(type)
+    if type == 'car':
+        for transport in user.car['cars']:
+            if transport['ucode'] == ucode:
+                return transport
+    elif type == 'yacht':
+        for transport in user.yacht['yachts']:
+            if transport['ucode'] == ucode:
+                return transport
+    return None
+
 
 
 def get_symbol_money(type_money: str = "cash"):
@@ -124,27 +141,45 @@ def get_symbol_money(type_money: str = "cash"):
     else: symbol = "(?)"
     return symbol
 
-def give_money(request, server_id: int, sum: int, type_money: str = 'cash', comment=None):
+def give_money(request: WSGIRequestHandler, server_id: int, sum: int, type_money: str = 'cash', comment=None):
+    user = request.user
+    user.money[type_money] += (sum)
+    user.save()
+    
+    symbol = get_symbol_money(type_money)
+    ic(comment)
+    if sum > 0 and not comment:
+        # ic(sum > 0 and not comment)
+        messages.success(request, f"На баланс начислено: {intcomma(sum)} {symbol}")
+    elif sum < 0 and not comment:
+        # ic(sum < 0 and not comment)
+        messages.success(request, f"С баланса списано: {intcomma(sum)} {symbol}")
+    elif comment:
+        # ic(comment)
+        messages.success(request, comment)
+    return True
+    
+# def give_money(request, server_id: int, sum: int, type_money: str = 'cash', comment=None):
 
-    result = coll.update_one(
-        {'server_id': server_id},
-        {'$inc': {f'money.{type_money}': sum}},
-    )
-    ic(comment, type_money, sum, server_id)
-    if result.modified_count > 0 or (result.modified_count <= 0 and sum == 0):
-        symbol = get_symbol_money(type_money)
+#     result = coll.update_one(
+#         {'server_id': server_id},
+#         {'$inc': {f'money.{type_money}': sum}},
+#     )
+#     ic(comment, type_money, sum, server_id)
+#     if result.modified_count > 0 or (result.modified_count <= 0 and sum == 0):
+#         symbol = get_symbol_money(type_money)
 
-        if sum > 0 and not comment:
-            # ic(sum > 0 and not comment)
-            messages.success(request, f"На баланс начислено: {intcomma(sum)} {symbol}")
-        elif sum < 0 and not comment:
-            # ic(sum < 0 and not comment)
-            messages.success(request, f"С баланса списано: {intcomma(sum)} {symbol}")
-        elif comment:
-            # ic(comment)
-            messages.success(request, comment)
-        return True
-    return False
+#         if sum > 0 and not comment:
+#             # ic(sum > 0 and not comment)
+#             messages.success(request, f"На баланс начислено: {intcomma(sum)} {symbol}")
+#         elif sum < 0 and not comment:
+#             # ic(sum < 0 and not comment)
+#             messages.success(request, f"С баланса списано: {intcomma(sum)} {symbol}")
+#         elif comment:
+#             # ic(comment)
+#             messages.success(request, comment)
+#         return True
+#     return False
 
 
 def calculate_total_quantity(house_id: int):

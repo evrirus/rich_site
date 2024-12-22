@@ -30,7 +30,7 @@ ALLOWED_HOSTS = ['*']
 
 INSTALLED_APPS = [
     'homePage',
-    'djongo',
+    # 'djongo',
     'users',
     'magazine',
     'other_functions',
@@ -63,7 +63,7 @@ MIDDLEWARE = [
 
 AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
-    'users.telegram_backend.TelegramBackend',
+    # 'users.telegram_backend.TelegramBackend',
 ]
 TELEGRAM_BOT_TOKEN = '6534598365:AAGxpSaIXsDU2Gr44k-wEfd_8zec6SAuxTg'
 
@@ -91,14 +91,25 @@ WSGI_APPLICATION = 'richMachine.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'djongo',
+#         'NAME': 'lalka',
+#         'CLIENT': {
+#             'host': 'mongodb://localhost:27017',
+#         },
+#         'ENFORCE_SCHEMA': False
+#     }
+# }
+
 DATABASES = {
-    'default': {
-        'ENGINE': 'djongo',
-        'NAME': 'lalka',
-        'CLIENT': {
-            'host': 'mongodb://localhost:27017',
-        },
-        'ENFORCE_SCHEMA': False
+    "default": {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": "richmachine",
+        "USER": "postgres",
+        "PASSWORD": "Evrirus",
+        "HOST": "127.0.0.1",
+        "PORT": "5432",
     }
 }
 
@@ -157,11 +168,11 @@ AUTH_USER_MODEL = "users.CustomUser"
 
 LOGIN_REDIRECT_URL = "home"
 LOGOUT_REDIRECT_URL = "home"
-CSRF_TRUSTED_ORIGINS = ['https://44a8-57-129-24-114.ngrok-free.app']
+CSRF_TRUSTED_ORIGINS = ['https://8c4d-5-228-83-61.ngrok-free.app']
 SECURE_CROSS_ORIGIN_OPENER_POLICY = 'same-origin-allow-popups'
 CORS_ORIGIN_WHITELIST = (
 'http://localhost:8000',  # for localhost (REACT Default)
-'https://44a8-57-129-24-114.ngrok-free.app', # for network
+'https://8c4d-5-228-83-61.ngrok-free.app', # for network
 )
 # В файле settings.py вашего Django-приложения
 CSP_FRAME_ANCESTORS = ("'self'", "https://*.t.me")

@@ -7,6 +7,8 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.serializers import ModelSerializer
 from rest_framework.views import APIView
+
+from other_functions.models import Inventory
 from utils import (coll, db_cars, db_crypt, db_inv, get_car_by_id,
                    get_district_by_id, get_full_houses_info, get_house_by_id,
                    get_messages, get_yacht_by_id, give_money)
@@ -38,8 +40,19 @@ class GetInventory(APIView):
     
     def get(self, request: Request):
 
-        inventory = db_inv.find_one({"server_id": request.server_id}, projection={'_id': False}) 
-        result = {"success": True}
-        result.update(inventory)
+        ic(request.user.server_id)
+        inv = Inventory.objects.get(server_id=request.user.server_id)
+
+        items = inv.items.all()
+        standart_items = []
+        for item in items:
+
+            standart_items.append({
+                'id': item.item_id,
+                'type': item.item_type
+            })
+
+        ic(standart_items)
+        result = {"success": True, 'inventory': standart_items}
 
         return Response(result)

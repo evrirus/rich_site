@@ -2,65 +2,74 @@
 
 import json
 from wsgiref.simple_server import WSGIRequestHandler
+from django.db import transaction
 
+import requests
 from django.conf import settings
 from django.contrib import messages
-from django.contrib.auth.views import logout_then_login
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.views import logout_then_login
 from django.contrib.humanize.templatetags.humanize import intcomma
-from django.http import HttpResponseNotFound, JsonResponse
+from django.http import JsonResponse
 from django.shortcuts import redirect, render
 from django.urls import reverse, reverse_lazy
 from django.views.generic.edit import CreateView
 from icecream import ic
-from pymongo.errors import ConnectionFailure, OperationFailure
-from utils import (client, coll, db_cars, db_houses, db_yachts,
-                   get_district_by_id, get_house_by_id, get_messages,
-                   give_money, verify_telegram_auth, db_inv)
+from magazine.models import Car, Yacht, Houses
+from utils import (coll, db_cars, db_houses, db_yachts, get_house_by_id,
+                   get_messages, give_money, verify_telegram_auth)
 
 from .forms import CustomUserCreationForm, LoginUserForm
 from .models import CustomUser
-import requests
 
 DOMEN = 'http://127.0.0.1:8000/'
 
 def register(request):
     if request.method == 'POST':
+        # ic(request)
         form = CustomUserCreationForm(request.POST)
         username = form.data['username']
         
         telegram_id = request.POST.get('telegram_id')
+        ic(telegram_id)
 
         if not telegram_id:
             messages.error(request, 'Telegram authentication is required.')
             return render(request, 'registration/signup.html', {'form': form})
-        
+
         if CustomUser.objects.filter(username=username).exists():
             messages.error(request, 'A user with that username already exists.')
             return render(request, 'registration/signup.html', {'form': form})
-        
+        # ic(form.is_valid())
         if form.is_valid():
-            
+            ic('valid')
             if CustomUser.objects.filter(telegram_id=telegram_id).exists():
-                coll.update_one({'telegram_id': telegram_id}, {'username': username})
+                
+                CustomUser.objects.update(telegram_id=telegram_id, username=username)
                 messages.info(request, 'Синхронизация данных | У вас уже имеется аккаунт зарегистрированный на этот телеграм.\nСвязываем телеграм и сайт.')
+
             
             else:
                 user = form.save(commit=False)
-                user.telegram_id = telegram_id
+                user.telegram_id = int(telegram_id)
+                ic(user)
                 user.save()
+                ic('save')
             
-                example = {"server_id": user.server_id,
-                           "maxQuantity": 30,
-                           "inventory": [{'type': 'empty'}] * 30
-                }
-                db_inv.insert(example)
-                
+                # example = {"server_id": user.server_id,
+                #            "maxQuantity": 30,
+                #            "inventory": [{'type': 'empty'}] * 30
+                # }
+                # db_inv.insert(example)
             #log authorizacia
+            ic('pred login')
             
             login(request, user)
+            ic('login')
             return redirect('profile', server_id=user.server_id)
+        else:
+            ic(form.errors)
     else:
         form = CustomUserCreationForm()
     return render(request, 'registration/signup.html', {'form': form})
@@ -77,6 +86,7 @@ def profile(request, server_id: int):
     url_get_profile = DOMEN + 'api/get_profile/'
     data = {"action": "get_profile", "server_id": server_id, "source": "web"}
     response = requests.post(url_get_profile, json=data).json()
+    ic(response)
     response['title'] = f'User profile ID: {response['server_id']}'
     
     return render(request, 'profile.html', response)
@@ -101,6 +111,7 @@ def login_user(request):
             
             if username and password:
                 user = authenticate(request, username=username, password=password)
+                ic(user)
             elif telegram_auth_data:
                 try:
                     if verify_telegram_auth(telegram_auth_data, settings.TELEGRAM_BOT_TOKEN):
@@ -116,6 +127,7 @@ def login_user(request):
             else:
                 messages.error(request, "Invalid username or password.")
         else:
+            ic(form.errors)
             messages.error(request, "Invalid username or password.")
     else:
         form = LoginUserForm()
@@ -143,91 +155,84 @@ def sell_transport(request: WSGIRequestHandler, type: str, ucode: str):
     if type not in ('car', 'yacht'):
         return JsonResponse({'success': False, 'error': 'Неверный тип транспорта'})
     
-    user_info = coll.find_one({'server_id': request.user.server_id})
-    if not user_info:
+    
+    user = request.user
+    if not user:
         return JsonResponse({'success': False, 'error': 'Пользователь не найден'})
     
-    transports = user_info[f'{type}'][f'{type}s']
+    if type == 'car':
+        transports = user.car['cars']
+    else:
+        transports = user.yacht['yachts']
+
     num = 0
     for k, tr in enumerate(transports):
         if tr['ucode'] == ucode: 
             num = k
+    if type == 'car':
+        items = user.car.get('cars', [])
+    else:
+        items = user.yacht.get('yachts', [])
     
-    items = user_info.get(f'{type}', {}).get(f'{type}s', [])
+    ic(items, num)
     transport_info = items[num]
     items.pop(num)
     
-    coll.update_one(
-        {'server_id': request.user.server_id},
-        {'$set': {f'{type}.{type}s': items}}
-    )
-    give_money(request, request.user.server_id, transport_info['price'] // 2)
     if type == 'car':
-        db_cars.update_one({'id': transport_info['id']},
-                           {'$inc': {'quantity': 1}})
+        user.car['cars'] = items
+    else:
+        user.yacht['yachts'] = items
+    user.save()
+
+    give_money(request, request.user.server_id, transport_info['price'] // 2)
+    
+    if type == 'car':
+        car = Car.objects.get(id=transport_info['id'])
+        car.quantity += 1
+        car.save()
+
     elif type == 'yacht':
-        db_yachts.update_one({'id': transport_info['id']},
-                           {'$inc': {'quantity': 1}})
+        yacht = Yacht.objects.get(id=transport_info['id'])
+        yacht.quantity += 1
+        yacht.save()
+
     else: ic('ASHIBKA')
-    ic('Транспорт успешно продан!')
+
     messages.success(request, 'Транспорт успешно продан!')
     return JsonResponse({'success': True, 'message': 'Транспорт успешно продан!', 'messages': get_messages(request)})
      
 
 
-@login_required(login_url="/users/login/")
-def get_transport_profile(request: WSGIRequestHandler, type: str, ucode: int):
-    if type not in ('car', 'yacht'):
-        return JsonResponse({'success': False, 'error': 'Неверный тип транспорта'})
-    
-    user_info = coll.find_one({'server_id': request.user.server_id})
-    if not user_info:
-        return JsonResponse({'success': False, 'error': 'Пользователь не найден'})
-    
-    transports = user_info[f'{type}'][f'{type}s']
-    ic(transports, 11)
-    if not transports:
-        return JsonResponse({'success': False, 'error': 'Транспорт не найден'})
-    
-    num = 0
-    for k, tr in enumerate(transports):
-        if tr['ucode'] == ucode: 
-            num = k
-    transport_info = transports[num]
-    
-    if type == 'car':
-        global_trasport_info = db_cars.find_one({'id': transport_info['id']})
-    else: 
-        global_trasport_info = db_yachts.find_one({'id': transport_info['id']})
-    
-    ic(transport_info)
-    
-    return JsonResponse({
-        'success': True,
-        'type': type,
-        'id': transport_info['id'],
-        'maxQuantity': global_trasport_info['maxQuantity'],
-        'quantity': global_trasport_info['quantity'],
-        'price': intcomma(transport_info['price']),
-        'name': transport_info['name'],
-        'plate': transport_info['plate'] if transport_info['plate'] else 'Отсутствуют',
-    })
-    
     
 
     
 def sell_house(request: WSGIRequestHandler, id: int):
+
     house_info = get_house_by_id(id)
-    
-    result = coll.update_one({'server_id': request.user.server_id},
-                             {'$pull': {'house.houses': {'id': house_info['id']}}})
-    
-    if result.modified_count < 1:
-        return JsonResponse({'success': False, 'error': 'Не удалось удалить дом'})
-    
-    db_houses.update_one({'id': house_info['id']},
-                         {'$set': {'owner': None}})
-    give_money(request, request.user.server_id, house_info['price'] // 2)
+
+
+
+    # result = coll.update_one({'server_id': request.user.server_id},
+    #                          {'$pull': {'house.houses': {'id': house_info.id}}})
+    #
+    # ic(request.user.house)
+    # if result.modified_count < 1:
+    #     return JsonResponse({'success': False, 'error': 'Не удалось удалить дом'})
+
+    with transaction.atomic():
+        for k, tr in enumerate(request.user.house['houses']):
+            if tr['id'] == house_info.id:
+                request.user.house['houses'].remove(tr)
+                request.user.save()
+                break
+
+
+
+        house = Houses.objects.get(id=house_info.id)
+        house.owner = None
+        house.save()
+
+    give_money(request, request.user.server_id, house_info.price // 2)
     messages.success(request, 'Продажа прошла успешно!')
     return JsonResponse({'success': True, 'message': 'Продажа прошла успешно!', 'messages': get_messages(request)})
 

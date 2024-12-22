@@ -277,8 +277,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         const houseDiv = document.querySelector(`.house.frosted_glass[id="${currentHouseId}"][data-modal-type="house"]`);
                         houseDiv.remove();
                     }
-
-                    handleMessages(data.messages)
+                    console.log(data);
+                    handleMessages(data.messages);
                     closeAllModals();
                   }).catch(error => {
                     loadingIndicatorTransport.style.visibility = 'hidden';

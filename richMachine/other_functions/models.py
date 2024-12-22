@@ -6,8 +6,26 @@ from users.models import CustomUser
 
 
 
-# Create your models here.
-class UserToken(models.Model):
-    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
-    token = models.CharField(max_length=36, unique=True)
-    created_at = models.DateTimeField(auto_now_add=True)
+
+    
+class Inventory(models.Model):
+    server_id = models.IntegerField()  # ID сервера
+    max_quantity = models.IntegerField(default=30)  # Максимальное количество предметов в инвентаре
+    user = models.ForeignKey(CustomUser, related_name='inventories', on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f"Inventory {self.user.username}"
+
+    class Meta:
+        db_table = "inventory"
+
+class InventoryItem(models.Model):
+    inventory = models.ForeignKey(Inventory, related_name='items', on_delete=models.CASCADE)
+    item_type = models.CharField(max_length=100)  # Тип предмета (например, "videocard")
+    item_id = models.IntegerField()
+
+    def __str__(self):
+        return f"{self.item_type} in inventory {self.inventory.id}"
+
+    class Meta:
+        db_table = "inventoryitem"

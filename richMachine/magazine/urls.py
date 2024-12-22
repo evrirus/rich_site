@@ -18,7 +18,7 @@ urlpatterns = [
     path('buy_videocard/<int:videocard_id>/', views.buy_videocard, name='buy_videocard'),
     path('get_transport_info/<str:type>/<int:id>/', views.get_transport_info, name='get_transport_info'),
     path('buy_transport/<str:type>/<int:id>/', views.buy_transport, name='buy_transport'),
-    path('get_house_info/<int:id>/', views.get_house_info, name='get_house_info'),
+    path('get_house_info/<int:house_id>/', views.get_house_info, name='get_house_info'),
     path('buy_house/<int:id>/', views.buy_house, name='buy_house'),
     
 ]

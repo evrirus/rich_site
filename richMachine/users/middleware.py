@@ -58,14 +58,14 @@ class RequestSourceMiddleware(MiddlewareMixin):
 class AuthenticationUserMiddleware(MiddlewareMixin):
     def process_request(self, request: WSGIRequest):
 
-        user_server_id = None
+        user_server_id = 5
 
-        if request.source == 'telegram_bot':
-            telegram_id = request.data.get('telegram_id')
-            user_server_id = coll.find_one({"telegram_id": telegram_id}, projection={"_id": False, "server_id": True})['server_id']
+        # if request.source == 'telegram_bot':
+        #     telegram_id = request.data.get('telegram_id')
+        #     user_server_id = coll.find_one({"telegram_id": telegram_id}, projection={"_id": False, "server_id": True})['server_id']
 
-        elif request.source == 'web':
-            user_server_id = request.data.get('server_id')
+        # elif request.source == 'web':
+        #     user_server_id = request.data.get('server_id')
 
         request.server_id = user_server_id
 
