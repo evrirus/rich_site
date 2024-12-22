@@ -1,4 +1,3 @@
-
 from authentication import SiteAuthentication, TelegramAuthentication
 from django.contrib import messages
 from icecream import ic
@@ -6,8 +5,8 @@ from rest_framework.authentication import SessionAuthentication
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from utils import (get_district_by_id, get_full_houses_info,
-                   get_house_by_id, get_messages)
+from utils import (get_full_houses_info,
+                    get_messages)
 from users.models import CustomUser
 
 

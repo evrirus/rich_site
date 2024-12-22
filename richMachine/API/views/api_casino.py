@@ -1,36 +1,27 @@
 import json
 import random
 
-import uuid
-from datetime import timedelta
-from wsgiref.simple_server import WSGIRequestHandler
+from rest_framework.views import APIView
+
+
 from authentication import SiteAuthentication, TelegramAuthentication
 from rest_framework.authentication import SessionAuthentication
-import matplotlib.pyplot as plt
-from django.conf import settings
+
 from django.contrib import messages
-from django.contrib.auth import authenticate, login
-from django.contrib.auth.decorators import login_required
+
 from django.contrib.humanize.templatetags.humanize import intcomma
-from django.http import HttpResponseNotFound, JsonResponse
-from django.shortcuts import redirect, render
-from django.urls import reverse, reverse_lazy
-from django.utils import timezone
-from django.utils.decorators import method_decorator
-from django.views import View
-from django.views.decorators.csrf import csrf_exempt
-from django.views.generic.edit import CreateView
+from django.http import JsonResponse
+
+
 from icecream import ic
-from pymongo.errors import ConnectionFailure, OperationFailure
-import requests
-from utils import (DOMEN, client, coll, db_cars, db_houses, db_inv, db_yachts,
-                   generate_ucode, get_district_by_id, get_house_by_id,
-                   get_item_by_id, get_item_in_inventory_user_by_id,
-                   get_messages, give_money, verify_telegram_auth, get_symbol_money)
 
-# from .models import UserToken
+from utils import get_messages, give_money,  get_symbol_money
 
-coefficients = {
+class GenerateCombinationView(APIView):
+    authentication_classes = [SessionAuthentication, TelegramAuthentication, SiteAuthentication]
+    permission_classes = []
+
+    coefficients = {
         1: ['🍭', '🍭', '🍭'],
         2: ['🍭', '🍭', '🦄'],
         3: ['🍭', '🍭', '💵'],
@@ -106,7 +97,7 @@ coefficients = {
         73: ['💵', '👻', '💵'],
         74: ['💵', '👻', '🦖'],
         75: ['💵', '👻', '👻'],
-        76: ['🦖', '🍭', '🍭'], 
+        76: ['🦖', '🍭', '🍭'],
         77: ['🦖', '🍭', '🦄'],
         78: ['🦖', '🍭', '💵'],
         79: ['🦖', '🍭', '🦖'],
@@ -158,99 +149,41 @@ coefficients = {
         125: ['👻', '👻', '👻'],
     }
 
-
-# Create your views here.
-def inventory(request: WSGIRequestHandler):
-    
-    url_get_inventory = DOMEN + 'api/get_inventory/'
-    data = {"action": "get_inventory", "server_id": request.user.server_id, "source": "web"}
-    response = requests.get(url_get_inventory, json=data).json()
-    ic(response)
-    # Список для хранения информации о предметах, которые будут отображаться
-    show_items = []
-
-    # Заполнение списка информацией о видеокартах
-    for item in response.get('inventory', []):
-        if item['type'] == 'videocard':
-
-            for i in show_items:
-                if item['id'] == i['id']:
-                    show_items.append({
-                        'name': i['name'], 'performance': i['performance'],
-                        'type': i['type'], 'id': item['id']
-                    })
-                    break
-
-            else: 
-                videocard_info = get_item_by_id(item['id'])
-                show_items.append({
-                    'name': videocard_info['name'],
-                    'performance': videocard_info['attributes']['performance'],
-                    'type': videocard_info['type'], 'id': item['id']
-                })
-                
-        elif item['type'] == 'plate':
-            show_items.append({
-                'num': item['attributes']['value'],
-                'type': item['type'],
-            })
-
-    # Определение разности между максимальным количеством и текущим количеством предметов
-    max_quantity = response.get('maxQuantity', 0)
-    current_quantity = len(show_items)
-    
-    if current_quantity < max_quantity:
-        difference = max_quantity - current_quantity
-        # Заполнение оставшегося места пустыми элементами
-        show_items.extend([{'type': 'empty'}] * difference)
-
-    # Возвращение отрендеренного шаблона с данными
-    return render(request, 'other_functions/inventory.html', {
-        'my_server_id': request.user.server_id,
-        'items': show_items
-    })
-    
-
-
-
-class GenerateCombinationView(View):
-    authentication_classes = [SessionAuthentication, TelegramAuthentication, SiteAuthentication]
-    permission_classes = []
-
-    @csrf_exempt
     def post(self, request):
-        ic(request)
+
         data = json.loads(request.body)
         user_input = data.get('user_input')
         user_choice = data.get('user_choice')
-        
+
         # Проверка и преобразование ставки
         bid = int(user_input) if user_input.isdigit() else 0
         if bid <= 0:
             messages.error(request, 'Ставка не может быть меньше единицы')
-            return JsonResponse({'success': False, 'message': 'Ставка не может быть меньше единицы', 'messages': get_messages(request)})
+            return JsonResponse(
+                {'success': False, 'message': 'Ставка не может быть меньше единицы', 'messages': get_messages(request)})
 
         balance = request.user.money[user_choice]
 
         # Проверка достаточности средств
         if balance < bid:
             messages.error(request, 'Недостаточно средств. | Пополнить счёт можно в Донате')
-            return JsonResponse({'success': False, 'message': 'Недостаточно средств.', 'messages': get_messages(request)})
-        
+            return JsonResponse(
+                {'success': False, 'message': 'Недостаточно средств.', 'messages': get_messages(request)})
+
         # Генерация комбинации и расчет коэффициента
         items = ["🍭", "🦄", "💵", "🦖", "👻"]
         combination = random.choices(items, k=3)  # Генерация комбинации из трех символов
         coefficient = self.get_coefficient(combination)
         # coefficient = 0 # КОЭФ
-        
+
         # Рассчет выигрыша
         winnings = int(coefficient * bid) - bid
 
         # Обновление баланса и отправка уведомления в зависимости от коэффициента
         if coefficient > 1:
 
-            balance += -bid+(winnings*3)
-            give_money(request, request.user.server_id, -bid+(winnings*3), type_money=user_choice, 
+            balance += -bid + (winnings * 3)
+            give_money(request, request.user.server_id, -bid + (winnings * 3), type_money=user_choice,
                        comment=f"Уведомление | Ваша ставка принята, ваш выигрыш составил {intcomma(winnings)} {get_symbol_money(user_choice)}. \nКоэффициент x{coefficient}.\nОстаточный баланс: {intcomma(balance)} {get_symbol_money(user_choice)}")
 
         elif coefficient < 1:
@@ -263,20 +196,21 @@ class GenerateCombinationView(View):
             give_money(request, request.user.server_id, 0, type_money=user_choice,
                        comment=f"Уведомление | Ваша ставка не принесла выигрыша.\n Коэффициент x{coefficient}.\nОстаточный баланс: {intcomma(balance)} {get_symbol_money(user_choice)}")
 
-        return JsonResponse({'combination': combination, 'success': True, 'user_input': user_input, 'user_choice': user_choice, 'messages': get_messages(request)})
+        return JsonResponse(
+            {'combination': combination, 'success': True, 'user_input': user_input, 'user_choice': user_choice,
+             'messages': get_messages(request)})
 
-
-
-    def random_with_probability(self, probability):
+    @staticmethod
+    def random_with_probability(probability):
         return random.random() < probability
 
-
-    def get_keys_by_value(self, d, value):
+    @staticmethod
+    def get_keys_by_value(d, value):
         return [k for k, v in d.items() if v == value]
 
     def get_coefficient(self, combination: list):
-        
-        num = self.get_keys_by_value(coefficients, combination)
+
+        num = self.get_keys_by_value(self.coefficients, combination)
 
         if not num:
             return 0
@@ -287,21 +221,15 @@ class GenerateCombinationView(View):
             return 7
         elif 121 < num[0] < 125 or num[0] in (100, 75, 50, 25):
             return 3
-        elif 2 < num[0] < 5 or 31 < num[0] < 35 or 61 < num[0] < 65 or 91 < num[0] < 95 or num[0] in (7, 13, 19, 25, 38, 44, 57, 69, 75, 82, 88, 100, 107, 113, 119):
+        elif 2 < num[0] < 5 or 31 < num[0] < 35 or 61 < num[0] < 65 or 91 < num[0] < 95 or num[0] in (
+        7, 13, 19, 25, 38, 44, 57, 69, 75, 82, 88, 100, 107, 113, 119):
             return 2
 
-        probability = 0.17  # 20% вероятность
+        probability = 0.17  # 17% вероятность
         if self.random_with_probability(probability):
             return 1
-        
-        probability = 0.22  # 20% вероятность
+
+        probability = 0.22  # 22% вероятность
         if self.random_with_probability(probability):
             return 0.5
         return 0
-
-def casino(request):
-    return render(request, 'other_functions/casino_main.html', {'my_server_id': request.user.server_id})
-
-def slot_machine(request):
-    return render(request, 'other_functions/casino_slot.html', {'my_server_id': request.user.server_id})
-

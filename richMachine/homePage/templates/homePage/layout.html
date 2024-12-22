@@ -46,7 +46,7 @@
                 <li><a href="/magazine" class="header__button">Магазин</a></li>
                 <li>
                     <select id="functions" name="fruits" class="header__button" onchange="navigateToPage()">
-                        <option value="">Выберите</option>
+                        <option class="bckgd-func" style="color: #7d7d7d" value="">Выберите</option>
                         <option class="bckgd-func" value="/donate">Донат</option>
                         <option class="bckgd-func" value="/casino">Казино</option>
                         <option class="bckgd-func" value="/jobs">Работа</option>
@@ -62,7 +62,6 @@
                 <script>
                     function navigateToPage() {
                         var select = document.getElementById("functions");
-                        if (select)
                         var url = select.value;
 
                         if (url) {

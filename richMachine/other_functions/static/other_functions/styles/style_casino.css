@@ -91,9 +91,11 @@ button {
     text-align: center;
     margin-top: 1.5em;
     margin-bottom: 2em;
+    font-family: Montserrat, sans-serif;
 }
 #input__bid::placeholder {
-    color: #000b14;
+    color: #757575;
+    font-family: Montserrat, sans-serif;
 }
 
 input[type="number"] {
