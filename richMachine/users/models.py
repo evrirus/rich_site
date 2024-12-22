@@ -65,7 +65,7 @@ def default_couple():
 
 
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
-from djongo import models
+from django.db import models
 from django.utils.translation import gettext_lazy as _
 from django.utils import timezone
 from bson import ObjectId
@@ -89,7 +89,7 @@ class CustomUserManager(BaseUserManager):
 
 # Custom User Model
 class CustomUser(AbstractBaseUser, PermissionsMixin):
-    _id = models.ObjectIdField(primary_key=True, editable=False, default=ObjectId)  # Удалить это поле
+    # _id = models.ObjectIdField(primary_key=True, editable=False, default=0)  # Удалить это поле
     server_id = models.IntegerField(default=0)
     user_id = models.IntegerField(blank=True, null=True)
     donate_balance = models.IntegerField(default=0)
@@ -124,6 +124,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
             max_server_id = CustomUser.objects.all().aggregate(Max('server_id')).get('server_id__max') or 0
             self.server_id = max_server_id + 1
         super().save(*args, **kwargs)
+
 
 # def none_field():
 #     return {}

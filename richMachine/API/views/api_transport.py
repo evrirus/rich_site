@@ -7,6 +7,8 @@ from rest_framework.authentication import SessionAuthentication
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
+
+from magazine.models import Yacht, Car
 from utils import (DOMEN, coll, db_cars, db_yachts, get_car_by_id,
                    get_district_by_id, get_full_houses_info, get_house_by_id,
                    get_messages, get_transport_by_ucode, get_yacht_by_id,
@@ -73,29 +75,24 @@ class CheckTransportInfo(APIView):
     def get(self, request: Request):
         data = request.GET or request.data
 
-        # Определяем функцию для получения информации о транспорте
         func = get_yacht_by_id if data['type'] == 'yacht' else get_car_by_id if data['type'] == 'car' else None
         if not func:
             return Response({"success": False, "error": "invalid_type"})
-        
-        ic(data)
-        # Получаем данные о транспорте
-        data_transport = func(int(data['id']))  # Передаем telegram_id для получения данных
-        if not isinstance(data_transport, dict):
-            return Response({"success": False, "error": "invalid_response"})
-        
-        data_transport.update({"id": data['id'], "type": data['type']})
-        result = data_transport
-        
+
+        data_transport = func(int(data['id']))
+
         if data.get('ucode'):
-            
-            result.update(get_transport_by_ucode(data['type'], data['ucode']))
-            del result['_id']
+            ic(request.user.car)
+            result = {
+                **get_transport_by_ucode(request.user.server_id, data['type'], data['ucode']),
+                'quantity': data_transport.quantity,
+                'maxQuantity': data_transport.max_quantity,
+            }
+
             ic(result)
             return Response({"success": True, "info": result})
 
-        del result['_id']
-        return Response({"success": True, "info": result})
+        return Response({"success": False, 'error': "invalid_transport"})
 
     
 class SellTransportToState(APIView):

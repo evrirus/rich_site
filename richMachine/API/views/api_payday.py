@@ -33,10 +33,10 @@ def give_payday():
             for house in user['house']['houses']:
                 house_info = get_house_by_id(house['id'])
                 
-                if not house_info.get('basement', {}).get('videocards'):
+                if not house_info.basement.get('videocards'):
                     continue
                 
-                for videocard, qty in house_info['basement']['videocards'].items():
+                for videocard, qty in house_info.basement['videocards'].items():
                     videocard_info = get_item_by_id(int(videocard))
                     balance_house += videocard_info['attributes']['performance'] * qty
             

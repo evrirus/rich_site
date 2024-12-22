@@ -80,20 +80,20 @@
         <span class="header-statistic">Статистика</span>
         <table class="statistic-basement table">
             <tr>
+                <th>Номер дома:</th>
+                <td>{{house_info.id}}</td>
+            </tr>
+            <tr>
                 <th>Баланс:</th>
-                <td><span id="current-balance">{{ house_info.basement.balance|intcomma }}</span>$</td>
+                <td><span id="current-balance">{{ house_info.balance|intcomma }} </span>$</td>
             </tr>
             <tr>
                 <th>Доход/сутки:</th>
-                <td>{{ income|intcomma }} $</td>
+                <td><span id="current-profit">{{ income|intcomma }} </span>$</td>
             </tr>
             <tr>
                 <th>Видеокарт:</th>
-                <td>{{quantity_videocards}} / {{limit_videocards}}</td>
-            </tr>
-            <tr>
-                <th>Номер дома:</th>
-                <td>{{house_info.id}}</td>
+                <td><span id="quantity-videocards">{{quantity_videocards}}</span> / <span id="limit-videocards">{{limit_videocards}}</span></td>
             </tr>
         </table>
     </div>

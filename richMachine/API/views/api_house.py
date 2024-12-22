@@ -40,16 +40,25 @@ class GetHouseView(APIView):
 
     def get(self, request: Request, id_house: int):
         house_info = get_house_by_id(id_house)
-        district_info = get_district_by_id(house_info['district_id'])
+        district_info = get_district_by_id(house_info.district_id)
 
-        house_info['district_info'] = district_info
-        house_info['basement'] = house_info.get('basement', {}).get('level') if house_info.get('basement') else 0
-        house_info['price'] = house_info['price']
-        house_info['type'] = 'Дом' if house_info['type'] == 'house' else 'Квартира'
-        house_info['class'] = house_info['class'].title()
+        standart_district_info = {
+            'name': district_info.name,
+        }
 
+        standart_house_info = {
+            'id_for_district': house_info.id_for_district,
+            'district_info': standart_district_info,
+            'basement': house_info.basement.get('level', 0) if house_info.basement else 0,
+            'price': house_info.price,
+            'type': 'Дом' if house_info.type_field == 'house' else 'Квартира',
+            'class': house_info.class_field.title(),
+            'floors': house_info.floors,
+            'id': house_info.id,
+        }
+        ic(standart_house_info)
         return Response({'success': True, 'message': 'ok',
-                             **house_info})
+                        **standart_house_info})
         
 class GetBasementView(APIView):
     """API для получения списка домов пользователя
@@ -63,13 +72,7 @@ class GetBasementView(APIView):
     def get(self, request: Request, id_house: int):
         ic(id_house)
         house_info = get_house_by_id(id_house)
-        
-        del house_info['class']
-        del house_info['floors']
-        del house_info['price']
-        del house_info['district_id']
-        del house_info['id_for_district']
-        del house_info['type']
+
         ic(house_info)
         
         videocards = []
@@ -77,8 +80,16 @@ class GetBasementView(APIView):
         # if not house_info['basement'].get('videocards'):
         #     return Response({'success': False, 'message': 'ok',
         #                      **house_info})
-            
-        for id, qty in house_info['basement'].get('videocards', {}).items():
+
+        standart_house_info = {
+            'id': house_info.id,
+            'basement': house_info.basement,
+            'balance': house_info.basement.get('balance', 0),
+        }
+        ic(standart_house_info)
+        ic(house_info.basement)
+
+        for id, qty in house_info.basement.get('videocards', {}).items():
             if qty == 0:
                 continue
             
@@ -90,7 +101,7 @@ class GetBasementView(APIView):
             mix_videocards.append({'name': card['name'], 'quantity': qty})
 
         return Response({'success': True, 'message': 'ok',
-                         'videocards': videocards, 'house_info': house_info,
+                         'videocards': videocards, 'house_info': standart_house_info,
                          'mix_videocards': mix_videocards})
         
 
