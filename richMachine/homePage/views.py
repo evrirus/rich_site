@@ -6,6 +6,7 @@ from django.core.handlers.wsgi import WSGIRequest
 
 # Create your views here.
 def index(request: WSGIRequest):
+    ic(request.user)
     data = {
         'title': "Rich Machine",
         'username': request.user.username,

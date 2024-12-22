@@ -6,6 +6,7 @@ from .views.api_transport import (CheckTransportInfo, GetMyCarsView,
 from .views.api_users import (ChangeLanguageView, ChangeNicknameView,
                               GetBalance, ProfileView)
 from .views.api_other import GetSymbolCrypt, GetInventory
+from .views.api_casino import GenerateCombinationView
 
 app_name = 'api'
 
@@ -30,6 +31,7 @@ urlpatterns = [
     
     # Other
     path('get_inventory/', GetInventory.as_view(), name='get_inventory'),
+    path('slot/generate/', GenerateCombinationView.as_view())
     
     # House functions
     # path('house/change_class/', ChangeClassHouse.as_view(), name='change_class')

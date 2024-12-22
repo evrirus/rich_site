@@ -3,7 +3,8 @@
 
 {% block title %}Slot Machine{% endblock %}
 {% block stylesheet %}
-    <link rel="icon" href="/static/homePage/img/logo.png">
+
+    <link rel="icon" href="{% static 'homePage/img/logo.png' %}">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -11,8 +12,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Cinzel:wght@400..900&family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Moul&display=swap" rel="stylesheet">
 
-    <link rel="stylesheet" href="/static/homePage/styles/style.css">
-    <link rel="stylesheet" href="/static/other_functions/styles/style_casino.css">
+    <link rel="stylesheet" href="{% static 'homePage/styles/style.css' %}">
+    <link rel="stylesheet" href="{% static 'other_functions/styles/style_casino.css' %}">
 {% endblock %}
 
 
@@ -21,81 +22,41 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 {% endblock %}
 
-</head>
+
 
 {% block content %}
     <div class="container">
-        <header class="a_cap">
-            <div class="header__logo">
-                <a href="/">
-                    <img class="logo__icon" src="/static/homePage/img/logo.svg">
-                </a>
-                <div class="logo__text">Rich<br>Machine</div>
+        <div id="main">
+            <div id="app">
+                <div class="doors">
+                    <div class="door">
+                        <div class="boxes"></div>
+                    </div>
+                    <div class="door">
+                        <div class="boxes"></div>
+                    </div>
+                    <div class="door"   >
+                        <div class="boxes"></div>
+                    </div>
+                </div>
+
+                <form id="userForm" method="post">
+                    {% csrf_token %}
+                    <div id="bid">
+                        <input id="input__bid" type="number" name="user_input" placeholder="Enter bid" required>
+                        <select id="choose_type_cash" name="user_choice">
+                            <option value="cash">₽</option>
+                            <option value="dollar">$</option>
+                        </select>
+                    </div>
+                    <button id="submit_bid" type="submit">Крутить!</button>
+                </form>
+                <p class="info"></p>
             </div>
-            <ul class="header__buttons">
-                
-                    <li><a href="/profile/" class="header__button">Профиль</a></li>
-                    <li><a href="#" class="header__button" id="logout-button">Выйти</a></li>
-                
-                <li><a href="/magazine" class="header__button">Магазин</a></li>
-                <li>
-                    <select id="functions" name="fruits" class="header__button" onchange="navigateToPage()">
-                        <option value="">Выберите</option>
-                        <option class="bckgd-func" value="/donate">Донат</option>
-                        <option class="bckgd-func" value="/casino">Казино</option>
-                        <option class="bckgd-func" value="/jobs">Работа</option>
-                        <option class="bckgd-func" value="/property">Имущество</option>
-                        <option class="bckgd-func" value="/car_plate">Номер</option>
-                        <option class="bckgd-func" value="/inventory">Инвентарь</option>
-                        <option class="bckgd-func" value="/stock">Биржа</option>
-                        
-                    </select>
-                <script>
-                    function navigateToPage() {
-                        var select = document.getElementById("functions");
-                        if (select)
-                        var url = select.value;
+        </div>
 
-                        if (url) {
-                            window.location.href = url; // Перенаправление на выбранную страницу
-                        }
-                    }
-                </script>
-                </li>
-
-            </ul>
-        </header>
-        <div id="main"> 
-            
-<div id="app">
-    <div class="doors">
-      <div class="door">
-        <div class="boxes"></div>
-      </div>
-      <div class="door">
-        <div class="boxes"></div>
-      </div>
-      <div class="door">
-        <div class="boxes"></div>
-      </div>
+    </div>
+    <div id="messages-container">
     </div>
 
-    <form id="userForm" method="post">
-        {% csrf_token %}
-        <div id="bid">
-            <input id="input__bid" type="number" name="user_input" placeholder="Enter bid" required>
-            <select id="choose_type_cash" name="user_choice">
-                <option value="cash">₽</option>
-                <option value="dollar">$</option>
-            </select>
-        </div>
-        <button id="submit_bid" type="submit">Крутить!</button>
-    </form>
-    <p class="info"></p>
-</div>
-
-        </div>
-        <div id="messages-container">
-        </div>
-    </div>
 {% endblock %}
