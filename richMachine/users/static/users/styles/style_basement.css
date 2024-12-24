@@ -139,7 +139,7 @@ table tr th {
     font-weight:400;
 }
 
-button#take-profit, button#create-basement, button#update-basement {
+#take-profit, #create-basement__button, #update-basement {
     
     border: none;
     border-radius: 15px;
@@ -152,10 +152,10 @@ button#take-profit, button#create-basement, button#update-basement {
 }
 
 
-button#create-basement {
+#create-basement__button {
     background-color: #466877;
 }
-button#create-basement:hover {
+#create-basement__button:hover {
     background-color: #354f5a;
 }
 
@@ -166,7 +166,21 @@ button#take-profit:hover, button#update-basement:hover {
     background-color: #544677;
 }
 
+#create-basement {
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+}
 
+#create-basement__price {
+    color: white;
+    position: relative;
+    top: 50%;
+    transform: translateY(-100%);
+    color: #a5a5a5;
+    font-weight: 500
+
+}
 
 
 

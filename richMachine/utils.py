@@ -9,6 +9,7 @@ import time
 import uuid
 from wsgiref.simple_server import WSGIRequestHandler
 
+import requests
 from django.contrib import messages
 from django.contrib.humanize.templatetags.humanize import intcomma
 from icecream import ic
@@ -51,10 +52,8 @@ def generate_ucode(k=9):
     """Генерирует уникальный код длиной 9 символов."""
 
     chars = string.ascii_letters + string.digits
+    return ''.join(random.choices(chars, k=k))
 
-    ucode = ''.join(random.choices(chars, k=9))
-
-    return ucode
 
 
 def get_messages(request):
@@ -62,11 +61,11 @@ def get_messages(request):
 
 
 def verify_telegram_auth(data, token):
-    check_hash = data.pop('hash', None)
+    check_hash = data   .pop('hash', None)
     data_check_string = '\n'.join([f'{k}={v}' for k, v in sorted(data.items())])
     secret_key = hashlib.sha256(token.encode()).digest()
     hash = hmac.new(secret_key, data_check_string.encode(), hashlib.sha256).hexdigest()
-    
+
     if hash != check_hash:
         return False
     if time.time() - int(data['auth_date']) > 86400:
@@ -102,19 +101,24 @@ def get_full_houses_info(house_id: int) -> list[dict]:
 
 #* ID
 def get_house_by_id(house_id: int):
-    return Houses.objects.get(id=house_id)
-    # return db_houses.find_one({'id': house_id}, projection={'_id': False})
+    try:
+        return Houses.objects.get(id=house_id)
+    except Houses.DoesNotExist: return None
 
 def get_district_by_id(dis_id: int):
-    return Districts.objects.get(district_id=dis_id)
-    # return db_districts.find_one({'district_id': dis_id}, projection={'_id': False})
+    try:
+        return Districts.objects.get(district_id=dis_id)
+    except Districts.DoesNotExist: return None
 
 def get_car_by_id(car_id: int):
-    return Car.objects.get(id=car_id)
+    try:
+        return Car.objects.get(id=car_id)
+    except Car.DoesNotExist: return None
 
 def get_yacht_by_id(yacht_id: int):
-    return Yacht.objects.get(id=yacht_id)
-
+    try:
+        return Yacht.objects.get(id=yacht_id)
+    except Yacht.DoesNotExist: return None
 
 #* ucode
 def get_transport_by_ucode(server_id: int, type: str, ucode: str):
@@ -158,28 +162,6 @@ def give_money(request: WSGIRequestHandler, server_id: int, sum: int, type_money
         # ic(comment)
         messages.success(request, comment)
     return True
-    
-# def give_money(request, server_id: int, sum: int, type_money: str = 'cash', comment=None):
-
-#     result = coll.update_one(
-#         {'server_id': server_id},
-#         {'$inc': {f'money.{type_money}': sum}},
-#     )
-#     ic(comment, type_money, sum, server_id)
-#     if result.modified_count > 0 or (result.modified_count <= 0 and sum == 0):
-#         symbol = get_symbol_money(type_money)
-
-#         if sum > 0 and not comment:
-#             # ic(sum > 0 and not comment)
-#             messages.success(request, f"На баланс начислено: {intcomma(sum)} {symbol}")
-#         elif sum < 0 and not comment:
-#             # ic(sum < 0 and not comment)
-#             messages.success(request, f"С баланса списано: {intcomma(sum)} {symbol}")
-#         elif comment:
-#             # ic(comment)
-#             messages.success(request, comment)
-#         return True
-#     return False
 
 
 def calculate_total_quantity(house_id: int):
@@ -385,3 +367,26 @@ def log_action(user_id: int | str, situation: str, balance: bool = False, **kwar
         log_entry['balance'] = user.get('money')
     db_log.insert_one(log_entry)
 
+
+def DoRequest(link: str, method: str = 'GET',
+              token: str = "3e3c9b5af858140a22ce5591f716c42a62571f6e",
+              data: dict = {}, json: dict = {},
+              **kwargs) -> dict: #todo: заменить токен на None
+    link = DOMEN + link
+    token = token
+
+    headers = {
+        'Authorization': f'Token {token}'
+    }
+
+    if method == 'GET':
+        result = requests.get(link, headers=headers, data=data, json=json)
+    elif method == 'POST':
+        result = requests.post(link, headers=headers, data=data, json=json)
+
+    else: result = None
+
+    if not result or result.status_code != 200:
+        return False
+
+    return result.json()

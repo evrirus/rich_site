@@ -117,11 +117,16 @@
         
     </div>
     {% csrf_token %}
+    <p>{{ success }}</p>>
     {% if not house_info.basement %}
-        <button id="create-basement" house-id="{{ house_info.id }}">Построить</button>
+        <div id="create-basement">
+            <button id="create-basement__button" house-id="{{ house_info.id }}">Построить</button>
+            <p id="create-basement__price"><span id="create-basement__price" class="price">{{ 1000000|intcomma }}</span> ₽</p>
+        </div>
     {% elif success %}
         {% if 3 > house_info.basement.level %}
-            <button id="update-basement" house-id="{{ house_info.id }}">Улучшить</button><br>
+            <button id="update-basement" house-id="{{ house_info.id }}">Улучшить</button>
+            <p id="update-basement__price"></p><br>
         {% endif %}
         <button id="take-profit" house-id="{{ house_info.id }}">Забрать прибыль</button>
     {% endif %}

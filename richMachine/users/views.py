@@ -4,7 +4,6 @@ import json
 from wsgiref.simple_server import WSGIRequestHandler
 from django.db import transaction
 
-import requests
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import authenticate, login
@@ -17,11 +16,17 @@ from django.urls import reverse, reverse_lazy
 from django.views.generic.edit import CreateView
 from icecream import ic
 from magazine.models import Car, Yacht, Houses
+
 from utils import (coll, db_cars, db_houses, db_yachts, get_house_by_id,
-                   get_messages, give_money, verify_telegram_auth)
+                   get_messages, give_money, verify_telegram_auth, DoRequest)
 
 from .forms import CustomUserCreationForm, LoginUserForm
 from .models import CustomUser
+from authentication import SiteAuthentication, TelegramAuthentication
+from rest_framework.authentication import SessionAuthentication, TokenAuthentication
+from rest_framework.request import Request
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
 DOMEN = 'http://127.0.0.1:8000/'
 
@@ -76,17 +81,13 @@ def register(request):
 
 
 
-
-
 @login_required(login_url="/users/login/")
 def profile(request, server_id: int):
     # if request.user.server_id != server_id:
     #     return HttpResponseNotFound(render(request, '404.html'))
 
-    url_get_profile = DOMEN + 'api/get_profile/'
     data = {"action": "get_profile", "server_id": server_id, "source": "web"}
-    response = requests.post(url_get_profile, json=data).json()
-    ic(response)
+    response = DoRequest('api/get_profile/', 'POST', data=data)
     response['title'] = f'User profile ID: {response['server_id']}'
     
     return render(request, 'profile.html', response)
@@ -149,122 +150,73 @@ def loguot_user(request):
     messages.success(request, "Вы вышли с аккаунта")
     return logout_then_login(request, login_url='/profile/')
 
-@login_required(login_url="/users/login/")
-def sell_transport(request: WSGIRequestHandler, type: str, ucode: str):
-    
-    if type not in ('car', 'yacht'):
-        return JsonResponse({'success': False, 'error': 'Неверный тип транспорта'})
-    
-    
-    user = request.user
-    if not user:
-        return JsonResponse({'success': False, 'error': 'Пользователь не найден'})
-    
-    if type == 'car':
-        transports = user.car['cars']
-    else:
-        transports = user.yacht['yachts']
 
-    num = 0
-    for k, tr in enumerate(transports):
-        if tr['ucode'] == ucode: 
-            num = k
-    if type == 'car':
-        items = user.car.get('cars', [])
-    else:
-        items = user.yacht.get('yachts', [])
-    
-    ic(items, num)
-    transport_info = items[num]
-    items.pop(num)
-    
-    if type == 'car':
-        user.car['cars'] = items
-    else:
-        user.yacht['yachts'] = items
-    user.save()
 
-    give_money(request, request.user.server_id, transport_info['price'] // 2)
-    
-    if type == 'car':
-        car = Car.objects.get(id=transport_info['id'])
-        car.quantity += 1
-        car.save()
-
-    elif type == 'yacht':
-        yacht = Yacht.objects.get(id=transport_info['id'])
-        yacht.quantity += 1
-        yacht.save()
-
-    else: ic('ASHIBKA')
-
-    messages.success(request, 'Транспорт успешно продан!')
-    return JsonResponse({'success': True, 'message': 'Транспорт успешно продан!', 'messages': get_messages(request)})
-     
 
 
     
+class SellHouseView(APIView):
+    """API для смены никнейма
+    :param: NewNickname
 
-    
-def sell_house(request: WSGIRequestHandler, id: int):
+    returns: success: bool, old_nickname: str, new_nickname: str,
+             server_id: int, max_lenght: int"""
+    authentication_classes = [SessionAuthentication, TelegramAuthentication, SiteAuthentication]
+    permission_classes = []
 
-    house_info = get_house_by_id(id)
+    def post(self, request: Request, id: int):
 
+        house_info = get_house_by_id(id)
 
+        with transaction.atomic():
+            for k, tr in enumerate(request.user.house['houses']):
+                if tr['id'] == house_info.id:
+                    request.user.house['houses'].remove(tr)
+                    request.user.save()
+                    break
 
-    # result = coll.update_one({'server_id': request.user.server_id},
-    #                          {'$pull': {'house.houses': {'id': house_info.id}}})
-    #
-    # ic(request.user.house)
-    # if result.modified_count < 1:
-    #     return JsonResponse({'success': False, 'error': 'Не удалось удалить дом'})
+            house = Houses.objects.get(id=house_info.id)
+            house.owner = None
+            house.save()
 
-    with transaction.atomic():
-        for k, tr in enumerate(request.user.house['houses']):
-            if tr['id'] == house_info.id:
-                request.user.house['houses'].remove(tr)
-                request.user.save()
-                break
-
-
-
-        house = Houses.objects.get(id=house_info.id)
-        house.owner = None
-        house.save()
-
-    give_money(request, request.user.server_id, house_info.price // 2)
-    messages.success(request, 'Продажа прошла успешно!')
-    return JsonResponse({'success': True, 'message': 'Продажа прошла успешно!', 'messages': get_messages(request)})
+        give_money(request, request.user.server_id, house_info.price // 2)
+        messages.success(request, 'Продажа прошла успешно!')
+        return JsonResponse({'success': True, 'message': 'Продажа прошла успешно!', 'messages': get_messages(request)})
 
 def page_not_found(request, exception):
     ic(exception)
     return render(request, "404.html")
 
-def basement(request, id_house: int):
-    
-    url_get_basement = DOMEN + 'api/get_basement/' + str(id_house) + '/'
-    data = {"action": "get_basement", "server_id": request.user.server_id, "source": "web"}
-    ic(url_get_basement)
-    response: dict = requests.get(url_get_basement, json=data).json()
 
-    income = 0
-    current_videocards = len(response.get('videocards', []))
-    ic(response)
-    limit_videocards = response['house_info']['basement'].get('maxQuantity', 0)
-    for k in response['videocards']:
-        income += k['performance']
-    
-    
-    response.update({'my_server_id': request.user.server_id, 'income': income,
-                     'quantity_videocards': current_videocards, 'limit_videocards': limit_videocards,
-                     'mix_videocards': response['mix_videocards']})
-    # response.update()
-    ic(response)
-    
-    # if not response['house_info']['basement']:
-        
-    
-    if not response.get('videocards', {}):
-        response['success'] = False 
+class RenderBasementView(APIView):
+    """API для смены никнейма
+    :param: NewNickname
 
-    return render(request, 'basement.html', response)
+    returns: success: bool, old_nickname: str, new_nickname: str,
+             server_id: int, max_lenght: int"""
+    authentication_classes = [SessionAuthentication, TelegramAuthentication, SiteAuthentication]
+    permission_classes = []
+
+    def get(self, request: Request, id_house: int):
+
+        data = {"action": "get_basement", "server_id": request.user.server_id, "source": "web"}
+        ic('api/get_basement/' + str(id_house) + '/')
+        response = DoRequest('api/get_basement/' + str(id_house) + '/', 'GET', json=data)
+
+        ic(response)
+
+        income = 0
+        current_videocards = len(response.get('videocards', []))
+
+        limit_videocards = response['house_info']['basement'].get('maxQuantity', 0)
+        for k in response['videocards']:
+            income += k['performance']
+
+        response.update({'my_server_id': request.user.server_id, 'income': income,
+                         'quantity_videocards': current_videocards, 'limit_videocards': limit_videocards,
+                         'mix_videocards': response['mix_videocards']})
+
+        if not response.get('videocards', {}):
+            response['success'] = False
+
+        return render(request, 'basement.html', response)
