@@ -1,7 +1,7 @@
 from django.urls import path
 
 from .views.api_house import GetMyHousesView, GetHouseView, GetBasementView, GetTakeProfitBasementView, SellHouseView, \
-    CreateBasementView
+    CreateBasementView, GetBalanceBasementView, UpgradeBasementView
 from .views.api_transport import (CheckTransportInfo, GetMyCarsView,
                                   GetMyYachtsView, SellTransportToState)
 from .views.api_users import (ChangeLanguageView, ChangeNicknameView,
@@ -28,6 +28,8 @@ urlpatterns = [
     path('take_profit_basement/', GetTakeProfitBasementView.as_view(), name='take_profit_basement'),
     path('sell_house/<int:id>/', SellHouseView.as_view(), name='sell_house'),
     path('create_basement/', CreateBasementView.as_view(), name='create_basement'),
+    path('upgrade_basement/<int:id_house>/', UpgradeBasementView.as_view(), name='upgrade_basement'),
+    path('get_balance_basement/<int:id_house>/', GetBalanceBasementView.as_view(), name='get_balance_basement'),
     
     # Banking
     path('get_balance/', GetBalance.as_view(), name='get_balance'),

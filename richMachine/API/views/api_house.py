@@ -175,9 +175,13 @@ class GetTakeProfitBasementView(APIView):
         
         current_balance = house_info.basement['balance']
         if current_balance <= 0:
-            messages.info(request, 'Подвал | Вы ничего не добыли.')
+            messages.info(request, 'Подвал | Вы ничего не добыли.\nВозможно, вы недавно забирали прибыль')
             return Response({'success': False, 'messages': get_messages(request),})
-        
+
+        house = Houses.objects.get(id=house_info.id)
+        house.basement['balance'] = 0
+        house.save()
+
         db_houses.update_one({'id': request.data},
                              {'$set': {'basement.balance': 0}})
         give_money(request, request.user.server_id, current_balance, type_money='dollar', comment=f'Вы обналичили заработок с майнинга! Заработано: {intcomma(current_balance)}$')
@@ -185,6 +189,29 @@ class GetTakeProfitBasementView(APIView):
         return Response({'success': True, 'message': 'ok',
                          'messages': get_messages(request), 'new_balance': 0,
                          'profit': current_balance})
+
+
+class GetBalanceBasementView(APIView):
+    """API для получения значения прибыли с подвала
+    :param: None
+
+    returns: success: bool, balance: int"""
+
+    authentication_classes = [SessionAuthentication, TelegramAuthentication, SiteAuthentication]
+    permission_classes = []
+
+    def get(self, request: Request, id_house: int):
+        house_info = get_house_by_id(id_house)
+
+        if house_info.owner != request.user.server_id:
+            # messages.error(request, 'Вы не являетесь владельцем этого дома.')
+            return Response({'success': False})
+
+        if not house_info.basement:
+            # messages.error(request, 'Нет подвала.')
+            return Response({'success': False})
+
+        return Response({'success': True, 'balance': house_info.basement['balance']})
 
 
 class CreateBasementView(APIView):
@@ -223,6 +250,7 @@ class CreateBasementView(APIView):
         messages.success(request, 'Поздравляем | Вы построили подвал первого уровня!')
         return Response({'success': True, 'messages': get_messages(request), 'level': 1, 'house_id': house.id})
 
+
 class UpgradeBasementView(APIView):
     """API для постройки подвала в доме
     :param: None
@@ -237,6 +265,45 @@ class UpgradeBasementView(APIView):
     authentication_classes = [SessionAuthentication, TelegramAuthentication, SiteAuthentication]
     permission_classes = []
 
-    def post(self, request: Request):
+    def get(self, request: Request, id_house: int):
+        house_info = get_house_by_id(id_house)
+        upgrade_data = {
+            1: {'maxQuantity': 10, 'level': 1, 'price': 4_000_000},
+            2: {'maxQuantity': 30, 'level': 2, 'price': 5_000_000},
+            3: {'maxQuantity': 60, 'level': 3, 'price': 7_000_000},
+        }
+
+        if not house_info.basement:
+            messages.error(request, 'Нет подвала.')
+            return Response({'success': False, 'messages': get_messages(request)})
+
+        if house_info.basement.get('level', 0) < 1:
+            messages.error(request, 'Нет подвала.')
+            return Response({'success': False, 'messages': get_messages(request)})
+
+        if house_info.owner != request.user.server_id:
+            messages.error(request, "Дом не найден")
+            return Response({'success': False, 'messages': get_messages(request)})
+
+        if house_info.basement.get('level', 0) >= max(upgrade_data.keys()):
+            messages.error(request, 'Уровень подвала максимален')
+
+        if house_info.basement.get('level', 0) not in upgrade_data.keys():
+            messages.error(request, 'Неизвестная ошибка.')
+            return Response({'success': False, 'messages': get_messages(request)})
+
+        if request.user.money['cash'] < upgrade_data[house_info.basement.get('level', 0) + 1]['price']:
+            messages.error(request, 'Недостаточно средств.')
+            return Response({'success': False, 'messages': get_messages(request)})
+
+        give_money(request, request.user.server_id, -upgrade_data[house_info.basement.get('level', 0) + 1]['price'])
+
+        house_info.basement['maxQuantity'] = upgrade_data[house_info.basement.get('level', 0) + 1]['maxQuantity']
+        house_info.basement['level'] += 1
+        house_info.save()
+
+        messages.success(request, f'Вы улучшили подвал до {house_info.basement['level']} уровня! Теперь подвал вмещает больше видеокарт.')
+        return Response({'success': True, 'messages': get_messages(request), 'new_level': house_info.basement['level']})
+
         #TODO: доделать обновление подвала
         ...
