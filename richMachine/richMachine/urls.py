@@ -20,7 +20,8 @@ from django.contrib import admin
 from django.urls import include, path
 from users.views import profile, self_profile
 from other_functions.views import inventory, casino
-from users.views import basement
+from users.views import RenderBasementView
+
 
 app_name = 'richMachine'
 
@@ -35,7 +36,7 @@ urlpatterns = [
     path('profile/<int:server_id>', profile, name='profile'),
     path('inventory/', inventory.RenderInventory.as_view(), name='inventory'),
     
-    path('basement/<int:id_house>/', basement, name='basement'),
+    path('basement/<int:id_house>/', RenderBasementView.as_view(), name='basement'),
     
     path('casino/', casino.MainCasinoView.as_view(), name='casino'),
     path('casino/slot/', casino.SlotMachineView.as_view(), name='slot_machine'),

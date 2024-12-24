@@ -1,7 +1,9 @@
 from authentication import SiteAuthentication, TelegramAuthentication
+from rest_framework.authentication import SessionAuthentication
+from rest_framework.authentication import TokenAuthentication
 from django.contrib import messages
 from icecream import ic
-from rest_framework.authentication import SessionAuthentication
+
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -66,14 +68,10 @@ class ProfileView(APIView):
              job_lvl: int, language: str, last_login: datetime, money: dict,
              nickname: dict, registration: datetime, server_id: int, telegram_id: int,
              user_id: int, username: str, username_tg: str"""
-    authentication_classes = [SessionAuthentication, TelegramAuthentication, SiteAuthentication]
+    authentication_classes = [SessionAuthentication, TelegramAuthentication, SiteAuthentication, TokenAuthentication]
     permission_classes = []
     
     def post(self, request: Request):
-
-        if not request.data:
-            return Response({"success": False, "error": "data_is_empty"})
-
         user_info = request.user
         my_server_id = user_info.server_id
         if not user_info:

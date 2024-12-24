@@ -3,7 +3,7 @@ from authentication import SiteAuthentication, TelegramAuthentication
 from django.contrib import messages
 from django.contrib.humanize.templatetags.humanize import intcomma
 from icecream import ic
-from rest_framework.authentication import SessionAuthentication
+from rest_framework.authentication import SessionAuthentication, TokenAuthentication
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -12,7 +12,7 @@ from magazine.models import Yacht, Car
 from utils import (DOMEN, coll, db_cars, db_yachts, get_car_by_id,
                    get_district_by_id, get_full_houses_info, get_house_by_id,
                    get_messages, get_transport_by_ucode, get_yacht_by_id,
-                   give_money)
+                   give_money, DoRequest)
 
 
 class GetMyCarsView(APIView):
@@ -94,55 +94,64 @@ class CheckTransportInfo(APIView):
 
         return Response({"success": False, 'error': "invalid_transport"})
 
-    
+
 class SellTransportToState(APIView):
     """API для продажи транспорта пользователя
     :param: None
-    
+
     returns: success: bool, type: str, info: dict"""
-    authentication_classes = [SessionAuthentication, TelegramAuthentication, SiteAuthentication]
-    
-    def delete(self, request: Request):
-        data = request.data
-        ic(data)
-        
-        if data['type'] not in ('car', 'yacht'):
+    authentication_classes = [SessionAuthentication, TelegramAuthentication, SiteAuthentication, TokenAuthentication]
+
+    def post(self, request: Request, type: str, ucode: str):
+        ic(request)
+        # ic(args)
+        # ic(kwargs)
+
+        if type not in ('car', 'yacht'):
             return Response({'success': False, 'error': 'Неверный тип транспорта'})
 
-        user_info = request.user
-        if user_info.is_anonymous:
+        user = request.user
+        if not user:
             return Response({'success': False, 'error': 'Пользователь не найден'})
-        
-        ic(data['ucode'])
-        
-        why_transport = request.user.car if data['type'] == 'car' else request.user.yacht
 
-        for transport in why_transport[f"{data['type']}s"]:
-            
-            if transport['ucode'] == data['ucode']:
-                
-                url_get_transport_info = DOMEN + 'api/transport_info/'
-                data = {"action": "get_transport_info", "server_id": request.user.server_id, "type": data['type'], 
-                        "id": data['id'], "ucode": data['ucode'], "source": "web"}
-                response = requests.get(url_get_transport_info, json=data).json()
-                ic(response)
-                ic(transport)
-                ic("Продаю машину")
-                ic(request.user.server_id)
-                coll.update_one({'server_id': request.user.server_id},
-                                {'$pull': {f"{data['type']}.{data['type']}s": {'ucode': data['ucode']}}})
-                give_money(request, request.user.server_id, response.get('info', {}).get('price') // 2)
-
-                if data['type'] == 'car':
-                    db_cars.update_one({'id': int(data['id'])}, {'$inc': {'quantity': 1}})
-                    
-                elif data['type'] == 'yacht':
-                    db_yachts.update_one({'id': int(data['id'])}, {'$inc': {'quantity': 1}})
-                    
-                response = response['info']
-                messages.success(request, f"Транспорт {response['name']} был успешно продан за {intcomma(response['price'] // 2)} ₽")
-                return Response({'success': True, 'sell_to': 'state', 'price': response['price'] // 2,
-                                 'messages': get_messages(request), 'ucode': response['ucode'], 'id': int(data['id']),
-                                 'type': data['type'], 'name': response['name']})
+        if type == 'car':
+            transports = user.car['cars']
         else:
-            return Response({'success': False, 'error': 'Машина не найдена'})
+            transports = user.yacht['yachts']
+
+        num = 0
+        for k, tr in enumerate(transports):
+            if tr['ucode'] == ucode:
+                num = k
+        if type == 'car':
+            items = user.car.get('cars', [])
+        else:
+            items = user.yacht.get('yachts', [])
+
+        ic(items, num)
+        transport_info = items[num]
+        items.pop(num)
+
+        if type == 'car':
+            user.car['cars'] = items
+        else:
+            user.yacht['yachts'] = items
+        user.save()
+
+        give_money(request, request.user.server_id, transport_info['price'] // 2)
+
+        if type == 'car':
+            car = Car.objects.get(id=transport_info['id'])
+            car.quantity += 1
+            car.save()
+
+        elif type == 'yacht':
+            yacht = Yacht.objects.get(id=transport_info['id'])
+            yacht.quantity += 1
+            yacht.save()
+
+        else:
+            ic('ASHIBKA')
+
+        messages.success(request, 'Транспорт успешно продан!')
+        return Response({'success': True, 'message': 'Транспорт успешно продан!', 'messages': get_messages(request)})

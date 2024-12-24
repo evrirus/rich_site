@@ -48,6 +48,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         if (infoCar) infoCar.style.visibility = 'hidden';
         if (infoHouse) infoHouse.style.visibility = 'hidden';
+        if (loadingIndicatorHouse.style.visibility === 'visible') loadingIndicatorHouse.style.visibility = 'hidden';
     }
 
     function updateModalContent(data, type) {
@@ -132,10 +133,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 type: 'GET',
                 url: `/api/get_house_profile/${currentHouseId}/`,
                 success: function(response) {
-                    cache[cacheKey] = response;
-                    updateModalContent(response, 'house');
+                    if (!response.success) {
+                        loadingIndicatorHouse.style.visibility = 'visible';
+                        closeAllModals()
+
+                    }
+                    else {
+                        console.log(response);
+                        cache[cacheKey] = response;
+                        updateModalContent(response, 'house');
+                    }
                 },
                 error: function(xhr, status, error) {
+                    console.log(error);
                     console.error('Ошибка при загрузке данных: ', error);
                     loadingIndicatorHouse.style.visibility = 'hidden';
                 }
@@ -190,6 +200,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             $('#new_nickname').val(""); // очищаем input поле
                         }
                         handleMessages(response.messages);
+                        closeAllModals();
                     },
                     error: function(xhr, status, error) {
                         alert('Произошла ошибка: ' + error);
@@ -216,7 +227,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (acceptSellTransportButton) {
             acceptSellTransportButton.addEventListener('click', function() {
                 const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-                const url = `/users/sell_transport/${currentTransportType}/${currentTransportUcode}/`;
+                const url = `/api/sell_transport_to_state/${currentTransportType}/${currentTransportUcode}/`;
+                console.log(currentTransportId);
                 const data = {
                     id: currentTransportId,
                     type: currentTransportType
@@ -239,6 +251,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         }
                         handleMessages(response.messages);
                         closeAllModals();
+                        // ();
                     },
                     error: function(error) {
                         loadingIndicatorTransport.style.visibility = 'hidden';
@@ -255,13 +268,13 @@ document.addEventListener('DOMContentLoaded', () => {
         // Перенаправляет на страницу подвала по ID дома
         document.getElementById('basement').addEventListener('click', function(event) {
             let houseId = event.explicitOriginalTarget.attributes.house_id.textContent;
-            window.location.assign(`//127.0.0.1:8000/basement/${houseId}`);
+            window.location.assign(`/basement/${houseId}`);
         });
 
         if (acceptSellHouseButton) {
             acceptSellHouseButton.addEventListener('click', function() {
                 const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-                fetch(`/users/sell_house/${currentHouseId}/`, {
+                fetch(`/api/sell_house/${currentHouseId}/`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
