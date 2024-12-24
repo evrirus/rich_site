@@ -87,6 +87,37 @@ $(document).ready(function() {
         });
 
     })
+
+    const upgradeBasement = $('#upgrade-basement__button');
+    upgradeBasement.on('click', function (event) {
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        const houseId = upgradeBasement.attr('house-id');
+
+        $.ajax({
+            type: 'GET',
+            url: `/api/upgrade_basement/${houseId}/`,
+            headers: {
+                'X-CSRFToken': csrfToken,
+                'Content-Type': 'application/json'
+            },
+            success: function(response) {
+                console.log(response);
+                if (response.success) {
+
+                    $('.empty').text('Ваш подвал пуст!');
+                    // $('#upgrade-basement').remove();
+                    $('#limit-videocards').text();
+                }
+                handleMessages(response.messages);
+                // setTimeout(function(){ location.reload()},3000);
+
+            },
+            error: function(xhr, status, error) {
+                alert('Произошла ошибка: ' + error);
+            }
+        });
+
+    });
 });
   
   
