@@ -153,34 +153,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    function handleMessages(messages) {
-        const container = $('#messages-container');
-        messages.forEach(function(message) {
-            const parts = message.message.split('|');
-            const alertClass = 'alert-' + message.level;
-            let alert = $('<div class="alert ' + alertClass + '"></div>');
-
-            if (parts.length > 1) {
-                alert.append('<strong>' + parts[0] + '</strong><br>' + parts[1]);
-            } else {
-                alert.text(message.message);
-            }
-
-            // Добавляем уведомление в начало контейнера
-            container.prepend(alert);
-
-            // Удаляем уведомление через 5 секунд
-            setTimeout(() => {
-                alert.fadeOut(500, function() {
-                    $(this).remove();
-                });
-            }, 5000);
-        });
-    }
 
     if (nickname && modalNickname && closeNicknameButton) {
         nickname.addEventListener('dblclick', (event) => openModal(modalNickname, event, 40, 30));
-        closeNicknameButton.addEventListener('click', closeAllModals);
+        closeNicknameButton.addEventListener('dblclick', closeAllModals);
     
         $(document).ready(function() {
             $('#nickname-form').on('submit', function(event) {
@@ -196,10 +172,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
                         if (response.success) {
                             $('#current-name').text(response.new_nickname);
-                            closeAllModals();
                             $('#new_nickname').val(""); // очищаем input поле
                         }
-                        handleMessages(response.messages);
+
                         closeAllModals();
                     },
                     error: function(xhr, status, error) {
@@ -249,9 +224,9 @@ document.addEventListener('DOMContentLoaded', () => {
                             const transportDiv = document.querySelector(`.${currentTransportType}.frosted_glass[ucode="${currentTransportUcode}"][data-modal-type="${currentTransportType}"][numerical-order="${currentTransportNumerical}"]`);
                             transportDiv.remove();
                         }
-                        handleMessages(response.messages);
+
                         closeAllModals();
-                        // ();
+
                     },
                     error: function(error) {
                         loadingIndicatorTransport.style.visibility = 'hidden';
@@ -291,7 +266,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         houseDiv.remove();
                     }
                     console.log(data);
-                    handleMessages(data.messages);
+
                     closeAllModals();
                   }).catch(error => {
                     loadingIndicatorTransport.style.visibility = 'hidden';
@@ -333,7 +308,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         }
                         closeAllModals();
                     }
-                    handleMessages(data.messages);
+
             }).catch(error => {
                 alert('Произошла ошибка: ' + error.message);
             });

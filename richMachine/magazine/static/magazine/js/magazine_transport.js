@@ -12,30 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentTransportType = null;
     let currentTransportId = null;
 
-    function handleMessages(messages) {
-        const container = $('#messages-container');
-        messages.forEach(function(message) {
-            const parts = message.message.split('|');
-            const alertClass = 'alert-' + message.level;
-            let alert = $('<div class="alert ' + alertClass + '"></div>');
 
-            if (parts.length > 1) {
-                alert.append('<strong>' + parts[0] + '</strong><br>' + parts[1]);
-            } else {
-                alert.text(message.message);
-            }
-
-            // Добавляем уведомление в начало контейнера
-            container.prepend(alert);
-
-            // Удаляем уведомление через 5 секунд
-            setTimeout(() => {
-                alert.fadeOut(500, function() {
-                    $(this).remove();
-                });
-            }, 5000);
-        });
-    }
 
     if (transportItemsContainer && modal) {
         transportItemsContainer.addEventListener('click', (event) => {
@@ -133,7 +110,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }).then(response => response.json())
                   .then(data => {
                         closeModal();
-                        handleMessages(data.messages)
+                        // handleMessages(data.messages)
                 }).catch(error => {
                     alert('Произошла ошибка: ' + error.message);
                 });

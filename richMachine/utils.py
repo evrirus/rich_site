@@ -17,6 +17,8 @@ from pymongo import MongoClient
 
 from magazine.models import Car, Districts, Houses, Yacht
 from users.models import CustomUser
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
 
 DOMEN = 'http://127.0.0.1:8000/'
 
@@ -138,6 +140,92 @@ def get_transport_by_ucode(server_id: int, type: str, ucode: str):
 
 
 
+
+def send_message_to_user(user_id, message):
+    """
+    Отправляет сообщение пользователю через WebSocket.
+    """
+    ic(message, user_id)
+    channel_layer = get_channel_layer()
+    group_name = f'user_{user_id}'
+    # ic(message)
+    message['text'] += ' WS'
+    ic(message, 'haah')
+
+    async_to_sync(channel_layer.group_send)(
+        group_name,
+        {
+            'type': 'send_notification',  # Метод, который будет вызван в Consumer
+            'message': message,          # Данные для отправки
+        }
+    )
+
+
+class Money:
+    #todo: переделать give_money на этот класс.
+    def __init__(self, request: WSGIRequestHandler,
+                 server_id: int, sum: int,
+                 type_money: str = 'cash', comment=None):
+
+        self._request = request
+        self._server_id = server_id
+        self._sum = sum
+        self._type_money = type_money
+        self._comment = comment
+
+    @property
+    def request(self):
+        return self._request
+
+    @property
+    def server_id(self):
+        return self._server_id
+
+    @property
+    def sum(self):
+        return self._sum
+
+    @property
+    def type_money(self):
+        return self._type_money
+
+    @property
+    def comment(self):
+        return self._comment
+
+    @comment.setter
+    def comment(self, value):
+        if value is not None and value != self._comment:
+            self._comment = value
+        return self._comment
+
+    def give(self):
+        user = self.request.user
+        user.money[self.type_money] += (self.sum)
+        user.save()
+        return self
+
+    def create_notification(self):
+        if self.sum > 0 and not self.comment:
+            # ic(sum > 0 and not comment)
+            messages.success(self.request, f"На баланс начислено: {intcomma(sum)} {self.get_symbol_money(self._type_money)}")
+        elif self.sum < 0 and not self.comment:
+            # ic(sum < 0 and not comment)
+            messages.success(self.request, f"С баланса списано: {intcomma(sum)} {self.get_symbol_money(self._type_money)}")
+        elif self.comment:
+            # ic(comment)
+            messages.success(self.request, self.comment)
+
+        return self
+
+    @staticmethod
+    def get_symbol_money(type_money: str = "cash"):
+        if type_money in ("cash", "bank") : symbol = "₽"
+        elif type_money == 'dollar': symbol = "$"
+        elif type_money == 'bitcoin': symbol = "₿"
+        else: symbol = "(?)"
+        return symbol
+
 def get_symbol_money(type_money: str = "cash"):
     if type_money in ("cash", "bank") : symbol = "₽"
     elif type_money == 'dollar': symbol = "$"
@@ -154,13 +242,20 @@ def give_money(request: WSGIRequestHandler, server_id: int, sum: int, type_money
     ic(comment)
     if sum > 0 and not comment:
         # ic(sum > 0 and not comment)
-        messages.success(request, f"На баланс начислено: {intcomma(sum)} {symbol}")
+        comment = f"На баланс начислено: {intcomma(sum)} {symbol}"
+        # messages.success(request, f"На баланс начислено: {intcomma(sum)} {symbol}")
     elif sum < 0 and not comment:
         # ic(sum < 0 and not comment)
-        messages.success(request, f"С баланса списано: {intcomma(sum)} {symbol}")
-    elif comment:
+        comment = f"С баланса списано: {intcomma(sum)} {symbol}"
+        # messages.success(request, f"С баланса списано: {intcomma(sum)} {symbol}")
+    # elif comment:
         # ic(comment)
-        messages.success(request, comment)
+        # messages.success(request, comment)
+
+    ic(user.id, user.server_id)
+    ic(comment)
+    send_message_to_user(user.id, {'text': comment})
+
     return True
 
 

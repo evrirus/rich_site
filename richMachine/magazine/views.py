@@ -1,18 +1,17 @@
 from wsgiref.simple_server import WSGIRequestHandler
 
-from django.contrib import messages
+# from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.humanize.templatetags.humanize import intcomma
 from django.http import JsonResponse
 from django.shortcuts import render
 from icecream import ic
 
-from users.admin import CustomUserAdmin
 from users.models import CustomUser
-# from pymongo.errors import ConnectionFailure, OperationFailure
+
 from utils import (coll, db_houses, generate_ucode,
-                   get_district_by_id, get_house_by_id, get_item_by_id, get_messages,
-                   give_money, db_items, db_inv)
+                   get_district_by_id, get_house_by_id, get_item_by_id,
+                   give_money, db_items, db_inv, send_message_to_user)
 from .models import Car, Yacht, Districts, Houses, Items
 
 
@@ -84,30 +83,29 @@ def buy_transport(request: WSGIRequestHandler, type, id):
         if type == 'yachts':
             transport_info = Yacht.objects.get(id=id)
             if user.yacht.get('maxPlaces', 2) <= len(user.yacht.get('yachts', {})):
-                messages.error(request, 'Превышено максимальное количество мест в вашем флоте.')
-                return JsonResponse(
-                    {'success': False, 'message': 'Превышено максимальное количество мест в вашем флоте.',
-                     'messages': get_messages(request)})
+                send_message_to_user(request.user.id, {'text': 'Превышено максимальное количество мест в вашем флоте.'})
+                # messages.error(request, 'Превышено максимальное количество мест в вашем флоте.')
+                return JsonResponse({'success': False})
 
         elif type == 'cars':
             transport_info = Car.objects.get(id=id)
 
             if user.car.get('maxPlaces', 2) <= len(user.car.get('cars', {})):
-                messages.error(request, 'Превышено максимальное количество мест в вашем гараже.')
-                return JsonResponse(
-                    {'success': False, 'message': 'Превышено максимальное количество мест в вашем гараже.',
-                     'messages': get_messages(request)})
+                send_message_to_user(request.user.id, {'text': 'Превышено максимальное количество мест в вашем гараже.'})
+                # messages.error(request, 'Превышено максимальное количество мест в вашем гараже.')
+                return JsonResponse({'success': False})
         else:
             return JsonResponse({'success': False, 'message': 'Invalid type'})
 
         if transport_info.quantity <= 0:
-            messages.error(request, 'Транспорт раскуплен.')
-            return JsonResponse(
-                {'success': False, 'message': 'Транспорт раскуплен.', 'messages': get_messages(request)})
+            send_message_to_user(request.user.id, {'text': 'Транспорт раскуплен.'})
+            # messages.error(request, 'Транспорт раскуплен.')
+            return JsonResponse({'success': False})
 
         if user.money.get('cash', {}) < transport_info.price:
-            messages.error(request, 'Недостаточно средств.')
-            return JsonResponse({'success': False, 'messages': get_messages(request)})
+            send_message_to_user(request.user.id, {'text': 'Недостаточно средств.'})
+            # messages.error(request, 'Недостаточно средств.')
+            return JsonResponse({'success': False})
 
         sample = {
             'id': transport_info.id,
@@ -134,10 +132,9 @@ def buy_transport(request: WSGIRequestHandler, type, id):
             yacht.quantity -= 1
             yacht.save()
 
-        messages.success(request, 'Покупка прошла успешно!')
-        return JsonResponse(
-            {'success': True, 'message': 'Покупка прошла успешно!', 'messages': get_messages(request), 'type': type,
-             'id': id})
+        send_message_to_user(request.user.id, {'text': 'Покупка прошла успешно!'})
+        # messages.success(request, 'Покупка прошла успешно!')
+        return JsonResponse({'success': True, 'type': type, 'id': id})
     else:
         return JsonResponse({'success': False, 'message': 'Метод не поддерживается.'})
 
@@ -165,20 +162,21 @@ def get_house_info(request: WSGIRequestHandler, house_id: int):
 def buy_house(request: WSGIRequestHandler, id: int):
     house_info = get_house_by_id(id)
     if house_info.owner:
-        messages.error(request, "Дом уже занят!")
-        return JsonResponse({'success': False, 'message': "Дом уже занят!", 'messages': get_messages(request)})
+        send_message_to_user(request.user.id, {'text': 'Дом уже занят!'})
+        # messages.error(request, "Дом уже занят!")
+        return JsonResponse({'success': False})
 
     user_info = request.user
 
     if user_info.money.get('cash', {}) < house_info.price:
-        messages.error(request, 'Недостаточно средств.')
-        return JsonResponse({'success': False, 'message': 'Недостаточно средств.', 'messages': get_messages(request)})
+        send_message_to_user(request.user.id, {'text': 'Недостаточно средств.'})
+        # messages.error(request, 'Недостаточно средств.')
+        return JsonResponse({'success': False})
 
     if user_info.house.get('maxPlaces', 2) <= len(user_info.house.get('houses', {})):
-        messages.error(request, 'Превышено максимальное количество.')
-        return JsonResponse(
-            {'success': False, 'message': 'Превышено максимальное количество.', 'messages': get_messages(request)})
-
+        send_message_to_user(request.user.id, {'text': 'Превышено максимальное количество.'})
+        # messages.error(request, 'Превышено максимальное количество.')
+        return JsonResponse({'success': False})
 
     give_money(request, user_info.server_id, -house_info.price)
 
@@ -194,8 +192,9 @@ def buy_house(request: WSGIRequestHandler, id: int):
     # db_houses.update_one({'id': house_info.id},
     #                      {'$set': {'owner': user_info.server_id}})
 
-    messages.success(request, "Дом успешно приобретен!")
-    return JsonResponse({"message": "Дом успешно приобретен!", 'messages': get_messages(request)})
+    send_message_to_user(request.user.id, {'text': 'Дом успешно приобретен!'})
+    # messages.success(request, "Дом успешно приобретен!")
+    return JsonResponse({'success': True})
 
 
 @login_required(login_url="/users/login/")
@@ -223,25 +222,27 @@ def buy_videocard(request: WSGIRequestHandler, videocard_id: int):
 
     user_info = coll.find_one({'server_id': request.user.server_id})
     if user_info.get('money', {}).get('dollar', {}) < videocard_info.get('price'):
-        ic(user_info.get('money', {}).get('dollar', {}))
-        ic(videocard_info.get('price'))
-        messages.error(request, 'Недостаточно средств.')
-        return JsonResponse({'success': False, 'message': 'Недостаточно средств.', 'messages': get_messages(request)})
+
+        send_message_to_user(request.user.id, {'text': 'Недостаточно средств.'})
+        # messages.error(request, 'Недостаточно средств.')
+        return JsonResponse({'success': False, 'message': 'Недостаточно средств.', })
 
     user_inventory = db_inv.find_one({'server_id': request.user.server_id})
 
     if len(user_inventory.get('inventory', {})) >= user_inventory.get('maxQuantity', 30):
-        messages.error(request, 'Ваш инвентарь полон. Недостаточно места.')
+        send_message_to_user(request.user.id, {'text': 'Ваш инвентарь полон. Недостаточно места.'})
+        # messages.error(request, 'Ваш инвентарь полон. Недостаточно места.')
         return JsonResponse({'success': False, 'message': 'Ваш инвентарь полон. Недостаточно места.',
-                             'messages': get_messages(request)})
+                             })
 
     give_money(request, request.user.server_id, -videocard_info['price'], type_money='dollar')
 
     db_inv.update_one({'server_id': request.user.server_id},
                       {'$push': {'inventory': {'id': videocard_info['id'], 'type': videocard_info['type']}}})
 
-    messages.success(request, "Видеокарта куплена!")
-    return JsonResponse({"success": True, "message": "Видеокарта куплена!", 'messages': get_messages(request)})
+    send_message_to_user(request.user.id, {'text': 'Видеокарта куплена!'})
+    # messages.success(request, "Видеокарта куплена!")
+    return JsonResponse({"success": True})
 
 
 class Magazine:

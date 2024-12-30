@@ -1,6 +1,5 @@
 import requests
 from authentication import SiteAuthentication, TelegramAuthentication
-from django.contrib import messages
 from django.contrib.humanize.templatetags.humanize import intcomma
 from icecream import ic
 from rest_framework.authentication import SessionAuthentication, TokenAuthentication
@@ -11,8 +10,8 @@ from rest_framework.views import APIView
 from magazine.models import Yacht, Car
 from utils import (DOMEN, coll, db_cars, db_yachts, get_car_by_id,
                    get_district_by_id, get_full_houses_info, get_house_by_id,
-                   get_messages, get_transport_by_ucode, get_yacht_by_id,
-                   give_money, DoRequest)
+                   get_transport_by_ucode, get_yacht_by_id,
+                   give_money, DoRequest, send_message_to_user)
 
 
 class GetMyCarsView(APIView):
@@ -153,5 +152,6 @@ class SellTransportToState(APIView):
         else:
             ic('ASHIBKA')
 
-        messages.success(request, 'Транспорт успешно продан!')
-        return Response({'success': True, 'message': 'Транспорт успешно продан!', 'messages': get_messages(request)})
+        send_message_to_user(request.user.id, {'text': 'Транспорт успешно продан!'})
+        # messages.success(request, 'Транспорт успешно продан!')
+        return Response({'success': True, 'message': 'Транспорт успешно продан!'})

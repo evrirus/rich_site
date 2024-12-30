@@ -30,7 +30,8 @@ ALLOWED_HOSTS = ['*']
 
 INSTALLED_APPS = [
     'homePage',
-    # 'djongo',
+    'daphne',
+    'channels',
     'users',
     'magazine',
     'other_functions',
@@ -47,6 +48,17 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 ]
+
+ASGI_APPLICATION = 'richMachine.asgi.application'
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            'hosts': [('127.0.0.1', 6379)],
+        },
+    },
+}
+
 
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': (
@@ -73,7 +85,6 @@ MIDDLEWARE = [
 
 AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
-    # 'users.telegram_backend.TelegramBackend',
 ]
 TELEGRAM_BOT_TOKEN = '6534598365:AAGxpSaIXsDU2Gr44k-wEfd_8zec6SAuxTg'
 
@@ -178,11 +189,11 @@ AUTH_USER_MODEL = "users.CustomUser"
 
 LOGIN_REDIRECT_URL = "home"
 LOGOUT_REDIRECT_URL = "home"
-CSRF_TRUSTED_ORIGINS = ['https://8c4d-5-228-83-61.ngrok-free.app']
+CSRF_TRUSTED_ORIGINS = ['https://ee27-5-228-83-61.ngrok-free.app']
 SECURE_CROSS_ORIGIN_OPENER_POLICY = 'same-origin-allow-popups'
 CORS_ORIGIN_WHITELIST = (
 'http://localhost:8000',  # for localhost (REACT Default)
-'https://8c4d-5-228-83-61.ngrok-free.app', # for network
+'https://ee27-5-228-83-61.ngrok-free.app', # for network
 )
 # В файле settings.py вашего Django-приложения
 CSP_FRAME_ANCESTORS = ("'self'", "https://*.t.me")
