@@ -1,5 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
 
+
+
     const buttonFunctions = document.querySelector('.button-functions');
     const otherFunctions = document.querySelector('.other-functions');
 

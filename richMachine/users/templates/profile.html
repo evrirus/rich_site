@@ -103,7 +103,7 @@
         <span class="type-property">Автомобили</span>
 
         {% for car in cars %}
-            <div class="car frosted_glass" id="{{car.id}}" data-modal-id="{{car.id}}" data-modal-type="car" numerical-order="{{ forloop.counter }}" ucode="{{ car.ucode }}">
+            <div class="car frosted_glass" id="{{car.id}}" data-modal-id="{{car.id}}" data-modal-type="car" numerical-order="{{ forloop.counter }}" ucode="{{ car.ucode }}" style="cursor: pointer;">
                 <span class="car__name">{{car.name}}</span><br>
                 <span class="car__price">Гос.стоимость - {{car.price|intcomma}} ₽</span>
             </div>
@@ -112,7 +112,7 @@
     <div class="yachts">
         <span class="type-property">Яхты</span>
         {% for yacht in yachts %}
-            <div class="yacht frosted_glass" id="{{yacht.id}}" data-modal-id="{{yacht.id}}" data-modal-type="yacht" numerical-order="{{ forloop.counter }}" ucode="{{ yacht.ucode }}">
+            <div class="yacht frosted_glass" id="{{yacht.id}}" data-modal-id="{{yacht.id}}" data-modal-type="yacht" numerical-order="{{ forloop.counter }}" ucode="{{ yacht.ucode }}" style="cursor: pointer;">
                 <span class="yacht__name">{{yacht.name}}</span><br>
                 <span class="yacht__price">Гос.стоимость - {{yacht.price|intcomma}} ₽</span>
             </div>
@@ -121,7 +121,7 @@
     <div class="houses">
         <span class="type-property">Недвижимость</span>
         {% for house in house %}
-            <div class="house frosted_glass" id="{{house.id}}" data-modal-id="{{house.id}}" data-modal-type="house" numerical-order="{{ forloop.counter }}">
+            <div class="house frosted_glass" id="{{house.id}}" data-modal-id="{{house.id}}" data-modal-type="house" numerical-order="{{ forloop.counter }}" style="cursor: pointer;">
                 <span class="house__name">{{house.district_info.name|translite}} №{{house.id}}</span><br>
                 <span class="house__price">Гос.стоимость - {{house.price|intcomma}} ₽</span>
             </div>

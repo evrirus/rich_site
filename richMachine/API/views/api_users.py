@@ -1,14 +1,14 @@
 from authentication import SiteAuthentication, TelegramAuthentication
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.authentication import TokenAuthentication
-from django.contrib import messages
+# from django.contrib import messages
 from icecream import ic
 
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from utils import (get_full_houses_info,
-                    get_messages)
+                   send_message_to_user)
 from users.models import CustomUser
 
 
@@ -34,29 +34,35 @@ class ChangeNicknameView(APIView):
         max_length = request.user.nickname['max']
         
         if not new_nickname:
-            messages.error(request, f"Вы не указали нового имени.")
-            return Response({"success": False, "error": "nickname_is_empty", "messages": get_messages(request)})
+            send_message_to_user(request.user.id, {'text': 'Вы не указали нового имени.'})
+            # messages.error(request, f"Вы не указали нового имени.")
+            return Response({"success": False, "error": "nickname_is_empty"})
         
         if len(new_nickname) < 3:
-            messages.error(request, f"Указанное имя слишком короткое. Имя должно содержать более 3 символов")
-            return Response({"success": False, "error": "nickname_is_short", "messages": get_messages(request)})
+            send_message_to_user(request.user.id, {'text': 'Указанное имя слишком короткое. Имя должно содержать более 3 символов'})
+            # messages.error(request, f"Указанное имя слишком короткое. Имя должно содержать более 3 символов")
+            return Response({"success": False, "error": "nickname_is_short"})
         
         if len(new_nickname) > max_length:
-            messages.error(request, f"Указанное имя слишком длинное. Максимальное количество символов: {max_length}")
-            return Response({"success": False, "error": "nickname_is_long", "messages": get_messages(request)})
+            send_message_to_user(request.user.id,
+                                 {'text': f'Указанное имя слишком длинное. Максимальное количество символов: {max_length}'})
+            # messages.error(request, f"Указанное имя слишком длинное. Максимальное количество символов: {max_length}")
+            return Response({"success": False, "error": "nickname_is_long"})
         
         if new_nickname == old_nickname:
-            messages.error(request, f"Указанное имя совпадает с предыдущим.")
-            return Response({"success": False, "error": "nickname_is_the_same", "messages": get_messages(request)})
+            send_message_to_user(request.user.id, {'text': 'Указанное имя совпадает с предыдущим.'})
+            # messages.error(request, f"Указанное имя совпадает с предыдущим.")
+            return Response({"success": False, "error": "nickname_is_the_same"})
         
         user = CustomUser.objects.get(server_id=server_id)
         user.nickname['name'] = new_nickname
         user.save()
-        
-        messages.success(request, f"Теперь вы известны как {new_nickname}")
+
+        send_message_to_user(request.user.id, {'text': f'Теперь вы известны как {new_nickname}'})
+        # messages.success(request, f"Теперь вы известны как {new_nickname}")
         return Response({"success": True, 
                          "old_nickname": old_nickname, "new_nickname": new_nickname, 
-                         "server_id": server_id, "max_lenght": max_length, "messages": get_messages(request)})
+                         "server_id": server_id, "max_lenght": max_length})
 
 
 class ProfileView(APIView):
@@ -150,8 +156,9 @@ class ChangeLanguageView(APIView):
         
         result = {"success": True, "old_language": language, "new_language": new_language}
         if not request.user.is_anonymous:
-            messages.success(request, f"Вы поменяли язык на {'Русский' if languages[new_language_index] == 'ru' else 'Английский'}")
-            result['messages'] = get_messages(request)
+            send_message_to_user(request.user.id,
+                                 {'text': f'Вы поменяли язык на {'Русский' if languages[new_language_index] == 'ru' else 'Английский'}'})
+            # messages.success(request, f"Вы поменяли язык на {'Русский' if languages[new_language_index] == 'ru' else 'Английский'}")
         
         return Response(result)
     

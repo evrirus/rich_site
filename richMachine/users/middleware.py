@@ -13,7 +13,7 @@ class ContentSecurityPolicyMiddleware(MiddlewareMixin):
             "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
             "font-src 'self' https://fonts.gstatic.com; "
             "frame-src https://telegram.org https://oauth.telegram.org; "
-            "connect-src 'self' https://telegram.org; "
+            "connect-src 'self' https://telegram.org https://ee27-5-228-83-61.ngrok-free.app ;"
             "frame-ancestors 'self' https://oauth.telegram.org"
         )
         # X-Frame-Options заголовок

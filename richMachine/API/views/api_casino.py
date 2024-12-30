@@ -3,19 +3,14 @@ import random
 
 from rest_framework.views import APIView
 
-
 from authentication import SiteAuthentication, TelegramAuthentication
 from rest_framework.authentication import SessionAuthentication
-
-from django.contrib import messages
 
 from django.contrib.humanize.templatetags.humanize import intcomma
 from django.http import JsonResponse
 
+from utils import give_money, get_symbol_money, send_message_to_user
 
-from icecream import ic
-
-from utils import get_messages, give_money,  get_symbol_money
 
 class GenerateCombinationView(APIView):
     authentication_classes = [SessionAuthentication, TelegramAuthentication, SiteAuthentication]
@@ -158,17 +153,20 @@ class GenerateCombinationView(APIView):
         # Проверка и преобразование ставки
         bid = int(user_input) if user_input.isdigit() else 0
         if bid <= 0:
-            messages.error(request, 'Ставка не может быть меньше единицы')
+            send_message_to_user(request.user.id, {'text': 'Ставка не может быть меньше единицы'})
+            # messages.error(request, 'Ставка не может быть меньше единицы')
             return JsonResponse(
-                {'success': False, 'message': 'Ставка не может быть меньше единицы', 'messages': get_messages(request)})
+                {'success': False, 'message': 'Ставка не может быть меньше единицы'})
 
         balance = request.user.money[user_choice]
 
         # Проверка достаточности средств
         if balance < bid:
-            messages.error(request, 'Недостаточно средств. | Пополнить счёт можно в Донате')
+
+            send_message_to_user(request.user.id, {'text': 'Недостаточно средств. | Пополнить счёт можно в Донате'})
+            # messages.error(request, 'Недостаточно средств. | Пополнить счёт можно в Донате')
             return JsonResponse(
-                {'success': False, 'message': 'Недостаточно средств.', 'messages': get_messages(request)})
+                {'success': False, 'message': 'Недостаточно средств.'})
 
         # Генерация комбинации и расчет коэффициента
         items = ["🍭", "🦄", "💵", "🦖", "👻"]
@@ -198,7 +196,7 @@ class GenerateCombinationView(APIView):
 
         return JsonResponse(
             {'combination': combination, 'success': True, 'user_input': user_input, 'user_choice': user_choice,
-             'messages': get_messages(request)})
+             })
 
     @staticmethod
     def random_with_probability(probability):

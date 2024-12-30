@@ -1,5 +1,4 @@
 from authentication import SiteAuthentication, TelegramAuthentication
-from django.contrib import messages
 from icecream import ic
 from rest_framework import status
 from rest_framework.authentication import SessionAuthentication
@@ -11,7 +10,7 @@ from rest_framework.views import APIView
 from other_functions.models import Inventory
 from utils import (coll, db_cars, db_crypt, db_inv, get_car_by_id,
                    get_district_by_id, get_full_houses_info, get_house_by_id,
-                   get_messages, get_yacht_by_id, give_money)
+                   get_yacht_by_id, give_money)
 
 
 class GetSymbolCrypt(APIView):

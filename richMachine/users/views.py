@@ -5,7 +5,7 @@ from wsgiref.simple_server import WSGIRequestHandler
 from django.db import transaction
 
 from django.conf import settings
-from django.contrib import messages
+# from django.contrib import messages
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import logout_then_login
@@ -18,7 +18,7 @@ from icecream import ic
 from magazine.models import Car, Yacht, Houses
 
 from utils import (coll, db_cars, db_houses, db_yachts, get_house_by_id,
-                   get_messages, give_money, verify_telegram_auth, DoRequest)
+                   get_messages, give_money, verify_telegram_auth, DoRequest, send_message_to_user)
 
 from .forms import CustomUserCreationForm, LoginUserForm
 from .models import CustomUser
@@ -32,49 +32,40 @@ DOMEN = 'http://127.0.0.1:8000/'
 
 def register(request):
     if request.method == 'POST':
-        # ic(request)
+        ic(request.user.username)
         form = CustomUserCreationForm(request.POST)
         username = form.data['username']
-        
         telegram_id = request.POST.get('telegram_id')
-        ic(telegram_id)
 
         if not telegram_id:
-            messages.error(request, 'Telegram authentication is required.')
+            send_message_to_user(telegram_id, {'text': 'Авторизация через телеграм обязательна.'})
+            # messages.error(request, 'Telegram authentication is required.')
             return render(request, 'registration/signup.html', {'form': form})
 
         if CustomUser.objects.filter(username=username).exists():
-            messages.error(request, 'A user with that username already exists.')
+            send_message_to_user(telegram_id, {'text': 'A user with that username already exists.'})
+            # messages.error(request, 'A user with that username already exists.')
             return render(request, 'registration/signup.html', {'form': form})
-        # ic(form.is_valid())
+
         if form.is_valid():
             ic('valid')
             if CustomUser.objects.filter(telegram_id=telegram_id).exists():
                 
                 CustomUser.objects.update(telegram_id=telegram_id, username=username)
-                messages.info(request, 'Синхронизация данных | У вас уже имеется аккаунт зарегистрированный на этот телеграм.\nСвязываем телеграм и сайт.')
+                send_message_to_user(telegram_id, {'text': 'Синхронизация данных | У вас уже имеется аккаунт зарегистрированный на этот телеграм.\nСвязываем телеграм и сайт.'})
+                # messages.info(request, 'Синхронизация данных | У вас уже имеется аккаунт зарегистрированный на этот телеграм.\nСвязываем телеграм и сайт.')
 
-            
             else:
                 user = form.save(commit=False)
                 user.telegram_id = int(telegram_id)
-                ic(user)
                 user.save()
-                ic('save')
-            
-                # example = {"server_id": user.server_id,
-                #            "maxQuantity": 30,
-                #            "inventory": [{'type': 'empty'}] * 30
-                # }
-                # db_inv.insert(example)
-            #log authorizacia
-            ic('pred login')
             
             login(request, user)
-            ic('login')
             return redirect('profile', server_id=user.server_id)
         else:
-            ic(form.errors)
+            for err in form.errors.get('password2', []):
+                send_message_to_user(telegram_id, {'text': err})
+
     else:
         form = CustomUserCreationForm()
     return render(request, 'registration/signup.html', {'form': form})
@@ -119,17 +110,20 @@ def login_user(request):
                         telegram_id = telegram_auth_data['id']
                         user = authenticate(request, telegram_id=telegram_id)
                 except (json.JSONDecodeError, KeyError):
-                    messages.error(request, "Invalid Telegram data.")
+                    send_message_to_user(request.user.id, {'text': 'Invalid Telegram data.'})
+                    # messages.error(request, "Invalid Telegram data.")
                     return render(request, 'registration/login.html', {'form': form})
 
             if user:
                 login(request, user)
                 return redirect(reverse('profile', kwargs={'server_id': user.server_id}))
             else:
-                messages.error(request, "Invalid username or password.")
+                send_message_to_user(request.user.id, {'text': 'Invalid username or password.'})
+                # messages.error(request, "Invalid username or password.")
         else:
             ic(form.errors)
-            messages.error(request, "Invalid username or password.")
+            send_message_to_user(request.user.id, {'text': 'Invalid username or password.'})
+            # messages.error(request, "Invalid username or password.")
     else:
         form = LoginUserForm()
     return render(request, 'registration/login.html', {'form': form})
@@ -147,7 +141,8 @@ class LoginView(CreateView):
     template_name = "registration/login.html"
 
 def loguot_user(request):
-    messages.success(request, "Вы вышли с аккаунта")
+    send_message_to_user(request.user.id, {'text': 'Вы вышли с аккаунта'})
+    # messages.success(request, "Вы вышли с аккаунта")
     return logout_then_login(request, login_url='/profile/')
 
 
@@ -180,8 +175,9 @@ class SellHouseView(APIView):
             house.save()
 
         give_money(request, request.user.server_id, house_info.price // 2)
-        messages.success(request, 'Продажа прошла успешно!')
-        return JsonResponse({'success': True, 'message': 'Продажа прошла успешно!', 'messages': get_messages(request)})
+        send_message_to_user(request.user.id, {'text': 'Продажа прошла успешно!'})
+        # messages.success(request, 'Продажа прошла успешно!')
+        return JsonResponse({'success': True})
 
 def page_not_found(request, exception):
     ic(exception)
