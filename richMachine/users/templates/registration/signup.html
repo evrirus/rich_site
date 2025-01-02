@@ -8,14 +8,19 @@
 {% endblock %}
 
 {% block script %}
-<script src="{% static 'users/js/signup.js' %}" defer type="text/javascript"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script>
+        const REGISTER_URL = "{% url 'users:register' %}";
+        const PROFILE_URL = "{% url 'self_profile' %}";
+    </script>
+    <script src="{% static 'users/js/signup.js' %}" defer type="text/javascript"></script>
 {% endblock %}
 
 {% block content %}
 <div class="frame">
     <p class="main-text">Регистрация</p>
     <div class="form">
-        <form id="registrationForm" method="post" onsubmit="return validateTelegramAuth()">
+        <form id="registrationForm" onsubmit="return validateTelegramAuth()">
             {% csrf_token %}
             <input type="text" id="id_username" name="username" placeholder="Логин" required>
             <input type="password" id="id_password1" name="password1" placeholder="Пароль" required>
@@ -23,21 +28,23 @@
             <input type="hidden" id="telegram_id" name="telegram_id">
             <script async src="https://telegram.org/js/telegram-widget.js?22" data-telegram-login="evrirus_bot" data-size="large" data-onauth="onTelegramAuth(user)" data-request-access="write"></script>
             <script type="text/javascript">
-              var telegramAuthenticated = false;
 
-              function onTelegramAuth(user) {
-                document.getElementById('telegram_id').value = user.id;
-                telegramAuthenticated = true;
-                alert('Logged in as ' + user.first_name + ' ' + user.last_name + ' (' + user.id + (user.username ? ', @' + user.username : '') + ')');
-              }
 
-              function validateTelegramAuth() {
-                if (!telegramAuthenticated) {
-                  alert('Please log in with Telegram to register.');
-                  return false;
+                var telegramAuthenticated = false;
+
+                function onTelegramAuth(user) {
+                      document.getElementById('telegram_id').value = user.id;
+                      telegramAuthenticated = true;
+                      alert('Logged in as ' + user.first_name + ' ' + user.last_name + ' (' + user.id + (user.username ? ', @' + user.username : '') + ')');
                 }
-                return true;
-              }
+
+                function validateTelegramAuth() {
+                    if (!telegramAuthenticated) {
+                        alert('Please log in with Telegram to register.');
+                        return false;
+                    }
+                    return true;
+                }
             </script>
             <button class="button-authorizacia" type="submit">Зарегистрироваться</button>
             <a class="no-account" href="../login">Уже есть аккаунт?</a>

@@ -196,11 +196,11 @@ AUTH_USER_MODEL = "users.CustomUser"
 
 LOGIN_REDIRECT_URL = "home"
 LOGOUT_REDIRECT_URL = "home"
-CSRF_TRUSTED_ORIGINS = ['https://ee27-5-228-83-61.ngrok-free.app']
+CSRF_TRUSTED_ORIGINS = ['https://0c1c-5-228-83-61.ngrok-free.app']
 SECURE_CROSS_ORIGIN_OPENER_POLICY = 'same-origin-allow-popups'
 CORS_ORIGIN_WHITELIST = (
 'http://localhost:8000',  # for localhost (REACT Default)
-'https://ee27-5-228-83-61.ngrok-free.app', # for network
+'https://0c1c-5-228-83-61.ngrok-free.app', # for network
 )
 # В файле settings.py вашего Django-приложения
 CSP_FRAME_ANCESTORS = ("'self'", "https://*.t.me")

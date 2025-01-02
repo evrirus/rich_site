@@ -18,7 +18,8 @@ from icecream import ic
 from magazine.models import Car, Yacht, Houses
 
 from utils import (coll, db_cars, db_houses, db_yachts, get_house_by_id,
-                   get_messages, give_money, verify_telegram_auth, DoRequest, send_message_to_user)
+                   get_messages, give_money, verify_telegram_auth, DoRequest, send_message_to_user,
+                   send_message_to_session)
 
 from .forms import CustomUserCreationForm, LoginUserForm
 from .models import CustomUser
@@ -27,48 +28,74 @@ from rest_framework.authentication import SessionAuthentication, TokenAuthentica
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from inventory.models import Inventory
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
 
 DOMEN = 'http://127.0.0.1:8000/'
 
-def register(request):
-    if request.method == 'POST':
+@method_decorator(csrf_exempt, name='dispatch')
+class RegistrationView(APIView):
+    authentication_classes = [SessionAuthentication]
+    permission_classes = []
+
+    def get(self, request: Request):
+        ic(request)
+        return render(request, 'registration/signup.html')
+
+    def post(self, request: Request):
+
+        if not request.session.session_key:
+            request.session.create()
+
         ic(request.user.username)
         form = CustomUserCreationForm(request.POST)
         username = form.data['username']
         telegram_id = request.POST.get('telegram_id')
+        session_key = request.session.session_key
+        errors = []
 
-        if not telegram_id:
-            send_message_to_user(telegram_id, {'text': 'Авторизация через телеграм обязательна.'})
-            # messages.error(request, 'Telegram authentication is required.')
-            return render(request, 'registration/signup.html', {'form': form})
+        if not telegram_id or not telegram_id.isdigit():
+            errors.append('Авторизация через Telegram обязательна.')
 
-        if CustomUser.objects.filter(username=username).exists():
-            send_message_to_user(telegram_id, {'text': 'A user with that username already exists.'})
-            # messages.error(request, 'A user with that username already exists.')
-            return render(request, 'registration/signup.html', {'form': form})
+        if CustomUser.objects.filter(username=form.data['username']).exists():
+            errors.append('Пользователь с таким именем уже существует.')
+
+        # if not form.is_valid():
+        #     for field, field_errors in form.errors.items():
+        #         errors.extend(field_errors)
+
+        if errors:
+            ic(errors)
+            return JsonResponse({'success': False, 'errors': errors})
 
         if form.is_valid():
-            ic('valid')
-            if CustomUser.objects.filter(telegram_id=telegram_id).exists():
-                
-                CustomUser.objects.update(telegram_id=telegram_id, username=username)
-                send_message_to_user(telegram_id, {'text': 'Синхронизация данных | У вас уже имеется аккаунт зарегистрированный на этот телеграм.\nСвязываем телеграм и сайт.'})
-                # messages.info(request, 'Синхронизация данных | У вас уже имеется аккаунт зарегистрированный на этот телеграм.\nСвязываем телеграм и сайт.')
+            user = form.save(commit=False)
+            user.telegram_id = int(telegram_id)
+            user.save()
 
-            else:
-                user = form.save(commit=False)
-                user.telegram_id = int(telegram_id)
-                user.save()
-            
+            Inventory.objects.create(user=user)
+            send_message_to_session(session_key, {'text': 'Добро пожаловать! |'})
+
             login(request, user)
-            return redirect('profile', server_id=user.server_id)
-        else:
-            for err in form.errors.get('password2', []):
-                send_message_to_user(telegram_id, {'text': err})
+            ic('login')
+            return JsonResponse(
+                {'success': True, 'redirect_url': reverse('profile', kwargs={'server_id': user.server_id})})
 
-    else:
-        form = CustomUserCreationForm()
-    return render(request, 'registration/signup.html', {'form': form})
+
+        else:
+            ic(form.errors)
+            for err in form.errors:
+                for error in form.errors[err]:
+                   errors.append(error)
+
+                send_message_to_session(session_key, {'text': '\n'.join(errors)})
+            return JsonResponse({'success': False, 'errors': '\n'.join(errors)})
+
+
+        return JsonResponse({'success': True})
+
+
 
 
 
