@@ -12,13 +12,13 @@
     <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Cinzel:wght@400..900&family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Moul&display=swap" rel="stylesheet">
 
-    <link rel="stylesheet" href="{% static 'homePage/styles/style.css' %}">
-    <link rel="stylesheet" href="{% static 'other_functions/styles/style_casino.css' %}">
+{#    <link rel="stylesheet" href="{% static 'homePage/styles/style.css' %}">#}
+    <link rel="stylesheet" href="{% static 'casino/styles/style_casino.css' %}">
 {% endblock %}
 
 
 {% block script %}
-    <script src="/static/other_functions/js/casino_slot_machine.js" defer></script>
+    <script src="{% static '/casino/js/casino_slot_machine.js' %}" defer></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 {% endblock %}
 

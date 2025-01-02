@@ -1,0 +1,39 @@
+{% extends "homePage/layout.html" %}
+{% load static %}
+
+{% block title %}Inventory{% endblock %}
+
+{% block stylesheet %}
+<link rel="stylesheet" href="{% static 'inventory/styles/style_inventory.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="main-inventory">
+    <div id="celltable">
+        <div class="cells">
+            {% for item in items %}
+                
+                {% if item.type == "videocard" %}
+                    <div class="cell-inventory videocard">
+                        <img src="{% static 'inventory/img/videocard.svg' %}" alt="Видеокарта" class="image-videocard">
+                        <span class="name-videocard">{{item.name}}</span>
+                        <span class="performance">Доходность:<br>{{item.performance}}$ / день</span>
+                    </div>
+
+                {% elif item.type == "plate" %}
+                    <div class="cell-inventory auto-plate">
+                        <img src="{% static 'inventory/img/plate.svg' %}" class="image-plate"><br>
+                        <span class="name-videocard">Номерной знак</span>
+                        <span class="auto-number">A777MO  97</span>
+                    </div>
+
+                {% elif item.type == "empty" %}
+                    <div class="cell-inventory empty">
+                        <span class="text-empty">Пусто</span>
+                    </div>
+                {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

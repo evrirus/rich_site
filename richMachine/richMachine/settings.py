@@ -12,6 +12,8 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 
 from pathlib import Path
 
+from django.template.context_processors import static
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -29,12 +31,15 @@ ALLOWED_HOSTS = ['*']
 # Application definition
 
 INSTALLED_APPS = [
-    'homePage',
     'daphne',
+    'homePage',
+
+    'inventory',
+    'casino',
     'channels',
     'users',
     'magazine',
-    'other_functions',
+    # 'other_functions',
     'django_filters',
     'corsheaders',
     'API',
@@ -176,7 +181,9 @@ STATICFILES_DIRS = [
     BASE_DIR / 'homePage' / 'static',
     BASE_DIR / 'magazine' / 'static/',
     BASE_DIR / 'users' /'static/',
-    BASE_DIR / 'other_functions' /'static/',
+    # BASE_DIR / 'other_functions' / 'static/',
+    BASE_DIR / 'casino' / 'static/',
+    BASE_DIR / 'inventory' / 'static/',
     
 ]
 
