@@ -19,8 +19,11 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path
 from users.views import profile, self_profile
-from other_functions.views import inventory, casino
+# from other_functions.views import inventory, casino
 from users.views import RenderBasementView
+from casino import views as CasinoViews
+from inventory import views as InventoryViews
+
 
 
 app_name = 'richMachine'
@@ -34,12 +37,12 @@ urlpatterns = [
     path('magazine/', include('magazine.urls', namespace='magazine')),
     path('profile/', self_profile, name='self_profile'),
     path('profile/<int:server_id>', profile, name='profile'),
-    path('inventory/', inventory.RenderInventory.as_view(), name='inventory'),
+    path('inventory/', InventoryViews.RenderInventory.as_view(), name='inventory'),
     
     path('basement/<int:id_house>/', RenderBasementView.as_view(), name='basement'),
     
-    path('casino/', casino.MainCasinoView.as_view(), name='casino'),
-    path('casino/slot/', casino.SlotMachineView.as_view(), name='slot_machine'),
+    path('casino/', CasinoViews.MainCasinoView.as_view(), name='casino'),
+    path('casino/slot/', CasinoViews.SlotMachineView.as_view(), name='slot_machine'),
     # path('casino/slot/generate_combination/', casino.GenerateCombinationView.as_view(), name='generate_combination'),
     
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

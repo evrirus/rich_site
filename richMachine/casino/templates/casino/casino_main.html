@@ -4,14 +4,14 @@
 {% block title %}Casino{% endblock %}
 
 {% block stylesheet %}
-<link rel="stylesheet" href="{% static 'other_functions/styles/style_casino_main.css' %}">
+<link rel="stylesheet" href="{% static 'casino/styles/style_casino_main.css' %}">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bangers&display=swap" rel="stylesheet">    
 {% endblock %}
 
 {% block script %}
-<!-- <script src="{% static 'other_functions/js/casino.js' %}" defer></script> -->
+<!-- <script src="{% static 'casino/js/casino.js' %}" defer></script> -->
 {% endblock %}
 
 {% block content %}
@@ -35,14 +35,14 @@
             <div class="game-title bangers">roulette wheel</div>
             <div class="game-description">Крути барабан</div>
             <div class="game-image">
-                <img src="{% static 'other_functions/img/roulettes.png' %}" alt="roulette">
+                <img src="{% static 'casino/img/roulettes.png' %}" alt="roulette">
             </div>
         </div>
         <a href="{% url 'slot_machine' %}" class="rectangle-game" id="game-bandit">
             <div class="game-title bangers">One-armed bandit</div>
             <div class="game-description">Дёргай ручку</div>
             <div class="game-image">
-                <img src="{% static 'other_functions/img/slots.png' %}" alt="slots">
+                <img src="{% static 'casino/img/slots.png' %}" alt="slots">
             </div>
         </a>
     </div>

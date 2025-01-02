@@ -20,6 +20,7 @@
     </content>
     <orderEntry type="jdk" jdkName="Python 3.12 (rich_site)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="library" name="jquery" level="application" />
   </component>
   <component name="PyDocumentationSettings">
     <option name="format" value="PLAIN" />

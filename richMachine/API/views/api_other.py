@@ -7,7 +7,7 @@ from rest_framework.response import Response
 from rest_framework.serializers import ModelSerializer
 from rest_framework.views import APIView
 
-from other_functions.models import Inventory
+from inventory.models import Inventory
 from utils import (coll, db_cars, db_crypt, db_inv, get_car_by_id,
                    get_district_by_id, get_full_houses_info, get_house_by_id,
                    get_yacht_by_id, give_money)
