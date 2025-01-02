@@ -161,6 +161,19 @@ def send_message_to_user(user_id, message):
     )
 
 
+def send_message_to_session(session_key, message):
+    channel_layer = get_channel_layer()
+    group_name = f"session_{session_key}"
+    ic(group_name)
+    async_to_sync(channel_layer.group_send)(
+        group_name,
+        {
+            "type": "send_notification",
+            "message": message,
+        }
+    )
+
+
 class Money:
     #todo: переделать give_money на этот класс.
     def __init__(self, request: WSGIRequestHandler,

@@ -12,7 +12,7 @@ handler404 = 'users.views.page_not_found'
 # handler500 = 'users.views.server_error'
 
 urlpatterns = [
-    path('register/', views.register, name='register'),
+    path('register/', views.RegistrationView.as_view(), name='register'),
     # path('profile/<int:server_id>/', views.profile, name='profile'),
     # path('profile/', views.self_profile, name='self_profile'),
     # path('change_nickname/', views.change_nickname, name='change_nickname'),
