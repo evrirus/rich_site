@@ -34,23 +34,23 @@ class ChangeNicknameView(APIView):
         max_length = request.user.nickname['max']
         
         if not new_nickname:
-            send_message_to_user(request.user.id, {'text': 'Вы не указали нового имени.'})
+            send_message_to_user(request.user.server_id, {'text': 'Вы не указали нового имени.'})
             # messages.error(request, f"Вы не указали нового имени.")
             return Response({"success": False, "error": "nickname_is_empty"})
         
         if len(new_nickname) < 3:
-            send_message_to_user(request.user.id, {'text': 'Указанное имя слишком короткое. Имя должно содержать более 3 символов'})
+            send_message_to_user(request.user.server_id, {'text': 'Указанное имя слишком короткое. Имя должно содержать более 3 символов'})
             # messages.error(request, f"Указанное имя слишком короткое. Имя должно содержать более 3 символов")
             return Response({"success": False, "error": "nickname_is_short"})
         
         if len(new_nickname) > max_length:
-            send_message_to_user(request.user.id,
+            send_message_to_user(request.user.server_id,
                                  {'text': f'Указанное имя слишком длинное. Максимальное количество символов: {max_length}'})
             # messages.error(request, f"Указанное имя слишком длинное. Максимальное количество символов: {max_length}")
             return Response({"success": False, "error": "nickname_is_long"})
         
         if new_nickname == old_nickname:
-            send_message_to_user(request.user.id, {'text': 'Указанное имя совпадает с предыдущим.'})
+            send_message_to_user(request.user.server_id, {'text': 'Указанное имя совпадает с предыдущим.'})
             # messages.error(request, f"Указанное имя совпадает с предыдущим.")
             return Response({"success": False, "error": "nickname_is_the_same"})
         
@@ -58,7 +58,7 @@ class ChangeNicknameView(APIView):
         user.nickname['name'] = new_nickname
         user.save()
 
-        send_message_to_user(request.user.id, {'text': f'Теперь вы известны как {new_nickname}'})
+        send_message_to_user(request.user.server_id, {'text': f'Теперь вы известны как {new_nickname}'})
         # messages.success(request, f"Теперь вы известны как {new_nickname}")
         return Response({"success": True, 
                          "old_nickname": old_nickname, "new_nickname": new_nickname, 
@@ -91,7 +91,7 @@ class ProfileView(APIView):
             houses_standard_view.append({'id': house.id, 'district_info': {'name': house.district_info.name},
                                         'price': house.price})
 
-        ic(user_info.car)
+        ic(user_info)
         response_data = {
             "success": True,
             # "_id": user_info.get('_id'),
@@ -112,7 +112,6 @@ class ProfileView(APIView):
             "registration": user_info.registration,
             "server_id": user_info.server_id,
             "telegram_id": user_info.telegram_id,
-            "user_id": user_info.user_id,
             "username": user_info.username,
             "username_tg": user_info.username_tg,
             
@@ -156,7 +155,7 @@ class ChangeLanguageView(APIView):
         
         result = {"success": True, "old_language": language, "new_language": new_language}
         if not request.user.is_anonymous:
-            send_message_to_user(request.user.id,
+            send_message_to_user(request.user.server_id,
                                  {'text': f'Вы поменяли язык на {'Русский' if languages[new_language_index] == 'ru' else 'Английский'}'})
             # messages.success(request, f"Вы поменяли язык на {'Русский' if languages[new_language_index] == 'ru' else 'Английский'}")
         

@@ -89,6 +89,7 @@ MIDDLEWARE = [
 ]
 
 AUTHENTICATION_BACKENDS = [
+    'users.telegram_backend.TelegramBackend',
     'django.contrib.auth.backends.ModelBackend',
 ]
 TELEGRAM_BOT_TOKEN = '6534598365:AAGxpSaIXsDU2Gr44k-wEfd_8zec6SAuxTg'
@@ -196,11 +197,11 @@ AUTH_USER_MODEL = "users.CustomUser"
 
 LOGIN_REDIRECT_URL = "home"
 LOGOUT_REDIRECT_URL = "home"
-CSRF_TRUSTED_ORIGINS = ['https://0c1c-5-228-83-61.ngrok-free.app']
+CSRF_TRUSTED_ORIGINS = ['https://8318-5-228-83-61.ngrok-free.app']
 SECURE_CROSS_ORIGIN_OPENER_POLICY = 'same-origin-allow-popups'
 CORS_ORIGIN_WHITELIST = (
 'http://localhost:8000',  # for localhost (REACT Default)
-'https://0c1c-5-228-83-61.ngrok-free.app', # for network
+'https://8318-5-228-83-61.ngrok-free.app', # for network
 )
 # В файле settings.py вашего Django-приложения
 CSP_FRAME_ANCESTORS = ("'self'", "https://*.t.me")

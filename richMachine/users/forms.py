@@ -30,7 +30,7 @@ class LoginUserForm(AuthenticationForm):
         widget=forms.PasswordInput(attrs={"autocomplete": "current-password", "placeholder": "Пароль"}),
         required=False
     )
-    telegram_id = forms.CharField(max_length=100, required=False, widget=forms.HiddenInput())
+    telegram_id = forms.IntegerField(required=False, widget=forms.HiddenInput())
     
     class Meta:
         fields = ['username', 'password', 'telegram_id']

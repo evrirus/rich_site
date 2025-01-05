@@ -124,21 +124,3 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
         verbose_name = 'user'
         verbose_name_plural = 'users'
         db_table = 'users'
-
-
-# def none_field():
-#     return {}
-
-# class InventoryModel(models.Model):
-#     # Определение полей модели
-#     server_id = models.IntegerField(default=0)
-#     maxQuantity = models.IntegerField(default=30)
-#     inventory = models.ArrayField(
-#       djongo_models.JSONField(), # используйте djongo_models.JSONField
-#       default=list,
-#       db_index=False
-#     )
-
-#     class Meta:
-#         app_label = 'inventory'
-#         db_table = 'inventory' # (Необязательно)

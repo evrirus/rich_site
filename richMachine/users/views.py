@@ -50,7 +50,6 @@ class RegistrationView(APIView):
 
         ic(request.user.username)
         form = CustomUserCreationForm(request.POST)
-        username = form.data['username']
         telegram_id = request.POST.get('telegram_id')
         session_key = request.session.session_key
         errors = []
@@ -60,10 +59,6 @@ class RegistrationView(APIView):
 
         if CustomUser.objects.filter(username=form.data['username']).exists():
             errors.append('Пользователь с таким именем уже существует.')
-
-        # if not form.is_valid():
-        #     for field, field_errors in form.errors.items():
-        #         errors.extend(field_errors)
 
         if errors:
             ic(errors)
@@ -82,7 +77,6 @@ class RegistrationView(APIView):
             return JsonResponse(
                 {'success': True, 'redirect_url': reverse('profile', kwargs={'server_id': user.server_id})})
 
-
         else:
             ic(form.errors)
             for err in form.errors:
@@ -91,7 +85,6 @@ class RegistrationView(APIView):
 
                 send_message_to_session(session_key, {'text': '\n'.join(errors)})
             return JsonResponse({'success': False, 'errors': '\n'.join(errors)})
-
 
         return JsonResponse({'success': True})
 
@@ -115,45 +108,90 @@ def profile(request, server_id: int):
 def self_profile(request: WSGIRequestHandler):
     return redirect(reverse('profile', kwargs={'server_id': request.user.server_id}))
 
-def login_user(request):
-    if request.method == 'POST':
+
+@method_decorator(csrf_exempt, name='dispatch')
+class LoginView(APIView):
+    authentication_classes = [SessionAuthentication]
+    permission_classes = []
+
+    def get(self, request: Request):
+        ic(request)
+        return render(request, 'registration/login.html')
+
+    def post(self, request: Request):
+        if not request.session.session_key:
+            request.session.create()
+
         form = LoginUserForm(request, data=request.POST)
-        
+        session_key = request.session.session_key
+        errors = []
+
+        if request.POST.get('telegram_auth_data'):
+            telegram_auth_data = json.loads(request.POST.get('telegram_auth_data'))
+
+            if not CustomUser.objects.filter(telegram_id=telegram_auth_data['id']).exists():
+                errors.append('Вы ещё не зарегистрированы.')
+        else:
+            telegram_auth_data = None
+
+        if errors:
+            ic(errors)
+            return JsonResponse({'success': False, 'errors': errors})
+        ic(form.data)
+        ic(form.is_valid())
         if form.is_valid():
             username = form.cleaned_data.get('username')
             password = form.cleaned_data.get('password')
-            if request.POST.get('telegram_auth_data'):
-                telegram_auth_data = json.loads(request.POST.get('telegram_auth_data'))
-            else: telegram_auth_data = None
+            ic(telegram_auth_data)
 
             user = None
-            
+
             if username and password:
                 user = authenticate(request, username=username, password=password)
                 ic(user)
             elif telegram_auth_data:
                 try:
-                    if verify_telegram_auth(telegram_auth_data, settings.TELEGRAM_BOT_TOKEN):
-                        telegram_id = telegram_auth_data['id']
+                    a = verify_telegram_auth(telegram_auth_data, settings.TELEGRAM_BOT_TOKEN)
+                    ic(a, 'verify_telegram_auth')
+                    if a:
+                        ic('telega')
+                        telegram_id = telegram_auth_data.get('id')
+                        ic(telegram_id)
+                        my_user = CustomUser.objects.get(telegram_id=telegram_id)
+                        ic(my_user)
                         user = authenticate(request, telegram_id=telegram_id)
-                except (json.JSONDecodeError, KeyError):
-                    send_message_to_user(request.user.id, {'text': 'Invalid Telegram data.'})
-                    # messages.error(request, "Invalid Telegram data.")
-                    return render(request, 'registration/login.html', {'form': form})
+                        ic(user)
+                    ic('b')
 
+                except (json.JSONDecodeError, KeyError):
+                    ic('except')
+                    send_message_to_session(session_key, {'text': 'Invalid Telegram data.'})
+                    # messages.error(request, "Invalid Telegram data.")
+                    return JsonResponse({'success': False, 'errors': 'Invalid Telegram data.'})
+
+            ic(user)
             if user:
                 login(request, user)
-                return redirect(reverse('profile', kwargs={'server_id': user.server_id}))
+                send_message_to_session(session_key, {'text': f'Вы успешно авторизовались как {user.get_username()}'})
+                return JsonResponse({'success': True})
             else:
-                send_message_to_user(request.user.id, {'text': 'Invalid username or password.'})
+                send_message_to_session(session_key, {'text': 'Invalid username or password.'})
+
+            return JsonResponse({'success': True})
                 # messages.error(request, "Invalid username or password.")
         else:
             ic(form.errors)
-            send_message_to_user(request.user.id, {'text': 'Invalid username or password.'})
-            # messages.error(request, "Invalid username or password.")
-    else:
-        form = LoginUserForm()
-    return render(request, 'registration/login.html', {'form': form})
+            ic(form.data)
+            # ic(form.password)
+            # ic(form.telegram_id)
+            for err in form.errors:
+                for error in form.errors[err]:
+                    errors.append(error)
+
+                send_message_to_session(session_key, {'text': '\n'.join(errors)})
+            return JsonResponse({'success': False, 'errors': '\n'.join(errors)})
+        return JsonResponse({'success': True})
+
 
 
 class SignUpView(CreateView):
@@ -162,13 +200,13 @@ class SignUpView(CreateView):
     template_name = 'registration/signup.html'
     
     
-class LoginView(CreateView):
-    form_class = LoginUserForm
-    success_url = reverse_lazy("login")
-    template_name = "registration/login.html"
+# class LoginView(CreateView):
+#     form_class = LoginUserForm
+#     success_url = reverse_lazy("login")
+#     template_name = "registration/login.html"
 
 def loguot_user(request):
-    send_message_to_user(request.user.id, {'text': 'Вы вышли с аккаунта'})
+    send_message_to_user(request.user.server_id, {'text': 'Вы вышли с аккаунта'})
     # messages.success(request, "Вы вышли с аккаунта")
     return logout_then_login(request, login_url='/profile/')
 
@@ -202,7 +240,7 @@ class SellHouseView(APIView):
             house.save()
 
         give_money(request, request.user.server_id, house_info.price // 2)
-        send_message_to_user(request.user.id, {'text': 'Продажа прошла успешно!'})
+        send_message_to_user(request.user.server_id, {'text': 'Продажа прошла успешно!'})
         # messages.success(request, 'Продажа прошла успешно!')
         return JsonResponse({'success': True})
 

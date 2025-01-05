@@ -26,7 +26,7 @@
     height: 29.063em;
 }
 
-#registrationForm {
+#loginForm {
     width: 47.188em;
     height: 29.063em;
     display: flex;
@@ -111,6 +111,6 @@ p {
     margin-bottom: 25px;
 }
 
-#id_password1 {
+#id_password {
     margin-bottom: 81px;
 }

@@ -39,6 +39,7 @@
             <ul class="header__buttons">
                 {% if my_server_id %}
                     <li><a href="/profile/" class="header__button">Профиль</a></li>
+                    {% csrf_token %}
                     <li><a href="#" class="header__button" id="logout-button">Выйти</a></li>
                 {% else %}
                     <li><a href="/users/login/" class="header__button">Войти</a></li>

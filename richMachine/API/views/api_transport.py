@@ -152,6 +152,6 @@ class SellTransportToState(APIView):
         else:
             ic('ASHIBKA')
 
-        send_message_to_user(request.user.id, {'text': 'Транспорт успешно продан!'})
+        send_message_to_user(request.user.server_id, {'text': 'Транспорт успешно продан!'})
         # messages.success(request, 'Транспорт успешно продан!')
         return Response({'success': True, 'message': 'Транспорт успешно продан!'})
