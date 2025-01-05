@@ -7,37 +7,74 @@
 <link rel="stylesheet" href="{% static 'users/styles/login_style.css' %}">
 {% endblock %}
 
+{% block script %}
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script>
+        const LOGIN_URL = "{% url 'users:login' %}";
+        const PROFILE_URL = "{% url 'self_profile' %}";
+    </script>
+    <script src="{% static 'users/js/signin.js' %}" defer type="text/javascript"></script>
+{% endblock %}
+
 {% block content %}
 <div class="frame">
     <p class="main-text">Авторизация</p>
     <div class="form">
-        <form id="registrationForm" method="post" onsubmit="return validateTelegramAuth()">
-            <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+        <form id="loginForm" onsubmit="return validateTelegramAuth()">
+            {% csrf_token %}
             <input type="text" id="id_username" name="username" placeholder="Логин">
-            <input type="password" id="id_password1" name="password" placeholder="Пароль">
+            <input type="password" id="id_password" name="password" placeholder="Пароль">
             <input type="hidden" id="telegram_auth_data" name="telegram_auth_data">
             <script async src="https://telegram.org/js/telegram-widget.js?22" data-telegram-login="evrirus_bot" data-size="large" data-onauth="onTelegramAuth(user)" data-request-access="write"></script>
             <script type="text/javascript">
-              var telegramAuthenticated = false;
+                var telegramAuthenticated = false;
 
-              function onTelegramAuth(user) {
-                document.getElementById('telegram_auth_data').value = JSON.stringify(user);
-                telegramAuthenticated = true;
-                alert('Logged in as ' + user.first_name + ' ' + user.last_name + ' (' + user.id + (user.username ? ', @' + user.username : '') + ')');
-              }
-
-              function validateTelegramAuth() {
-                var username = document.getElementById('id_username').value;
-                var password = document.getElementById('id_password1').value;
-                var telegram_auth_data = document.getElementById('telegram_auth_data').value;
-                
-                if (!username && !password && !telegram_auth_data) {
-                  alert('Please enter username and password or log in with Telegram to register.');
-                  return false;
+                function onTelegramAuth(user) {
+                    telegramAuthenticated = true;
+                    sendTelegramAuthData(user);
                 }
-                return true;
-              }
+
+                function sendTelegramAuthData(user) {
+                    const csrfToken = $('input[name="csrfmiddlewaretoken"]').val();
+
+                    $.ajax({
+                        url: LOGIN_URL, // Убедитесь, что переменная LOGIN_URL содержит правильный URL для логина
+                        type: "POST",
+                        data: {
+                            telegram_auth_data: JSON.stringify(user), // Передаём Telegram-данные
+                            csrfmiddlewaretoken: csrfToken // Передаём CSRF токен
+                        },
+                        success: function (response) {
+                            if (response.success) {
+                                handleNotifications('Успешная авторизация через Телеграм!', 'success');
+                                window.location.href = PROFILE_URL; // Перенаправляем на профиль
+                            } else {
+                                handleNotifications(response.errors, 'error');
+                            }
+                        },
+                        error: function (error) {
+                            console.error(error);
+                            handleNotifications('Ошибка авторизации через Telegram.', 'error');
+                        }
+                    });
+                }
+
+                // Универсальная функция для отображения уведомлений
+                function handleNotifications(message, type = 'success') {
+                    const container = $('#messages-container');
+                    const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+
+                    let alert = $('<div class="alert ' + alertClass + '"></div>').text(message);
+                    container.prepend(alert);
+
+                    setTimeout(() => {
+                        alert.fadeOut(500, function () {
+                            $(this).remove();
+                        });
+                    }, 5000);
+                }
             </script>
+
             <button class="button-authorizacia" type="submit">Авторизоваться</button>
             <a class="no-account" href="../register">Нет аккаунта?</a>
         </form>

@@ -54,12 +54,12 @@ class SellHouseView(APIView):
         house_info = get_house_by_id(id)
 
         if not house_info:
-            send_message_to_user(request.user.id, {'text': 'Дом не найден'})
+            send_message_to_user(request.user.server_id, {'text': 'Дом не найден'})
             # messages.error(request, "Дом не найден")
             return Response({"success": False, "error": "Дом не найден"})
 
         if house_info.owner != request.user.server_id:
-            send_message_to_user(request.user.id, {'text': 'Дом не найден'})
+            send_message_to_user(request.user.server_id, {'text': 'Дом не найден'})
             # messages.error(request, "Дом не найден")
             return Response({"success": False, "error": "Дом не найден",
                              })
@@ -74,7 +74,7 @@ class SellHouseView(APIView):
             house.save()
 
         give_money(request, request.user.server_id, house_info.price // 2)
-        send_message_to_user(request.user.id, {'text': 'Продажа прошла успешно!'})
+        send_message_to_user(request.user.server_id, {'text': 'Продажа прошла успешно!'})
         # messages.success(request, 'Продажа прошла успешно!')
         return JsonResponse({'success': True, 'message': 'Продажа прошла успешно!'})
 
@@ -90,7 +90,7 @@ class GetHouseView(APIView):
     def get(self, request: Request, id_house: int):
         house_info = get_house_by_id(id_house)
         if not house_info:
-            send_message_to_user(request.user.id, {'text': 'Дом не найден'})
+            send_message_to_user(request.user.server_id, {'text': 'Дом не найден'})
             # messages.error(request, 'Дом не найден')
             return JsonResponse({"success": False, "error": "Дом не найден",
                                  })
@@ -173,13 +173,13 @@ class GetTakeProfitBasementView(APIView):
         house_info = get_house_by_id(request.data)
 
         if not house_info.basement:
-            send_message_to_user(request.user.id, {'text': 'Подвал | Подвал не построен.'})
+            send_message_to_user(request.user.server_id, {'text': 'Подвал | Подвал не построен.'})
             # messages.info(request, 'Подвал | Подвал не построен.')
             return Response({'success': False,})
         
         current_balance = house_info.basement['balance']
         if current_balance <= 0:
-            send_message_to_user(request.user.id, {'text': 'Подвал | Вы ничего не добыли.\nВозможно, вы недавно забирали прибыль'})
+            send_message_to_user(request.user.server_id, {'text': 'Подвал | Вы ничего не добыли.\nВозможно, вы недавно забирали прибыль'})
             # messages.info(request, 'Подвал | Вы ничего не добыли.\nВозможно, вы недавно забирали прибыль')
             return Response({'success': False,})
 
@@ -209,12 +209,12 @@ class GetBalanceBasementView(APIView):
         house_info = get_house_by_id(id_house)
 
         if house_info.owner != request.user.server_id:
-            send_message_to_user(request.user.id, {'text': 'Вы не являетесь владельцем этого дома.'})
+            send_message_to_user(request.user.server_id, {'text': 'Вы не являетесь владельцем этого дома.'})
             # messages.error(request, 'Вы не являетесь владельцем этого дома.')
             return Response({'success': False})
 
         if not house_info.basement:
-            send_message_to_user(request.user.id, {'text': 'Нет подвала.'})
+            send_message_to_user(request.user.server_id, {'text': 'Нет подвала.'})
             # messages.error(request, 'Нет подвала.')
             return Response({'success': False})
 
@@ -235,14 +235,14 @@ class CreateBasementView(APIView):
         house = Houses.objects.get(id=request.data)
 
         if house.basement:
-            send_message_to_user(request.user.id, {'text': 'Подвал | У вас уже имеется подвал.'})
+            send_message_to_user(request.user.server_id, {'text': 'Подвал | У вас уже имеется подвал.'})
             # messages.error(request, 'Подвал | У вас уже имеется подвал.')
             return Response({'success': False})
 
         PRICE_FIRST_LEVEL = 4_000_000
 
         if request.user.money['cash'] < PRICE_FIRST_LEVEL:
-            send_message_to_user(request.user.id, {'text': 'Недостаточно средств.'})
+            send_message_to_user(request.user.server_id, {'text': 'Недостаточно средств.'})
             # messages.error(request, "Недостаточно средств.")
             return Response({'success': False})
 
@@ -255,7 +255,7 @@ class CreateBasementView(APIView):
         house.save()
 
         give_money(request, request.user.server_id, -PRICE_FIRST_LEVEL)
-        send_message_to_user(request.user.id, {'text': 'Поздравляем | Вы построили подвал первого уровня!'})
+        send_message_to_user(request.user.server_id, {'text': 'Поздравляем | Вы построили подвал первого уровня!'})
         # messages.success(request, 'Поздравляем | Вы построили подвал первого уровня!')
         return Response({'success': True, 'level': 1, 'house_id': house.id})
 
@@ -283,32 +283,32 @@ class UpgradeBasementView(APIView):
         }
 
         if not house_info.basement:
-            send_message_to_user(request.user.id, {'text': 'Нет подвала'})
+            send_message_to_user(request.user.server_id, {'text': 'Нет подвала'})
             # messages.error(request, 'Нет подвала.')
             return Response({'success': False})
 
         if house_info.basement.get('level', 0) < 1:
-            send_message_to_user(request.user.id, {'text': 'Нет подвала'})
+            send_message_to_user(request.user.server_id, {'text': 'Нет подвала'})
             # messages.error(request, 'Нет подвала.')
             return Response({'success': False})
 
         if house_info.owner != request.user.server_id:
-            send_message_to_user(request.user.id, {'text': 'Дом не найден'})
+            send_message_to_user(request.user.server_id, {'text': 'Дом не найден'})
             # messages.error(request, "Дом не найден")
             return Response({'success': False})
 
         if house_info.basement.get('level', 0) >= max(upgrade_data.keys()):
-            send_message_to_user(request.user.id, {'text': 'Уровень подвала максимален'})
+            send_message_to_user(request.user.server_id, {'text': 'Уровень подвала максимален'})
             # messages.error(request, 'Уровень подвала максимален')
             return Response({'success': False})
 
         if house_info.basement.get('level', 0) not in upgrade_data.keys():
-            send_message_to_user(request.user.id, {'text': 'Неизвестная ошибка.'})
+            send_message_to_user(request.user.server_id, {'text': 'Неизвестная ошибка.'})
             # messages.error(request, 'Неизвестная ошибка.')
             return Response({'success': False})
 
         if request.user.money['cash'] < upgrade_data[house_info.basement.get('level', 0) + 1]['price']:
-            send_message_to_user(request.user.id, {'text': 'Недостаточно средств.'})
+            send_message_to_user(request.user.server_id, {'text': 'Недостаточно средств.'})
             # messages.error(request, 'Недостаточно средств.')
             return Response({'success': False})
 
@@ -317,7 +317,7 @@ class UpgradeBasementView(APIView):
         house_info.basement['maxQuantity'] = upgrade_data[house_info.basement.get('level', 0) + 1]['maxQuantity']
         house_info.basement['level'] += 1
         house_info.save()
-        send_message_to_user(request.user.id,
+        send_message_to_user(request.user.server_id,
                              {'text': f'Вы улучшили подвал до {house_info.basement['level']} уровня! Теперь подвал вмещает больше видеокарт.'})
         # messages.success(request, f'Вы улучшили подвал до {house_info.basement['level']} уровня! Теперь подвал вмещает больше видеокарт.')
         return Response({'success': True, 'new_level': house_info.basement['level']})

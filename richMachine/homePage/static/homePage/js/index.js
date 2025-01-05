@@ -1,7 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
 
-
-
     const buttonFunctions = document.querySelector('.button-functions');
     const otherFunctions = document.querySelector('.other-functions');
 
@@ -23,7 +21,8 @@ document.addEventListener('DOMContentLoaded', () => {
         logoutButton.addEventListener('click', function(event) {
             event.preventDefault(); // Отменяем переход по ссылке
 
-            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+            const csrfToken = $('[name=csrfmiddlewaretoken]').val();
+            console.log(csrfToken);
 
             fetch('/users/logout/', {
                 method: 'POST',
@@ -34,10 +33,9 @@ document.addEventListener('DOMContentLoaded', () => {
             })
             .then(response => {
                 if (response.ok) {
-                    // Успешный выход, можно перенаправить пользователя или обновить интерфейс
-                    window.location.href = '/users/login/'; // Перенаправление на главную страницу или другую
+                    window.location.href = '/users/login/';
+
                 } else {
-                    // Обработка ошибок
                     console.error('Ошибка при выходе:', response.statusText);
                 }
             })

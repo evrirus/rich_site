@@ -153,7 +153,7 @@ class GenerateCombinationView(APIView):
         # Проверка и преобразование ставки
         bid = int(user_input) if user_input.isdigit() else 0
         if bid <= 0:
-            send_message_to_user(request.user.id, {'text': 'Ставка не может быть меньше единицы'})
+            send_message_to_user(request.user.server_id, {'text': 'Ставка не может быть меньше единицы'})
             # messages.error(request, 'Ставка не может быть меньше единицы')
             return JsonResponse(
                 {'success': False, 'message': 'Ставка не может быть меньше единицы'})
@@ -163,7 +163,7 @@ class GenerateCombinationView(APIView):
         # Проверка достаточности средств
         if balance < bid:
 
-            send_message_to_user(request.user.id, {'text': 'Недостаточно средств. | Пополнить счёт можно в Донате'})
+            send_message_to_user(request.user.server_id, {'text': 'Недостаточно средств. | Пополнить счёт можно в Донате'})
             # messages.error(request, 'Недостаточно средств. | Пополнить счёт можно в Донате')
             return JsonResponse(
                 {'success': False, 'message': 'Недостаточно средств.'})

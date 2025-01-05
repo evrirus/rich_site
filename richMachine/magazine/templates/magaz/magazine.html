@@ -2,44 +2,38 @@
 {% load static %}
 {% load humanize %}
 {% load my_filters %}
-{% block title %} {{title}} {% endblock %}
+{% block title %} {{ title }} {% endblock %}
 {% block username %}{{ username }}{% endblock %}
 {% block server_id %}{{ server_id }}{% endblock %}
 
 {% block stylesheet %} 
-<link rel="icon" href="{% static 'homePage/img/logo.png' %}">
+    <link rel="icon" href="{% static 'homePage/img/logo.png' %}">
 
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Cinzel:wght@400..900&family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Moul&display=swap" rel="stylesheet">
 
-<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Cinzel:wght@400..900&family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
-<link href="https://fonts.googleapis.com/css2?family=Moul&display=swap" rel="stylesheet">
-
-<link rel="stylesheet" href="{% static 'magazine/styles/magazine_style.css' %}">
-{% endblock %}
-
-
-{% block script %}
-<!-- <script src="{% static 'homePage/js/profile.js' %}" defer></script> -->
+    <link rel="stylesheet" href="{% static 'magazine/styles/magazine_style.css' %}">
 {% endblock %}
 
 
 {% block content %}
-<div class="main-block">
-    <p class="marking">Магазин</p>
-    <div class="property">
-        {% for item in items %}
-            <a class="cell_item type__{{item.code}}" href="{{item.code}}">
-                <div class="property-icon">
-                    {{ item.svg|safe }}
-                </div>
-                <div class="property-class">
-                    {{ item.title }}
-                </div>
-            </a>
-        {% endfor %}
+    <div class="main-block">
+        <p class="marking">Магазин</p>
+        <div class="property">
+            {% for item in items %}
+                <a class="cell_item type__{{ item.code }}" href="{{ item.code }}">
+                    <div class="property-icon">
+                        {{ item.svg|safe }}
+                    </div>
+                    <div class="property-class">
+                        {{ item.title }}
+                    </div>
+                </a>
+            {% endfor %}
+        </div>
     </div>
-</div>
 {% endblock %}
 
