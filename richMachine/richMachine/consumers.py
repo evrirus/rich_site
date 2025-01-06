@@ -7,7 +7,7 @@ class NotificationConsumer(AsyncWebsocketConsumer):
         user = self.scope['user']
         if user.is_authenticated:
             # Если пользователь авторизован, используем его ID для группы
-            self.group_name = f'user_{user.id}'
+            self.group_name = f'user_{user.server_id}'
         else:
             # Если пользователь не авторизован, используем session_key
             session_key = self.scope['session'].session_key

@@ -33,10 +33,7 @@ def default_money():
 
 def default_job():
     return {
-        "title": None,
         "level": 1,
-        "salary": 0,
-        "description": None,
         "tasks_completed": 0,
         "next_job": 'now' # timezone.now()
     }

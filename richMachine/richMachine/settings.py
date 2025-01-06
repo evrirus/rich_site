@@ -39,12 +39,13 @@ INSTALLED_APPS = [
     'channels',
     'users',
     'magazine',
-    # 'other_functions',
+    'jobs',
     'django_filters',
     'corsheaders',
     'API',
     'rest_framework',
     'rest_framework.authtoken',
+    # 'django_ratelimit',
     'django.contrib.humanize',
     'django.contrib.admin',
     'django.contrib.auth',
@@ -185,6 +186,7 @@ STATICFILES_DIRS = [
     # BASE_DIR / 'other_functions' / 'static/',
     BASE_DIR / 'casino' / 'static/',
     BASE_DIR / 'inventory' / 'static/',
+    BASE_DIR / 'jobs' / 'static/',
     
 ]
 
@@ -197,11 +199,11 @@ AUTH_USER_MODEL = "users.CustomUser"
 
 LOGIN_REDIRECT_URL = "home"
 LOGOUT_REDIRECT_URL = "home"
-CSRF_TRUSTED_ORIGINS = ['https://8318-5-228-83-61.ngrok-free.app']
+CSRF_TRUSTED_ORIGINS = ['https://f6ec-5-228-83-61.ngrok-free.app']
 SECURE_CROSS_ORIGIN_OPENER_POLICY = 'same-origin-allow-popups'
 CORS_ORIGIN_WHITELIST = (
 'http://localhost:8000',  # for localhost (REACT Default)
-'https://8318-5-228-83-61.ngrok-free.app', # for network
+'https://f6ec-5-228-83-61.ngrok-free.app', # for network
 )
 # В файле settings.py вашего Django-приложения
 CSP_FRAME_ANCESTORS = ("'self'", "https://*.t.me")

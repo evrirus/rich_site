@@ -33,8 +33,8 @@ urlpatterns = [
     
     path('admin/', admin.site.urls, name='admin'),
     path('', include('homePage.urls', namespace='homePage')),
-    path('users/', include('users.urls', namespace='users')),
-    path('magazine/', include('magazine.urls', namespace='magazine')),
+    path('users/', include('users.urls', namespace='users'), name='users'),
+    path('magazine/', include('magazine.urls', namespace='magazine'), name='magazine'),
     path('profile/', self_profile, name='self_profile'),
     path('profile/<int:server_id>', profile, name='profile'),
     path('inventory/', InventoryViews.RenderInventory.as_view(), name='inventory'),
@@ -43,6 +43,8 @@ urlpatterns = [
     
     path('casino/', CasinoViews.MainCasinoView.as_view(), name='casino'),
     path('casino/slot/', CasinoViews.SlotMachineView.as_view(), name='slot_machine'),
+
+    path('jobs/', include('jobs.urls', namespace='jobs'), name='jobs'),
     # path('casino/slot/generate_combination/', casino.GenerateCombinationView.as_view(), name='generate_combination'),
     
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

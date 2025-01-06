@@ -1,0 +1,101 @@
+{% extends "homePage/layout.html" %}
+{% load static %}
+{% block title %}Go to Work!{% endblock %}
+
+
+{% block stylesheet %}
+    <link rel="stylesheet" href="{% static 'jobs/styles/jobs.css' %}">
+{% endblock %}
+
+{% block script %}
+{#    <script>#}
+{#        const LOGIN_URL = "{% url 'users:login' %}";#}
+{#        const PROFILE_URL = "{% url 'self_profile' %}";#}
+{#    </script>#}
+    <script>
+        {#const UPD_CLICKS = "{% url 'jobs:update_clicks' %}";#}
+    </script>
+    <script src="{% static 'jobs/js/work.js' %}" defer type="text/javascript"></script>
+{% endblock %}
+
+
+{% block content %}
+    <div id="frame">
+        <div id="up-side">
+            <div id="left-side">
+                <img src="{% static 'jobs/img/stars-statistics.svg' %}" id="stars-achievements">
+                <div id="achievements">
+                    <span id="achievements__header">Достижения</span>
+                    <div id="achievements__info">
+                        <table>
+                            <tr>
+                                <td id="earned">Заработано:</td>
+                                <td id="earned-value"><span class="value">100 000</span> ₽</td>
+                            </tr>
+                            <tr>
+                                <td id="worked">Проработано:</td>
+                                <td id="worked-value"><span class="value">30</span> суток</td>
+                            </tr>
+                            <tr>
+                                <td id="level">Level:</td>
+                                <td id="level-value"><span class="value">7</span></td>
+                            </tr>
+                        </table>
+
+                    </div>
+                </div>
+            </div>
+            <div id="middle-side">
+                <div id="balance">
+                    <div id="balance-text">Баланс</div>
+                    <div id="balance-value"><span class="value">100.000</span> ₽</div>
+                </div>
+                <div id="work-main">
+
+                    <div id="main-circuit" class="main-button">
+                        <div id="main-interior">
+                            <img src="{% static 'jobs/img/main-broom.svg' %}" id="main-image" draggable="false">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="right-side">
+
+                <img src="{% static 'jobs/img/stars-statistics.svg' %}" id="stars-statistics">
+                <div id="statistics">
+                    <span id="statistics__header">Статистика</span>
+                    <div id="statistics__info">
+                        <table>
+                            <tr>
+                                <td id="salary">Зарплата:</td>
+                                <td id="salary-value"><span class="value">10 000</span> ₽</td>
+                            </tr>
+                            <tr>
+                                <td id="sphere">Сфера:</td>
+                                <td id="sphere-value"><span class="value">Стройка</span></td>
+                            </tr>
+                            <tr>
+                                <td id="job">Работа:</td>
+                                <td id="job-value"><span class="value">Дворник</span></td>
+                            </tr>
+                            <tr>
+                                <td id="shift-end">Конец смены:</td>
+                                <td id="shift-end-value"><span class="value">7</span> суток</td>
+                            </tr>
+                        </table>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="down-side">
+            <div id="down__info">
+                <div id="timer">⏳ Осталось 4д 23ч 59м</div>
+                <div id="progress-bar">
+                    <progress id="progress" max="100" value="50">70%</progress>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}

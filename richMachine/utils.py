@@ -124,10 +124,9 @@ def get_yacht_by_id(yacht_id: int):
 
 #* ucode
 def get_transport_by_ucode(server_id: int, type: str, ucode: str):
-    ic(server_id, type, ucode)
+
     user = CustomUser.objects.get(server_id=server_id)
-    ic(user.car['cars'])
-    ic(type)
+
     if type == 'car':
         for transport in user.car['cars']:
             if transport['ucode'] == ucode:
@@ -148,9 +147,9 @@ def send_message_to_user(user_id, message):
     ic(message, user_id)
     channel_layer = get_channel_layer()
     group_name = f'user_{user_id}'
-    # ic(message)
+
+    # todo: удалить
     message['text'] += ' WS'
-    ic(message, 'haah')
 
     async_to_sync(channel_layer.group_send)(
         group_name,
@@ -164,7 +163,7 @@ def send_message_to_user(user_id, message):
 def send_message_to_session(session_key, message):
     channel_layer = get_channel_layer()
     group_name = f"session_{session_key}"
-    ic(group_name)
+
     async_to_sync(channel_layer.group_send)(
         group_name,
         {
@@ -265,9 +264,10 @@ def give_money(request: WSGIRequestHandler, server_id: int, sum: int, type_money
         # ic(comment)
         # messages.success(request, comment)
 
-    ic(user.id, user.server_id)
+    ic(user.server_id)
     ic(comment)
-    send_message_to_user(user.id, {'text': comment})
+    send_message_to_user(user.server_id, {'text': comment})
+    ic('GIVE MONEY')
 
     return True
 
