@@ -22,7 +22,6 @@ document.addEventListener('DOMContentLoaded', () => {
             event.preventDefault(); // Отменяем переход по ссылке
 
             const csrfToken = $('[name=csrfmiddlewaretoken]').val();
-            console.log(csrfToken);
 
             fetch('/users/logout/', {
                 method: 'POST',

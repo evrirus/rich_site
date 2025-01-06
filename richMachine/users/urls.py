@@ -1,6 +1,7 @@
 from django.conf.urls import handler400, handler403, handler404, handler500
 from django.contrib.auth.views import LogoutView
 from django.urls import path
+from django.contrib.auth.views import PasswordChangeView
 
 from . import views
 
@@ -19,6 +20,9 @@ urlpatterns = [
     # path('change_language/', views.change_language, name='language'),
     path('login/', views.LoginView.as_view(), name='login'),
     path('logout/', views.loguot_user, name='logout'),
+    # path('password_change/',
+    #      PasswordChangeView.as_view(template_name='registration/password_change.html'),
+    #      name='password_change'),
     # path('sell_transport/<str:type>/<str:ucode>/', views.sell_transport, name='sell_transport'),
     # path('get_transport_profile/<str:type>/<str:ucode>/', views.get_transport_profile, name='get_transport_profile'),
     # path('get_house_profile/<int:id>/', views.get_house_profile, name='get_house_profile'),

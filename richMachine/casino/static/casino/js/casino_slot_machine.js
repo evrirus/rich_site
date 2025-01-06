@@ -74,7 +74,7 @@
             });
 
             const data = await response.json();
-
+            console.log(data);
             if (data.combination) {
                 handleMessages(data.messages)
                 return data.combination;

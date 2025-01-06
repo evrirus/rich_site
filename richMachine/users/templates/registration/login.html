@@ -4,11 +4,10 @@
 {% load static %}
 
 {% block stylesheet %}
-<link rel="stylesheet" href="{% static 'users/styles/login_style.css' %}">
+    <link rel="stylesheet" href="{% static 'users/styles/login_style.css' %}">
 {% endblock %}
 
 {% block script %}
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <script>
         const LOGIN_URL = "{% url 'users:login' %}";
         const PROFILE_URL = "{% url 'self_profile' %}";

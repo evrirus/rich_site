@@ -7,6 +7,8 @@ from icecream import ic
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
+
+from jobs.models import Jobs
 from utils import (get_full_houses_info,
                    send_message_to_user)
 from users.models import CustomUser
@@ -91,7 +93,11 @@ class ProfileView(APIView):
             houses_standard_view.append({'id': house.id, 'district_info': {'name': house.district_info.name},
                                         'price': house.price})
 
-        ic(user_info)
+
+        job_now = Jobs.objects.get(level=user_info.job['level']).name
+        ic(job_now)
+
+
         response_data = {
             "success": True,
             # "_id": user_info.get('_id'),
@@ -103,7 +109,7 @@ class ProfileView(APIView):
             "is_active": user_info.is_active,
             "is_staff": user_info.is_staff,
             "is_superuser": user_info.is_superuser,
-            "job": user_info.job['title'] if user_info.job['title'] else "Безработный",
+            "job": job_now if job_now else "Безработный",
             "job_lvl": user_info.job_lvl,
             "language": user_info.language,
             "last_login": user_info.last_login,

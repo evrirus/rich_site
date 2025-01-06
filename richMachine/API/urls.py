@@ -8,6 +8,7 @@ from .views.api_users import (ChangeLanguageView, ChangeNicknameView,
                               GetBalance, ProfileView)
 from .views.api_other import GetSymbolCrypt, GetInventory
 from .views.api_casino import GenerateCombinationView
+from .views.api_jobs import WorkAPI
 from rest_framework.authtoken.views import obtain_auth_token
 
 app_name = 'api'
@@ -39,7 +40,10 @@ urlpatterns = [
     
     # Other
     path('get_inventory/', GetInventory.as_view(), name='get_inventory'),
-    path('slot/generate/', GenerateCombinationView.as_view())
+    path('slot/generate/', GenerateCombinationView.as_view()),
+
+    # Jobs
+    path('update_clicks/', WorkAPI.as_view(), name='upd_clicks'),
     
     # House functions
     # path('house/change_class/', ChangeClassHouse.as_view(), name='change_class')
