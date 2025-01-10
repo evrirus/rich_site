@@ -2,37 +2,33 @@
 
 import json
 from wsgiref.simple_server import WSGIRequestHandler
-from django.db import transaction
 
 from django.conf import settings
 # from django.contrib import messages
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import logout_then_login
-from django.contrib.humanize.templatetags.humanize import intcomma
+from django.db import transaction
 from django.http import JsonResponse
 from django.shortcuts import redirect, render
-from django.urls import reverse, reverse_lazy
-from django.views.generic.edit import CreateView
-from icecream import ic
-from magazine.models import Car, Yacht, Houses
-
-from utils import (coll, db_cars, db_houses, db_yachts, get_house_by_id,
-                   get_messages, give_money, verify_telegram_auth, DoRequest, send_message_to_user,
-                   send_message_to_session)
-from django.urls import reverse_lazy
-from django.contrib.auth.views import PasswordChangeView
-
-from .forms import CustomUserCreationForm, LoginUserForm #, CustomPasswordChangeForm
-from .models import CustomUser
-from authentication import SiteAuthentication, TelegramAuthentication
-from rest_framework.authentication import SessionAuthentication, TokenAuthentication
-from rest_framework.request import Request
-from rest_framework.response import Response
-from rest_framework.views import APIView
-from inventory.models import Inventory
-from django.views.decorators.csrf import csrf_exempt
+from django.urls import reverse
 from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import csrf_exempt
+
+from icecream import ic
+from rest_framework.authentication import SessionAuthentication
+from rest_framework.request import Request
+from rest_framework.views import APIView
+
+
+from authentication import SiteAuthentication, TelegramAuthentication
+from inventory.models import Inventory
+from magazine.models import Houses
+from utils import (get_house_by_id,
+                   verify_telegram_auth, DoRequest, send_message_to_user,
+                   send_message_to_session, Money)
+from .forms import CustomUserCreationForm, LoginUserForm  # , CustomPasswordChangeForm
+from .models import CustomUser
 
 DOMEN = 'http://127.0.0.1:8000/'
 
@@ -223,9 +219,9 @@ class SellHouseView(APIView):
             house.owner = None
             house.save()
 
-        give_money(request, request.user.server_id, house_info.price // 2)
-        send_message_to_user(request.user.server_id, {'text': 'Продажа прошла успешно!'})
-        # messages.success(request, 'Продажа прошла успешно!')
+        money = Money(request, house_info.price // 2).give()
+        money.create_notification('Продажа прошла успешно!')
+
         return JsonResponse({'success': True})
 
 def page_not_found(request, exception):

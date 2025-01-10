@@ -11,7 +11,7 @@
 
     <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Cinzel:wght@400..900&family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Moul&display=swap" rel="stylesheet">
-
+    <link href="https://fonts.googleapis.com/css2?family=Bangers&display=swap" rel="stylesheet">
 {#    <link rel="stylesheet" href="{% static 'homePage/styles/style.css' %}">#}
     <link rel="stylesheet" href="{% static 'casino/styles/style_casino.css' %}">
 {% endblock %}
@@ -24,9 +24,74 @@
 
 
 {% block content %}
-    <div class="container">
-        <div id="main">
-            <div id="app">
+    <div id="sides">
+        <div id="left-side">
+            <div id="winners">
+                <span id="winners__header">Выигрыши</span>
+                <div id="winners__data">
+                    <table id="winners__data-table">
+
+                        <tbody>
+                            <tr>
+                                <td class="td_left">user</td>
+                                <td class="td_right">win</td>
+                            </tr>
+                            <tr>
+                                <td class="td_left">kovalskiy</td>
+                                <td class="td_right">10 000 $</td>
+                            </tr>
+                            <tr>
+                                <td class="td_left">lera</td>
+                                <td class="td_right">1 000 000 $</td>
+                            </tr>
+                            <tr>
+                                <td class="td_left">kovalskiy</td>
+                                <td class="td_right">10 000 $</td>
+                            </tr>
+                            <tr>
+                                <td class="td_left">lera</td>
+                                <td class="td_right">1 000 000 $</td>
+                            </tr>
+                            <tr>
+                                <td class="td_left">kovalskiy</td>
+                                <td class="td_right">10 000 $</td>
+                            </tr>
+                            <tr>
+                                <td class="td_left">lera</td>
+                                <td class="td_right">1 000 000 $</td>
+                            </tr>
+                            <tr>
+                                <td class="td_left">kovalskiy</td>
+                                <td class="td_right">10 000 $</td>
+                            </tr>
+                            <tr>
+                                <td class="td_left">lera</td>
+                                <td class="td_right">1 000 000 $</td>
+                            </tr>
+                            <tr>
+                                <td class="td_left">kovalskiy</td>
+                                <td class="td_right">10 000 $</td>
+                            </tr>
+                            <tr>
+                                <td class="td_left">lera</td>
+                                <td class="td_right">1 000 000 $</td>
+                            </tr>
+                            <tr>
+                                <td class="td_left">kovalskiy</td>
+                                <td class="td_right">10 000 $</td>
+                            </tr>
+                            <tr>
+                                <td class="td_left">lera</td>
+                                <td class="td_right">1 000 000 $</td>
+                            </tr>
+
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div id="middle-side">
+            <div id="middle__first-side">
                 <div class="doors">
                     <div class="door">
                         <div class="boxes"></div>
@@ -38,6 +103,13 @@
                         <div class="boxes"></div>
                     </div>
                 </div>
+            </div>
+            <div id="middle__second-side">
+                <div id="freespins">
+                    <span id="freespins__text" class="bangers">FREE SPINS: 10!</span>
+                </div>
+            </div>
+            <div id="middle__third-side">
 
                 <form id="userForm" method="post">
                     {% csrf_token %}
@@ -47,15 +119,54 @@
                             <option value="cash">₽</option>
                             <option value="dollar">$</option>
                         </select>
+
+                        <div id="buttons-bid">
+                            <div class="row" id="row_1">
+                                <button class="bid" id="bid__x05">7 500</button>
+                                <button class="bid" id="bid__x2">30 000</button>
+                                <button class="bid" id="bid__vabank">Ва-банк</button>
+                            </div>
+                            <div class="row" id="row_2">
+                                <button class="bid" id="bid__freespin">
+                                    <div id="bid__main-text">Bonus spin</div>
+                                    <div id="bid__second-text">Free: 10</div>
+                                </button>
+                            </div>
+                        </div>
+
+
                     </div>
-                    <button id="submit_bid" type="submit">Крутить!</button>
+                    <button id="submit_bid">
+                        <span id="submit_bid__text" class="bangers">
+                            TWIST
+                        </span>
+                    </button>
                 </form>
-                <p class="info"></p>
+            </div>
+            <p class="info">
+
+            </p>
+        </div>
+        <div id="right-side">
+            <div id="balance">
+                <span id="balance__text">Баланс</span>
+                <div id="balance__data">
+                    <table id="balance__data-table">
+                        <tbody>
+                            <tr>
+                                <td class="td_left">Рубли:</td>
+                                <td class="td_right">1 000 000 ₽</td>
+                            </tr>
+                            <tr>
+                                <td class="td_left">Доллары:</td>
+                                <td class="td_right">10 000 $</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
+    </div>
 
-    </div>
-    <div id="messages-container">
-    </div>
 
 {% endblock %}

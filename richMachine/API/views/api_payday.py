@@ -1,6 +1,10 @@
 
 from django.utils import timezone
 from icecream import ic
+
+from magazine.models import Houses
+from users.models import CustomUser
+from django.db.models import Q
 from utils import (coll, db_houses, db_rates, db_stock, get_house_by_id,
                    get_item_by_id)
 
@@ -13,37 +17,54 @@ def give_payday():
     """
 
     counter = 0
-    give_all_money = {
+    total_distributed_money = {
         "rubles": 0,
         "dollars": 0
         }
-    
-    for user in coll.find({'house.houses': {'$ne': []}}):
 
-        # Добавление процентов в банке
-        percent = user['money']['bank'] // 1500
+    # Фильтруем только пользователей с домами
+    users_with_houses = CustomUser.objects.filter(~Q(house__houses=[]))
+
+    for user in users_with_houses:
+        # Начисление процентов на банковский баланс
+        percent = user.money['bank'] // 1500
         if percent >= 1:
-            coll.update_one({'user_id': user['user_id']},
-                            {"$inc": {"money.bank": percent}})
-            give_all_money['rubles'] += percent
-            
-        if user['house'].get('houses'):
-            balance_house = 0
-            
-            for house in user['house']['houses']:
+            user.money['bank'] += percent
+            total_distributed_money['rubles'] += percent
+
+        # Проверяем наличие домов у пользователя
+        houses = user.house.get('houses', [])
+        if houses:
+            total_house_income = 0
+
+            for house in houses:
                 house_info = get_house_by_id(house['id'])
-                
-                if not house_info.basement.get('videocards'):
+
+                # Проверяем наличие видеокарт в доме
+                basement = house_info.basement
+                videocards = basement.get('videocards', {})
+
+                ic(videocards)
+
+                if not videocards:
                     continue
-                
-                for videocard, qty in house_info.basement['videocards'].items():
-                    videocard_info = get_item_by_id(int(videocard))
-                    balance_house += videocard_info['attributes']['performance'] * qty
-            
-            db_houses.update_one({'id': house},
-                                       {'$inc': {'basement.balance': balance_house // 24}})
-            give_all_money['dollars'] += balance_house
-        
+
+                # Вычисляем доход с видеокарт
+                for videocard_id, qty in videocards.items():
+                    videocard_info = get_item_by_id(int(videocard_id))
+                    ic(videocard_info, videocard_id, qty)
+                    performance = videocard_info.attributes.get('performance', 0)
+                    total_house_income += performance * qty
+
+                # Обновляем баланс в доме
+                house_info.basement['balance'] += total_house_income // 24
+                house_info.save()
+
+                total_distributed_money['dollars'] += total_house_income
+
+
+        # Сохраняем изменения в пользователе
+        user.save()
         counter += 1
     
     # await log_action(user_id='payday', situation='give_payday', 

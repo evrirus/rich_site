@@ -1,23 +1,19 @@
-
 from utils import (get_district_by_id, get_full_houses_info,
-                   get_item_by_id, send_message_to_user)
+                   get_item_by_id, send_message_to_user, Money)
 
 from django.db import transaction
-
 
 from django.contrib.humanize.templatetags.humanize import intcomma
 from django.http import JsonResponse
 
 from icecream import ic
 from magazine.models import Houses
-from utils import (db_houses,get_house_by_id,
-                    give_money)
+from utils import get_house_by_id
 
 from authentication import SiteAuthentication, TelegramAuthentication
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.request import Request
 from rest_framework.response import Response
-from django.urls import reverse_lazy
 from rest_framework.views import APIView
 
 
@@ -73,8 +69,11 @@ class SellHouseView(APIView):
             house.owner = None
             house.save()
 
-        give_money(request, request.user.server_id, house_info.price // 2)
-        send_message_to_user(request.user.server_id, {'text': 'Продажа прошла успешно!'})
+        money = Money(request, house_info.price // 2).give()
+        money.create_notification('Продажа прошла успешно!')
+
+
+        # send_message_to_user(request.user.server_id, {'text': 'Продажа прошла успешно!'})
         # messages.success(request, 'Продажа прошла успешно!')
         return JsonResponse({'success': True, 'message': 'Продажа прошла успешно!'})
 
@@ -187,10 +186,9 @@ class GetTakeProfitBasementView(APIView):
         house.basement['balance'] = 0
         house.save()
 
-        db_houses.update_one({'id': request.data},
-                             {'$set': {'basement.balance': 0}})
-        give_money(request, request.user.server_id, current_balance, type_money='dollar', comment=f'Вы обналичили заработок с майнинга! Заработано: {intcomma(current_balance)}$')
-        
+        money = Money(request, current_balance, type_money='dollar').give()
+        money.create_notification(f'Вы обналичили заработок с майнинга! Заработано: {intcomma(current_balance)}$')
+
         return Response({'success': True, 'message': 'ok',
                          'new_balance': 0,
                          'profit': current_balance})
@@ -254,9 +252,10 @@ class CreateBasementView(APIView):
             }
         house.save()
 
-        give_money(request, request.user.server_id, -PRICE_FIRST_LEVEL)
-        send_message_to_user(request.user.server_id, {'text': 'Поздравляем | Вы построили подвал первого уровня!'})
-        # messages.success(request, 'Поздравляем | Вы построили подвал первого уровня!')
+
+        money = Money(request, -PRICE_FIRST_LEVEL).give()
+        money.create_notification('Поздравляем | Вы построили подвал первого уровня!')
+
         return Response({'success': True, 'level': 1, 'house_id': house.id})
 
 
@@ -312,13 +311,13 @@ class UpgradeBasementView(APIView):
             # messages.error(request, 'Недостаточно средств.')
             return Response({'success': False})
 
-        give_money(request, request.user.server_id, -upgrade_data[house_info.basement.get('level', 0) + 1]['price'])
+        money = Money(request, -upgrade_data[house_info.basement.get('level', 0) + 1]['price']).give()
 
         house_info.basement['maxQuantity'] = upgrade_data[house_info.basement.get('level', 0) + 1]['maxQuantity']
         house_info.basement['level'] += 1
         house_info.save()
-        send_message_to_user(request.user.server_id,
-                             {'text': f'Вы улучшили подвал до {house_info.basement['level']} уровня! Теперь подвал вмещает больше видеокарт.'})
-        # messages.success(request, f'Вы улучшили подвал до {house_info.basement['level']} уровня! Теперь подвал вмещает больше видеокарт.')
+
+        money.create_notification(f'Вы улучшили подвал до {house_info.basement['level']} уровня! Теперь подвал вмещает больше видеокарт.')
+
         return Response({'success': True, 'new_level': house_info.basement['level']})
 

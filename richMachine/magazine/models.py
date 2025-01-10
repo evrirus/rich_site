@@ -67,10 +67,10 @@ class Districts(models.Model):
 
 class Items(models.Model):
     id = models.AutoField(primary_key=True)
-    name = models.CharField(max_length=255)
-    type = models.CharField(max_length=255)
-    attributes = models.JSONField(default=dict)
-    price = models.IntegerField(null=False)
+    name = models.CharField(max_length=255, null=True)
+    type = models.CharField(max_length=255, null=True)
+    attributes = models.JSONField(default=dict, null=True)
+    price = models.IntegerField(null=True)
     max_quantity = models.IntegerField(null=True)
 
     def __str__(self):

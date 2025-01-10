@@ -1,31 +1,14 @@
-from authentication import SiteAuthentication, TelegramAuthentication
-from django.contrib import messages
+import requests
+from django.shortcuts import render
+from rest_framework.request import Request
 from icecream import ic
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.request import Request
-from rest_framework.response import Response
 from rest_framework.views import APIView
-import json
-import random
 
-
-from wsgiref.simple_server import WSGIRequestHandler
 from authentication import SiteAuthentication, TelegramAuthentication
-from rest_framework.authentication import SessionAuthentication
+from utils import (DOMEN, get_item_by_id)
 
-from django.contrib import messages
-
-from django.contrib.humanize.templatetags.humanize import intcomma
-from django.http import JsonResponse
-from django.shortcuts import  render
-
-
-from django.views.decorators.csrf import csrf_exempt
-
-from icecream import ic
-
-import requests
-from utils import (DOMEN,get_item_by_id,get_messages, give_money,  get_symbol_money)
 
 class RenderInventory(APIView):
     """API для смены никнейма
@@ -59,10 +42,11 @@ class RenderInventory(APIView):
 
                 else:
                     videocard_info = get_item_by_id(item['id'])
+                    ic(videocard_info, item)
                     show_items.append({
-                        'name': videocard_info['name'],
-                        'performance': videocard_info['attributes']['performance'],
-                        'type': videocard_info['type'], 'id': item['id']
+                        'name': videocard_info.name,
+                        'performance': videocard_info.attributes['performance'],
+                        'type': videocard_info.type, 'id': item['id']
                     })
 
             elif item['type'] == 'plate':
@@ -79,6 +63,8 @@ class RenderInventory(APIView):
             difference = max_quantity - current_quantity
             # Заполнение оставшегося места пустыми элементами
             show_items.extend([{'type': 'empty'}] * difference)
+
+        ic(show_items)
 
         # Возвращение отрендеренного шаблона с данными
         return render(request, 'inventory/inventory.html', {

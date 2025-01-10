@@ -1,6 +1,7 @@
 import json
 import random
 
+from icecream import ic
 from rest_framework.views import APIView
 
 from authentication import SiteAuthentication, TelegramAuthentication
@@ -8,8 +9,10 @@ from rest_framework.authentication import SessionAuthentication
 
 from django.contrib.humanize.templatetags.humanize import intcomma
 from django.http import JsonResponse
+from rest_framework.request import Request
 
-from utils import give_money, get_symbol_money, send_message_to_user
+from casino.models import CasinoModel, FreeSpinType
+from utils import send_message_to_user, Money
 
 
 class GenerateCombinationView(APIView):
@@ -144,17 +147,43 @@ class GenerateCombinationView(APIView):
         125: ['👻', '👻', '👻'],
     }
 
-    def post(self, request):
+    def post(self, request: Request):
 
-        data = json.loads(request.body)
+        data = request.data
+        ic(data)
         user_input = data.get('user_input')
         user_choice = data.get('user_choice')
+        user_bid = data.get('bid')
+        ic(user_input, user_choice, user_bid)
+        casino_model = CasinoModel.objects.filter(user=request.user).first()
+        if user_bid.isdigit() and user_input.isdigit():
+            bid = int(user_input)
 
-        # Проверка и преобразование ставки
-        bid = int(user_input) if user_input.isdigit() else 0
+        elif user_bid == 'vabank':
+            bid = request.user.money[user_choice]
+
+        elif user_bid == 'freespin':
+            is_use = casino_model.use_freespin()
+            if is_use:
+
+                ic(casino_model)
+                freespins = casino_model.free_spin_types.all()
+                ic(freespins)
+
+                bid = freespins.first().stake_value
+
+                user_choice = freespins.first().currency
+                ic(user_choice)
+            else:
+                send_message_to_user(request.user.server_id, {'text': 'Нет доступных фриспинов'})
+
+                return JsonResponse(
+                    {'success': False, 'message': 'Нет доступных фриспинов', 'freespin': 0})
+        else: bid = 0
+
         if bid <= 0:
             send_message_to_user(request.user.server_id, {'text': 'Ставка не может быть меньше единицы'})
-            # messages.error(request, 'Ставка не может быть меньше единицы')
+
             return JsonResponse(
                 {'success': False, 'message': 'Ставка не может быть меньше единицы'})
 
@@ -162,9 +191,8 @@ class GenerateCombinationView(APIView):
 
         # Проверка достаточности средств
         if balance < bid:
-
             send_message_to_user(request.user.server_id, {'text': 'Недостаточно средств. | Пополнить счёт можно в Донате'})
-            # messages.error(request, 'Недостаточно средств. | Пополнить счёт можно в Донате')
+
             return JsonResponse(
                 {'success': False, 'message': 'Недостаточно средств.'})
 
@@ -179,20 +207,38 @@ class GenerateCombinationView(APIView):
 
         # Обновление баланса и отправка уведомления в зависимости от коэффициента
         if coefficient > 1:
-
             balance += -bid + (winnings * 3)
-            give_money(request, request.user.server_id, -bid + (winnings * 3), type_money=user_choice,
-                       comment=f"Уведомление | Ваша ставка принята, ваш выигрыш составил {intcomma(winnings)} {get_symbol_money(user_choice)}. \nКоэффициент x{coefficient}.\nОстаточный баланс: {intcomma(balance)} {get_symbol_money(user_choice)}")
+
+            money = Money(request, -bid + (winnings * 3), type_money=user_choice)
+            text = (f'Вы выиграли {intcomma(winnings)} {Money.get_symbol(user_choice)} (x{coefficient})\n'
+                    f'Баланс: {intcomma(balance)} {Money.get_symbol(user_choice)}')
 
         elif coefficient < 1:
 
-            balance += winnings
-            give_money(request, request.user.server_id, winnings, type_money=user_choice,
-                       comment=f"Уведомление | Ваша ставка проигрышна, вы потеряли {intcomma(winnings)} {get_symbol_money(user_choice)}. \nКоэффициент x{coefficient}.\nОстаточный баланс: {intcomma(balance)} {get_symbol_money(user_choice)}")
 
-        elif coefficient == 1:
-            give_money(request, request.user.server_id, 0, type_money=user_choice,
-                       comment=f"Уведомление | Ваша ставка не принесла выигрыша.\n Коэффициент x{coefficient}.\nОстаточный баланс: {intcomma(balance)} {get_symbol_money(user_choice)}")
+            if user_bid == 'freespin':
+                money = Money(request, 0, type_money=user_choice)
+
+                text = (f'Фриспин на {intcomma(bid)}{Money.get_symbol(user_choice)} (x{coefficient})\n'
+                        f'Ваш баланс остался прежним!\n'
+                        f'Баланс: {intcomma(balance)} {Money.get_symbol(user_choice)}')
+            else:
+                money = Money(request, winnings, type_money=user_choice)
+                balance += winnings
+
+                text = (f'Вы проиграли {intcomma(winnings)} {Money.get_symbol(user_choice)} (x{coefficient})\n'
+                        f'Баланс: {intcomma(balance)} {Money.get_symbol(user_choice)}')
+
+        # coefficient == 1
+        else:
+
+            money = Money(request, 0, type_money=user_choice)
+
+            text = (f'Ваши деньги остаются при Вас (x{coefficient})\n'
+                    f'Баланс: {intcomma(balance)} {Money.get_symbol(user_choice)}')
+
+        money.give()
+        money.create_notification(text+' CASINO')
 
         return JsonResponse(
             {'combination': combination, 'success': True, 'user_input': user_input, 'user_choice': user_choice,
@@ -223,11 +269,11 @@ class GenerateCombinationView(APIView):
         7, 13, 19, 25, 38, 44, 57, 69, 75, 82, 88, 100, 107, 113, 119):
             return 2
 
-        probability = 0.17  # 17% вероятность
+        probability = 0.13  # 13% вероятность
         if self.random_with_probability(probability):
             return 1
 
-        probability = 0.22  # 22% вероятность
+        probability = 0.17  # 17% вероятность
         if self.random_with_probability(probability):
             return 0.5
         return 0

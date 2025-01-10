@@ -65,6 +65,16 @@ CHANNEL_LAYERS = {
     },
 }
 
+CACHES = {
+    'default': {
+        'BACKEND': 'django_redis.cache.RedisCache',
+        'LOCATION': 'redis://127.0.0.1:6379/1',  # URL Redis-сервера
+        'OPTIONS': {
+            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+            'IGNORE_EXCEPTIONS': True,  # Игнорировать ошибки подключения (рекомендуется для production)
+        }
+    }
+}
 
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': (
@@ -119,16 +129,6 @@ WSGI_APPLICATION = 'richMachine.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'djongo',
-#         'NAME': 'lalka',
-#         'CLIENT': {
-#             'host': 'mongodb://localhost:27017',
-#         },
-#         'ENFORCE_SCHEMA': False
-#     }
-# }
 
 DATABASES = {
     "default": {
