@@ -1,4 +1,3 @@
-# from itertools import product
 import datetime
 import hashlib
 import hmac
@@ -7,18 +6,17 @@ import re
 import string
 import time
 import uuid
-from wsgiref.simple_server import WSGIRequestHandler
 
 import requests
-from django.contrib import messages
+from asgiref.sync import async_to_sync
+from channels.layers import get_channel_layer
 from django.contrib.humanize.templatetags.humanize import intcomma
 from icecream import ic
 from pymongo import MongoClient
+from rest_framework.request import Request
 
-from magazine.models import Car, Districts, Houses, Yacht
+from magazine.models import Car, Districts, Houses, Yacht, Items
 from users.models import CustomUser
-from channels.layers import get_channel_layer
-from asgiref.sync import async_to_sync
 
 DOMEN = 'http://127.0.0.1:8000/'
 
@@ -26,25 +24,20 @@ client = MongoClient('mongodb://localhost:27017')
 db = client.get_database('lalka')
 
 coll = db.get_collection('users_customuser')
-counter_collection = db.get_collection('counters')
 
-db_districts = db.get_collection('districts')
-db_yachts = db.get_collection('yachts')
-db_cars = db.get_collection('cars')
 
-db_jobs = db.get_collection('works')
+
+
 db_items = db.get_collection('items')
 db_rates = db.get_collection('rates')
 db_stock = db.get_collection('stock')
 db_crypt = db.get_collection('crypt')
 
-db_coeff = db.get_collection('coefficient')
+
 db_houses = db.get_collection('houses')
 db_inv = db.get_collection('inventory')
 db_log = db.get_collection('logging')
-db_test = db.get_collection('tests')
 
-db_admin = db.get_collection('admin')
 
 
 
@@ -56,10 +49,6 @@ def generate_ucode(k=9):
     chars = string.ascii_letters + string.digits
     return ''.join(random.choices(chars, k=k))
 
-
-
-def get_messages(request):
-    return [{'level': message.level, 'message': message.message, 'extra_tags': message.extra_tags} for message in messages.get_messages(request)]
 
 
 def verify_telegram_auth(data, token):
@@ -74,20 +63,6 @@ def verify_telegram_auth(data, token):
         return False
     return True
 
-
-def get_next_sequence_value(sequence_name: str):
-    if not counter_collection.find_one():
-        # Если нет, создаем документ с начальным значением счетчика
-        counter_collection.insert_one({'_id': 'your_collection_id', 
-                                             'sequence_value': 1,
-                                             'deal_id': 1,
-                                             'crypt_id': 1})
-    counter = counter_collection.find_one_and_update(
-        {'_id': 'your_collection_id'},
-        {'$inc': {sequence_name: 1}},
-        return_document=True
-    )
-    return counter[sequence_name]
 
 def get_crypto_info(name: str):
     data = db_crypt.find_one({'name': name})
@@ -140,15 +115,15 @@ def get_transport_by_ucode(server_id: int, type: str, ucode: str):
 
 
 
-def send_message_to_user(user_id, message):
+def send_message_to_user(server_id: int, message: dict[str, str]) -> None:
     """
     Отправляет сообщение пользователю через WebSocket.
     """
-    ic(message, user_id)
     channel_layer = get_channel_layer()
-    group_name = f'user_{user_id}'
+    group_name = f'user_{server_id}'
 
     # todo: удалить
+
     message['text'] += ' WS'
 
     async_to_sync(channel_layer.group_send)(
@@ -160,7 +135,7 @@ def send_message_to_user(user_id, message):
     )
 
 
-def send_message_to_session(session_key, message):
+def send_message_to_session(session_key: str, message: dict[str, str]):
     channel_layer = get_channel_layer()
     group_name = f"session_{session_key}"
 
@@ -175,101 +150,45 @@ def send_message_to_session(session_key, message):
 
 class Money:
     #todo: переделать give_money на этот класс.
-    def __init__(self, request: WSGIRequestHandler,
-                 server_id: int, sum: int,
-                 type_money: str = 'cash', comment=None):
+    def __init__(self, request: Request,
+                 amount: int, type_money: str = 'cash') -> None:
 
+        self.type_money = type_money
         self._request = request
-        self._server_id = server_id
-        self._sum = sum
+        self._server_id = request.user.server_id
+        self.amount = amount
         self._type_money = type_money
-        self._comment = comment
 
-    @property
-    def request(self):
-        return self._request
 
-    @property
-    def server_id(self):
-        return self._server_id
-
-    @property
-    def sum(self):
-        return self._sum
-
-    @property
-    def type_money(self):
-        return self._type_money
-
-    @property
-    def comment(self):
-        return self._comment
-
-    @comment.setter
-    def comment(self, value):
-        if value is not None and value != self._comment:
-            self._comment = value
-        return self._comment
 
     def give(self):
-        user = self.request.user
-        user.money[self.type_money] += (self.sum)
+        if self.amount == 0:
+            return False
+        user = self._request.user
+
+        user.money[self.type_money] += self.amount
         user.save()
+        ic(user.money, 'give')
         return self
 
-    def create_notification(self):
-        if self.sum > 0 and not self.comment:
-            # ic(sum > 0 and not comment)
-            messages.success(self.request, f"На баланс начислено: {intcomma(sum)} {self.get_symbol_money(self._type_money)}")
-        elif self.sum < 0 and not self.comment:
-            # ic(sum < 0 and not comment)
-            messages.success(self.request, f"С баланса списано: {intcomma(sum)} {self.get_symbol_money(self._type_money)}")
-        elif self.comment:
-            # ic(comment)
-            messages.success(self.request, self.comment)
+    def create_notification(self, v: str):
+        if self.amount > 0 and not v:
+            v = f"На баланс начислено: {intcomma(self.amount)} {self.get_symbol(self._type_money)}"
+
+        elif self.amount < 0 and not v:
+            v = f"С баланса списано: {intcomma(self.amount)} {self.get_symbol(self._type_money)}"
+
+        send_message_to_user(self._server_id, {'text': v})
 
         return self
 
     @staticmethod
-    def get_symbol_money(type_money: str = "cash"):
+    def get_symbol(type_money: str = "cash"):
         if type_money in ("cash", "bank") : symbol = "₽"
         elif type_money == 'dollar': symbol = "$"
         elif type_money == 'bitcoin': symbol = "₿"
         else: symbol = "(?)"
         return symbol
-
-def get_symbol_money(type_money: str = "cash"):
-    if type_money in ("cash", "bank") : symbol = "₽"
-    elif type_money == 'dollar': symbol = "$"
-    elif type_money == 'bitcoin': symbol = "₿"
-    else: symbol = "(?)"
-    return symbol
-
-def give_money(request: WSGIRequestHandler, server_id: int, sum: int, type_money: str = 'cash', comment=None):
-    user = request.user
-    user.money[type_money] += (sum)
-    user.save()
-    
-    symbol = get_symbol_money(type_money)
-    ic(comment)
-    if sum > 0 and not comment:
-        # ic(sum > 0 and not comment)
-        comment = f"На баланс начислено: {intcomma(sum)} {symbol}"
-        # messages.success(request, f"На баланс начислено: {intcomma(sum)} {symbol}")
-    elif sum < 0 and not comment:
-        # ic(sum < 0 and not comment)
-        comment = f"С баланса списано: {intcomma(sum)} {symbol}"
-        # messages.success(request, f"С баланса списано: {intcomma(sum)} {symbol}")
-    # elif comment:
-        # ic(comment)
-        # messages.success(request, comment)
-
-    ic(user.server_id)
-    ic(comment)
-    send_message_to_user(user.server_id, {'text': comment})
-    ic('GIVE MONEY')
-
-    return True
 
 
 def calculate_total_quantity(house_id: int):
@@ -348,12 +267,10 @@ def add_videocard_in_house(house_id: int, id_videocard: int, qty: int = 1):
     
 
 def get_item_by_id(item_id: int):
-    return db_items.find_one({'id': item_id})
+    try:
+        return Items.objects.get(id=item_id)
+    except Items.DoesNotExist: return None
 
-def get_item_in_inventory_user_by_id(server_id: int, item_id: int):
-    return db_inv.find_one({'server_id': server_id, 'inventory.id': item_id})
-def get_item_in_inventory_user_by_type(server_id: int, item_type: str):
-    return db_inv.find_one({'server_id': server_id, 'inventory.type': item_type})
 
 
 
@@ -403,8 +320,6 @@ def add_inventory_as_value(user_id: int, id_item: str = '19', value: str = None)
 
 def money_format(money: int):
     return "{:,}".format(money).replace(',', '.')
-    
-
 
 class nety_loga(BaseException):
     pass

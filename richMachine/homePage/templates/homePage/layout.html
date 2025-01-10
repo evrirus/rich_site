@@ -80,6 +80,10 @@
         </div>
         <div id="messages-container">
             <script>
+                let reconnectAttempts = 0;
+                const maxReconnectAttempts = 5;
+                const reconnectInterval = 1000; // Интервал повторного подключения в миллисекундах
+
                 function handleMessages(message) {
                     console.log(message);
                     const container = $('#messages-container');
@@ -98,7 +102,6 @@
                     const currentAlerts = container.children('.alert');
 
                     if (currentAlerts.length >= 4) {
-
                         // Удаляем самое старое уведомление
                         currentAlerts.last().fadeOut(150, function () {
                             $(this).remove();
@@ -114,28 +117,32 @@
                     }, 5000);
                 }
 
+                function fConnect() {
+                    const socket = new WebSocket(`ws://${location.host}/ws/notifications/`);
 
-                const socket = new WebSocket(`ws://${location.host}/ws/notifications/`);
+                    socket.onopen = function() {
+                        console.log('Соединение установлено');
+                        reconnectAttempts = 0; // Сбрасываем счетчик при успешном подключении
+                    };
 
-                socket.onmessage = function(event) {
+                    socket.onmessage = function(event) {
+                        const data = JSON.parse(event.data);
+                        handleMessages(data.text);
+                    };
 
-                    const data = JSON.parse(event.data);
-                    console.log(data, 1);
-                    // Логика отображения уведомлений
-                    handleMessages(data.text);
-                };
+                    socket.onclose = function(event) {
+                        console.log('Соединение закрыто, код:', event.code);
+                        console.log(`Попытка переподключения`);
+                        setTimeout(fConnect, reconnectInterval);
+                    };
 
-                {#const maxNotifications = 5;#}
-                {#const notifications = [];#}
+                    socket.onerror = function(error) {
+                        socket.close(); // Закрываем соединение при ошибке
+                    };
+                }
 
-
-
-                // Уведомления при перезагрузке страницы
-                {#fetch('/api/active-notifications/')#}
-                {#    .then(response => response.json())#}
-                {#    .then(data => {#}
-                {#        data.forEach(notification => displayNotification(notification.text));#}
-                {#    });#}
+                // Запускаем подключение при загрузке страницы
+                fConnect();
 
             </script>
         </div>

@@ -1,5 +1,7 @@
 {% extends "homePage/layout.html" %}
 {% load static %}
+{% load humanize %}
+
 {% block title %}Go to Work!{% endblock %}
 
 
@@ -8,10 +10,6 @@
 {% endblock %}
 
 {% block script %}
-{#    <script>#}
-{#        const LOGIN_URL = "{% url 'users:login' %}";#}
-{#        const PROFILE_URL = "{% url 'self_profile' %}";#}
-{#    </script>#}
     <script>
         {#const UPD_CLICKS = "{% url 'jobs:update_clicks' %}";#}
     </script>
@@ -30,7 +28,7 @@
                         <table>
                             <tr>
                                 <td id="earned">Заработано:</td>
-                                <td id="earned-value"><span class="value">100 000</span> ₽</td>
+                                <td id="earned-value"><span class="value">{{ total_earnings|intcomma }}</span> ₽</td>
                             </tr>
                             <tr>
                                 <td id="worked">Проработано:</td>
@@ -38,7 +36,7 @@
                             </tr>
                             <tr>
                                 <td id="level">Level:</td>
-                                <td id="level-value"><span class="value">7</span></td>
+                                <td id="level-value"><span class="value">{{ level|intcomma }}</span></td>
                             </tr>
                         </table>
 
@@ -48,10 +46,9 @@
             <div id="middle-side">
                 <div id="balance">
                     <div id="balance-text">Баланс</div>
-                    <div id="balance-value"><span class="value">100.000</span> ₽</div>
+                    <div id="balance-value"><span class="value">{{ balance|intcomma }}</span> ₽</div>
                 </div>
                 <div id="work-main">
-
                     <div id="main-circuit" class="main-button">
                         <div id="main-interior">
                             <img src="{% static 'jobs/img/main-broom.svg' %}" id="main-image" draggable="false">
@@ -63,20 +60,20 @@
 
                 <img src="{% static 'jobs/img/stars-statistics.svg' %}" id="stars-statistics">
                 <div id="statistics">
-                    <span id="statistics__header">Статистика</span>
+                    <p id="statistics__header">Статистика</p>
                     <div id="statistics__info">
                         <table>
                             <tr>
                                 <td id="salary">Зарплата:</td>
-                                <td id="salary-value"><span class="value">10 000</span> ₽</td>
+                                <td id="salary-value"><span class="value">{{ salary|intcomma }}</span> ₽</td>
                             </tr>
                             <tr>
                                 <td id="sphere">Сфера:</td>
-                                <td id="sphere-value"><span class="value">Стройка</span></td>
+                                <td id="sphere-value"><span class="value">{{ sphere }}</span></td>
                             </tr>
                             <tr>
                                 <td id="job">Работа:</td>
-                                <td id="job-value"><span class="value">Дворник</span></td>
+                                <td id="job-value"><span class="value">{{ name }}</span></td>
                             </tr>
                             <tr>
                                 <td id="shift-end">Конец смены:</td>
@@ -90,9 +87,9 @@
         </div>
         <div id="down-side">
             <div id="down__info">
-                <div id="timer">⏳ Осталось 4д 23ч 59м</div>
+                <div id="timer" style="display: none">⏳ Осталось 4д 23ч 59м</div>
                 <div id="progress-bar">
-                    <progress id="progress" max="100" value="50">70%</progress>
+                    <progress id="progress" max="{{ required_exp }}" value="{{ current_exp }}">70%</progress>
                 </div>
             </div>
         </div>

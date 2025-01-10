@@ -17,6 +17,7 @@ class InventoryItem(models.Model):
     inventory = models.ForeignKey(Inventory, related_name='items', on_delete=models.CASCADE)
     item_type = models.CharField(max_length=100)  # Тип предмета (например, "videocard")
     item_id = models.IntegerField()
+    ucode = models.CharField(max_length=50, null=True)
 
     def __str__(self):
         return f"{self.item_type} in inventory {self.inventory.id}"

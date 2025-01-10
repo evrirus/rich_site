@@ -6,7 +6,6 @@ class TelegramBackend(BaseBackend):
         if telegram_id:
             try:
                 user = CustomUser.objects.get(telegram_id=telegram_id)
-
                 return user
             except CustomUser.DoesNotExist:
                 return None

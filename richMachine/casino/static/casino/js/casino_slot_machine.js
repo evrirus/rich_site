@@ -1,109 +1,152 @@
-
-
-
-(async function () {
+$(function () {
     "use strict";
 
     const items = [
         "🍭", "🦄", "💵", "🦖", "👻"
     ];
-    const form = document.getElementById('userForm');
-    const doors = document.querySelectorAll(".door");
+    const $form = $('#userForm');
+    const $mainButton = $('#submit_bid');
+    const $buttonx05 = $('#bid__x05');
+    const $buttonx2 = $('#bid__x2');
+    const $buttonVaBank = $('#bid__vabank');
+    const $freeSpin = $('#bid__freespin');
+    const $inputBid = $('#input__bid');
+
+    const $doors = $(".door");
     let isSpinning = false;
 
-    document.getElementById('userForm').addEventListener('submit', async function (event) {
+    $form.on('submit', function (event) {
+
+        const submitter = event.originalEvent.submitter; // Получаем DOM-элемент кнопки
+        let bid = $inputBid.val();
+        console.log(bid);
+
+        if ($(submitter).is($buttonx05)) {
+            bid = setBidValue(Math.floor(bid / 2));
+
+        } else if ($(submitter).is($buttonx2)) {
+            bid = setBidValue(Math.floor(bid * 2));
+
+        } else if ($(submitter).is($buttonVaBank)) {
+            // Когда нажата кнопка "ВАБАНК", отправляем 'vabank', но инпут не меняется
+            bid = setBidValue(bid, 'vabank');
+
+        } else if ($(submitter).is($freeSpin)) {
+            bid = setBidValue(bid, 'freespin');
+        } else {
+            console.log('Вы нажали на неизвестную кнопку');
+        }
+
+
         event.preventDefault(); // Предотвращаем отправку формы по умолчанию
 
         if (isSpinning) return; // Предотвращаем запуск нескольких спинов одновременно
         isSpinning = true;
 
-        const formData = new FormData(form);
+        const formData = $form.serializeArray();
+
+        formData.push({ name: 'bid', value: bid });
+        console.log(formData);
 
         // Запрос комбинации с сервера
-        const combination = await fetchCombinationFromServer(formData);
-        if (!combination) {
-            isSpinning = false;
-            return;
-        }
+        fetchCombinationFromServer(formData).then(combination => {
+            if (!combination) {
+                isSpinning = false;
+                return;
+            }
 
-        // Инициализация перед запуском
-        init(false);
+            // Инициализация перед запуском
+            init(false);
 
-        const duration = parseFloat(getComputedStyle(doors[0].querySelector(".boxes")).transitionDuration) * 1000;
-        const delay = 200; // Задержка между началом анимации барабанов (в миллисекундах)
+            const duration = parseFloat(getComputedStyle($doors[0].querySelector(".boxes")).transitionDuration) * 1000;
+            const delay = 200; // Задержка между началом анимации барабанов (в миллисекундах)
 
-        // Запуск анимации всех барабанов с задержкой
-        doors.forEach((door, index) => {
-            setTimeout(() => {
-                const boxes = door.querySelector(".boxes");
-                boxes.style.transition = "transform 1s ease-out";
-                boxes.style.transform = `translateY(-${door.clientHeight * (boxes.childElementCount - 1)}px)`;
-            }, index * delay);
-        });
-
-        // Ожидание завершения всех анимаций
-        await new Promise(resolve => setTimeout(resolve, duration + delay * (doors.length - 1)));
-
-        // Отображение комбинации на экране
-        doors.forEach((door, index) => {
-            const boxes = door.querySelector(".boxes");
-            const box = document.createElement("div");
-            box.classList.add("box");
-            box.style.width = door.clientWidth + "px";
-            box.style.height = door.clientHeight + "px";
-            box.textContent = combination[index];
-            boxes.appendChild(box);
-            boxes.style.transform = `translateY(-${door.clientHeight * (boxes.childElementCount - 1)}px)`;
-        });
-
-        isSpinning = false;
-    });
-
-    async function fetchCombinationFromServer(formData) {
-        try {
-            const formDataObj = Object.fromEntries(formData.entries());
-            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-
-            const response = await fetch('/api/slot/generate/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': csrfToken
-                },
-                body: JSON.stringify(formDataObj)
+            // Запуск анимации всех барабанов с задержкой
+            $doors.each(function (index, door) {
+                setTimeout(() => {
+                    const $boxes = $(door).find(".boxes");
+                    $boxes.css({
+                        transition: "transform 1s ease-out",
+                        transform: `translateY(-${$(door).height() * ($boxes.children().length - 1)}px)`
+                    });
+                }, index * delay);
             });
 
-            const data = await response.json();
-            console.log(data);
-            if (data.combination) {
-                handleMessages(data.messages)
-                return data.combination;
+            // Ожидание завершения всех анимаций
+            setTimeout(() => {
+                // Отображение комбинации на экране
+                $doors.each(function (index, door) {
+                    const $boxes = $(door).find(".boxes");
+                    const $box = $("<div>", {
+                        class: "box",
+                        text: combination[index]
+                    }).css({
+                        width: $(door).width() + "px",
+                        height: $(door).height() + "px"
+                    });
+                    $boxes.append($box);
+                    $boxes.css({
+                        transform: `translateY(-${$(door).height() * ($boxes.children().length - 1)}px)`
+                    });
+                });
+
+                isSpinning = false;
+            }, duration + delay * ($doors.length - 1));
+        });
+    });
+
+    function setBidValue(value, type=null) {
+        console.log(value, type);
+
+        if (type === 'vabank') {
+            return type;
+        }
+        if (type === 'freespin') {
+            return type
+        }
+
+        $('#input__bid').val(value);
+        return value;
+
+    }
+
+    function fetchCombinationFromServer(formData) {
+
+        return $.ajax({
+            url: '/api/slot/generate/',
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': $('[name=csrfmiddlewaretoken]').val()
+            },
+            data: formData,
+            dataType: 'json'
+        }).then(response => {
+            console.log(response);
+            if (response.combination) {
+                return response.combination;
             } else {
-                handleMessages(data.messages)
                 return null;
             }
-        } catch (error) {
-            return null;
-        }
+        }).catch(() => console.log('Возникла неизвестная ошибка'));
     }
 
     function init(firstInit = true) {
-        doors.forEach(door => {
-            const boxes = door.querySelector(".boxes");
-            const boxesClone = document.createElement("div");
-            boxesClone.className = "boxes";
-            document.querySelector(".info").textContent = `${items.join(" ")}`;
+        $doors.each(function () {
+            const $door = $(this);
+            const $boxes = $door.find(".boxes");
+            const $boxesClone = $("<div>", { class: "boxes" });
+            $(".info").html(`<span class="smile">${items.join("</span> <span class=\"smile\">")}</span>`);
 
             let pool = [];
 
             if (firstInit) {
                 // Изначально отображаем только вопросительные знаки
-                for (let i = 0; i < 20; i++) { // Убедитесь, что символов достаточно
+                for (let i = 0; i < 20; i++) {
                     pool.push("❓");
                 }
             } else {
                 // Заполняем случайными символами
-                for (let i = 0; i < 20; i++) { // Убедитесь, что символов достаточно
+                for (let i = 0; i < 20; i++) {
                     pool.push(...items);
                 }
                 // Перемешиваем элементы
@@ -114,24 +157,22 @@
             const shuffledItems = shuffle(pool);
 
             shuffledItems.forEach(item => {
-                const box = document.createElement("div");
-                box.classList.add("box");
-                box.style.width = door.clientWidth + "px";
-                box.style.height = door.clientHeight + "px";
-                box.textContent = item;
-                boxesClone.appendChild(box);
+                const $box = $("<div>", {
+                    class: "box",
+                    text: item
+                }).css({
+                    width: $door.width() + "px",
+                    height: $door.height() + "px"
+                });
+                $boxesClone.append($box);
             });
 
-            boxesClone.style.transition = "none"; // Отключаем анимацию при изменении
-            boxesClone.style.transform = `translateY(0px)`;
-            door.replaceChild(boxesClone, boxes);
+            $boxesClone.css({
+                transition: "none",
+                transform: `translateY(0px)`
+            });
+            $door.find(".boxes").replaceWith($boxesClone);
         });
-    }
-
-    function getVisibleSymbol(door) {
-        // Получение видимого символа
-        const visibleBox = door.querySelector(".boxes .box:last-child");
-        return visibleBox ? visibleBox.textContent : "❓";
     }
 
     function shuffle(arr) {
@@ -145,4 +186,4 @@
 
     // Инициализация начального состояния
     init();
-})();
+});

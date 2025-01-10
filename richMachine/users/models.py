@@ -34,8 +34,9 @@ def default_money():
 def default_job():
     return {
         "level": 1,
+        "salary": 0,
         "tasks_completed": 0,
-        "next_job": 'now' # timezone.now()
+        "total_earnings": 0,
     }
 
 def default_house():

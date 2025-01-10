@@ -1,14 +1,20 @@
 html,
 body {
     width: 100vw;
-    height: 100vh;
     margin: 0;
     border: 0;
     padding: 0;
+    margin: 0;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
     -webkit-box-sizing: border-box;
     -moz-box-sizing: border-box;
     box-sizing: border-box;
-    background-color: #fff;
+    /*background-color: #fff;*/
+    --casino-bg-color: #320F12;
+    /*overflow: hidden;*/
+
 }
 
 *,
@@ -19,31 +25,140 @@ body {
     box-sizing: inherit;
 }
 
-#app {
-    width: 100%;
-    height: 100%;
+#sides {
+    padding-top: 5em;
+    display: flex;
+    flex-direction: row;
+    height: calc(100% - 60px);
+}
+.container {
+    padding-top: 0px;
+    background: radial-gradient(circle, rgba(103,31,38,1) 0%, rgba(62,19,23,1) 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh
 
-    background: #347B92;
+}
+#main {
+    padding-top: 0px;
+    margin-top: 0px;
+    height: calc(100% - 60px);
+}
+
+#middle-side {
+    width: min-content;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+#middle__first-side {
+    top: 0px;
+    border-radius: 10px 10px 0px 0px;
+    border: 2px solid white;
+    border-bottom: none;
+    background: linear-gradient(180deg, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0) 100%);
+}
+
+#middle__second-side {
+    /*border-radius: 10px 0px 10px 0px;*/
+    border: 2px solid white;
+    border-bottom: none;
+    border-top: none;
+    width: 100%;
 
     display: flex;
     flex-direction: column;
-    justify-content: center;
     align-items: center;
+}
+
+#middle__third-side {
+    border-radius: 0px 0px 10px 10px;
+    border: 2px solid white;
+    border-top: none;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    background: linear-gradient(0deg, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0) 100%);
+}
+#bid {
+    margin-bottom: 8vh;
+}
+
+.row {
+    padding-bottom: .5em;
+    display: flex;
+    flex-wrap: wrap;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: min(26px, 0.01vw);
+}
+#row_2 {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.bid {
+    color: white;
+    border: 1px solid white;
+    border-radius: 10px;
+    background: none;
+
+    align-items: center;
+    justify-content: center;
+    height: 30px;
+
+    font-size: 13.5px;
+}
+
+.bid:hover {
+    cursor: pointer;
+    border-color: #CCCCCC;
+    color: #CCCCCC;
+}
+
+#bid__freespin {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-size: 15px;
+    width: 100%;
+}
+#bid__main-text {
+    font-size: 15px;
+    height: 13.5px;
+}
+#bid__second-text {
+    font-size: 10px;
+    height: 9px;
+}
+
+.bangers {
+    font-family: "Bangers", system-ui;
 }
 
 .doors {
     display: flex;
+    padding: 2em min(52px, 4em);
+    padding-bottom: 2em;
 }
 
 .door {
-    background: #fafafa;
-    box-shadow: 0 0 3px 2px rgba(0, 0, 0, 0.4) inset;
+    background: rgba(250, 250, 250, 0);
+    box-shadow: 0 0 20px 5px rgba(193, 166, 98, 0.2);
+
+    border-radius: 10px;
+    /*border-color: #C1A362 solid 2px;*/
+    border: #C1A362 solid 5px;
 
     width: 100px;
     height: 150px;
     overflow: hidden;
 
-    border-radius: 1ex;
+
     margin: 1ch;
 }
 
@@ -79,22 +194,22 @@ button {
     text-align: center;
 }
 
-.a_cap {
-    background-color: #37408F;
-}
 
 #input__bid {
     border-radius: 15px;
     border: none;
-    background-color: white;
+    background-color: #3E1317;
     height: 2.5em;
     text-align: center;
     margin-top: 1.5em;
     margin-bottom: 2em;
     font-family: Montserrat, sans-serif;
+    color: white;
+    outline: none;
+
 }
 #input__bid::placeholder {
-    color: #757575;
+    color: white;
     font-family: Montserrat, sans-serif;
 }
 
@@ -115,10 +230,13 @@ input[type=number]::-webkit-outer-spin-button {
     border: none;
     border-radius: 15px;
     padding-left: 1em;
-    background-color: white;
+    background-color: #3E1317;
+    color: white;
 }
-option {
+#choose_type_cash option {
     border-radius: 5px;
+    background-color: #65558f00;
+    border: none;
 }
 
 form {
@@ -129,11 +247,87 @@ form {
 
 #submit_bid {
     border: none;
-    border-radius:1.2em;
-    background-color: #65558f;
-    color: white;
+    border-radius: 50px 25px 50px 25px;
+    background-color: #C1A362;
+    color: #671F26;
     height: 3em;
     width: 11em;
-
+    margin-bottom: 3em;
+    box-shadow: 0px 5.6px 42px 26.6px rgba(193, 166, 98, 0.1);
 }
 
+#submit_bid__text {
+    font-size: 1.5em;
+}
+
+#submit_bid:hover {
+    background-color: rgba(193, 163, 98, 0.9);
+    color: rgba(103, 31, 38, 0.95);
+}
+
+#submit_bid:active {
+    background-color: rgba(193, 163, 98, 0.8);
+    color: rgba(103, 31, 38, 0.8);
+}
+
+#left-side, #middle-side {
+    margin-right: 3em;
+}
+
+#winners, #balance {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background-color: var(--casino-bg-color);
+
+    border-radius: 15px;
+    width: max-content;
+    height: max-content;
+    padding: 1em;
+    color: white;
+}
+
+#winners__header {
+    margin-bottom: 1em;
+}
+
+#winners__info {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 1em;
+}
+
+#freespins__text {
+    font-size: 32px;
+    color: white;
+
+}
+#freespins {
+    padding-bottom: 1em;
+}
+
+table {
+    text-align: left;
+}
+
+.a_cap {
+    position: static;
+    background-color: rgba(0, 0, 0, 0.0);
+}
+
+.td_left {
+    text-align: left;
+}
+.td_right {
+    text-align: right;
+}
+#winners__data-table, #balance__data-table {
+    max-width: 12.5em;
+}
+.smile {
+    border-radius: 10px;
+    border: 2px solid #dadada;
+    padding: .5em;
+    margin-right: 3px;
+}

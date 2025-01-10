@@ -1,8 +1,8 @@
 import json
-from django.utils.deprecation import MiddlewareMixin
-from icecream import ic
+
 from django.core.handlers.wsgi import WSGIRequest
-from utils import coll
+from django.utils.deprecation import MiddlewareMixin
+
 
 class ContentSecurityPolicyMiddleware(MiddlewareMixin):
     def process_response(self, request, response: WSGIRequest):
@@ -18,7 +18,6 @@ class ContentSecurityPolicyMiddleware(MiddlewareMixin):
         )
         # X-Frame-Options заголовок
         response['X-Frame-Options'] = 'None'
-        # print("[OPIFDI[PSDI[PFIASDOP[AFDIOP[FAIP[ODSI[FPO[PEO]]]]]]]]")
         return response
 
 class RequestSourceMiddleware(MiddlewareMixin):

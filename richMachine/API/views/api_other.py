@@ -1,16 +1,12 @@
-from authentication import SiteAuthentication, TelegramAuthentication
 from icecream import ic
-from rest_framework import status
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.request import Request
 from rest_framework.response import Response
-from rest_framework.serializers import ModelSerializer
 from rest_framework.views import APIView
 
+from authentication import SiteAuthentication, TelegramAuthentication
 from inventory.models import Inventory
-from utils import (coll, db_cars, db_crypt, db_inv, get_car_by_id,
-                   get_district_by_id, get_full_houses_info, get_house_by_id,
-                   get_yacht_by_id, give_money)
+from utils import db_crypt
 
 
 class GetSymbolCrypt(APIView):
@@ -39,8 +35,7 @@ class GetInventory(APIView):
     
     def get(self, request: Request):
 
-        ic(request.user.server_id)
-        inv = Inventory.objects.get(server_id=request.user.server_id)
+        inv = Inventory.objects.get(user=request.user)
 
         items = inv.items.all()
         standart_items = []
