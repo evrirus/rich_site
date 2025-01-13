@@ -20,9 +20,13 @@ class FreeSpinType(models.Model):
 class CasinoModel(models.Model):
     user = models.ForeignKey(CustomUser, related_name='casino', on_delete=models.CASCADE)
     max_win = models.IntegerField(default=30)
+    max_win_time = models.DateTimeField(auto_now_add=False, null=True)
+    max_cash_win_type = models.CharField(default='dollar', max_length=100, null=True)
     freespins_available = models.IntegerField(default=0)  # Сколько фриспинов осталось
     current_stake = models.IntegerField()  # Текущая ставка пользователя
     free_spin_types = models.ManyToManyField(FreeSpinType, related_name='casino_freespins')  # Связь с типами фриспинов
+    # is_authenticated = models.BooleanField(default=False)
+
 
     def __str__(self):
         return f"Casino {self.user.username}"

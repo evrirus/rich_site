@@ -104,17 +104,19 @@
                     </div>
                 </div>
             </div>
-            <div id="middle__second-side">
-                <div id="freespins">
-                    <span id="freespins__text" class="bangers">FREE SPINS: 10!</span>
+            {% if freespins > 0 %}
+                <div id="middle__second-side">
+                    <div id="freespins">
+                        <span id="freespins__text" class="bangers">FREE SPINS: {{ freespins }}!</span>
+                    </div>
                 </div>
-            </div>
+            {% endif %}
             <div id="middle__third-side">
 
                 <form id="userForm" method="post">
                     {% csrf_token %}
                     <div id="bid">
-                        <input id="input__bid" type="number" name="user_input" placeholder="Enter bid" required>
+                        <input id="input__bid" type="number" name="user_input" placeholder="Enter bid">
                         <select id="choose_type_cash" name="user_choice">
                             <option value="cash">₽</option>
                             <option value="dollar">$</option>
@@ -122,14 +124,14 @@
 
                         <div id="buttons-bid">
                             <div class="row" id="row_1">
-                                <button class="bid" id="bid__x05">7 500</button>
-                                <button class="bid" id="bid__x2">30 000</button>
+                                <button class="bid" id="bid__x05">x0.5</button>
+                                <button class="bid" id="bid__x2">x2</button>
                                 <button class="bid" id="bid__vabank">Ва-банк</button>
                             </div>
                             <div class="row" id="row_2">
-                                <button class="bid" id="bid__freespin">
+                                <button class="bid" id="bid__freespin" {% if not freespins %} disabled {% endif %}>
                                     <div id="bid__main-text">Bonus spin</div>
-                                    <div id="bid__second-text">Free: 10</div>
+                                    <div id="bid__second-text">Free: {{ freespins }}</div>
                                 </button>
                             </div>
                         </div>
@@ -153,14 +155,17 @@
                 <div id="balance__data">
                     <table id="balance__data-table">
                         <tbody>
-                            <tr>
-                                <td class="td_left">Рубли:</td>
-                                <td class="td_right">1 000 000 ₽</td>
-                            </tr>
-                            <tr>
-                                <td class="td_left">Доллары:</td>
-                                <td class="td_right">10 000 $</td>
-                            </tr>
+                            {% for currency, value in balance.items %}
+
+                                <tr id="{% if c %}{{ c }}{% else %}{{ currency }}{% endif %}">
+                                    <td class="td_left">{% if value.translate %}{{ value.translate }}{% else %}{{ currency }}{% endif %}:</td>
+                                    <td class="td_right" id="amount_{% if c %}{{ c }}{% else %}{{ currency }}{% endif %}">
+                                        <span id="text_amount_{% if c %}{{ c }}{% else %}{{ currency }}{% endif %}">{{ value.amount }}</span> <span id="symbol_amount_{% if c %}{{ c }}{% else %}{{ currency }}{% endif %}">{{ value.symbol }}</span>
+                                        <span class="balance_notification {% if c %}{{ c }}{% else %}{{ currency }}{% endif %}"></span>
+                                    </td>
+                                </tr>
+
+                            {% endfor %}
                         </tbody>
                     </table>
                 </div>

@@ -85,37 +85,41 @@
                 const reconnectInterval = 1000; // Интервал повторного подключения в миллисекундах
 
                 function handleMessages(message) {
-                    console.log(message);
-                    const container = $('#messages-container');
+    const container = $('#messages-container');
 
-                    const parts = message.split('|');
-                    const alertClass = 'alert-' + 3; // Замените '3' на нужный уровень, если требуется
-                    let alert = $('<div class="alert ' + alertClass + '"></div>');
+    const parts = message.split('|');
+    const alertClass = 'alert-' + 3; // Замените '3' на нужный уровень, если требуется
+    let alert = $('<div class="alert ' + alertClass + '"></div>');
 
-                    if (parts.length > 1) {
-                        alert.append('<strong>' + parts[0] + '</strong><br>' + parts[1]);
-                    } else {
-                        alert.text(message);
-                    }
+    if (parts.length > 1) {
+        alert.append('<strong>' + parts[0] + '</strong><br>' + parts[1]);
+    } else {
+        alert.text(message);
+    }
 
-                    // Проверяем количество уведомлений в контейнере
-                    const currentAlerts = container.children('.alert');
+    // Проверяем количество уведомлений в контейнере
+    const currentAlerts = container.children('.alert');
 
-                    if (currentAlerts.length >= 4) {
-                        // Удаляем самое старое уведомление
-                        currentAlerts.last().fadeOut(150, function () {
-                            $(this).remove();
-                        });
-                    }
+    if (currentAlerts.length >= 4) {
+        // Удаляем самое старое уведомление
+        currentAlerts.last().addClass('slide-out'); // Добавляем класс для анимации
+        setTimeout(() => {
+            currentAlerts.last().remove(); // Удаляем элемент после завершения анимации
+        }, 500); // Длительность анимации
+    }
 
-                    container.prepend(alert);
+    // Добавляем уведомление в контейнер и анимируем его появление
+    container.prepend(alert);
+    alert.hide().fadeIn(300); // Скрываем уведомление сначала и затем плавно показываем
 
-                    setTimeout(() => {
-                        alert.fadeOut(500, function () {
-                            $(this).remove();
-                        });
-                    }, 5000);
-                }
+    setTimeout(() => {
+        alert.addClass('slide-out'); // Добавляем класс для анимации исчезновения
+        setTimeout(() => {
+            alert.remove(); // Удаляем элемент после завершения анимации
+        }, 500); // Длительность анимации
+    }, 5000);
+}
+
 
                 function fConnect() {
                     const socket = new WebSocket(`ws://${location.host}/ws/notifications/`);

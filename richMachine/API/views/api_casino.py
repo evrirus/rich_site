@@ -150,12 +150,16 @@ class GenerateCombinationView(APIView):
     def post(self, request: Request):
 
         data = request.data
-        ic(data)
+
         user_input = data.get('user_input')
         user_choice = data.get('user_choice')
         user_bid = data.get('bid')
-        ic(user_input, user_choice, user_bid)
+
         casino_model = CasinoModel.objects.filter(user=request.user).first()
+
+        # if not casino_model.is_authenticated:
+        #     return JsonResponse({'is_authenticated': False, 'error': True, 'message': 'Введите пароль для авторизации.'})
+
         if user_bid.isdigit() and user_input.isdigit():
             bid = int(user_input)
 
@@ -166,14 +170,10 @@ class GenerateCombinationView(APIView):
             is_use = casino_model.use_freespin()
             if is_use:
 
-                ic(casino_model)
                 freespins = casino_model.free_spin_types.all()
-                ic(freespins)
-
                 bid = freespins.first().stake_value
-
                 user_choice = freespins.first().currency
-                ic(user_choice)
+
             else:
                 send_message_to_user(request.user.server_id, {'text': 'Нет доступных фриспинов'})
 
@@ -190,7 +190,7 @@ class GenerateCombinationView(APIView):
         balance = request.user.money[user_choice]
 
         # Проверка достаточности средств
-        if balance < bid:
+        if not user_bid == 'freespin' and balance < bid:
             send_message_to_user(request.user.server_id, {'text': 'Недостаточно средств. | Пополнить счёт можно в Донате'})
 
             return JsonResponse(
@@ -207,9 +207,9 @@ class GenerateCombinationView(APIView):
 
         # Обновление баланса и отправка уведомления в зависимости от коэффициента
         if coefficient > 1:
-            balance += -bid + (winnings * 3)
+            balance += -bid + (winnings * 2)
 
-            money = Money(request, -bid + (winnings * 3), type_money=user_choice)
+            money = Money(request, -bid + (winnings * 2), type_money=user_choice)
             text = (f'Вы выиграли {intcomma(winnings)} {Money.get_symbol(user_choice)} (x{coefficient})\n'
                     f'Баланс: {intcomma(balance)} {Money.get_symbol(user_choice)}')
 
@@ -237,11 +237,33 @@ class GenerateCombinationView(APIView):
             text = (f'Ваши деньги остаются при Вас (x{coefficient})\n'
                     f'Баланс: {intcomma(balance)} {Money.get_symbol(user_choice)}')
 
+
+        # if money.amount > 0 and casino_model.max_win < money.amount:
+        #     casino_model.max_win = money.amount
+        #     casino_model.max_cash_win_type = 'dollar'
+        #     if user_choice != 'dollar':
+        #         ...
+        #     casino_model.
+
+                #todo: Сделать пропорцию валюты к доллару
+                #todo: сначала сделать биржу
+
+
+
+        # top_bets = CasinoModel.objects.order_by('-max_win')[:10] # 10 человек с самыми высокими ставками
+        #
+        # ic(top_bets)
+
+
         money.give()
-        money.create_notification(text+' CASINO')
+        # money.create_notification(text+' CASINO')
 
         return JsonResponse(
-            {'combination': combination, 'success': True, 'user_input': user_input, 'user_choice': user_choice,
+            {'combination': combination, 'success': True,
+             'user_input': user_input, 'user_choice': user_choice,
+             'notify': text, 'freespins': casino_model.freespins_available,
+             'winnings': winnings or 0,
+             'balance': request.user.money[user_choice],
              })
 
     @staticmethod
@@ -253,27 +275,36 @@ class GenerateCombinationView(APIView):
         return [k for k, v in d.items() if v == value]
 
     def get_coefficient(self, combination: list):
-
         num = self.get_keys_by_value(self.coefficients, combination)
 
         if not num:
             return 0
 
-        if num[0] in (1, 32, 63, 94):
-            return 4
-        elif num[0] == 125:
-            return 7
-        elif 121 < num[0] < 125 or num[0] in (100, 75, 50, 25):
-            return 3
-        elif 2 < num[0] < 5 or 31 < num[0] < 35 or 61 < num[0] < 65 or 91 < num[0] < 95 or num[0] in (
-        7, 13, 19, 25, 38, 44, 57, 69, 75, 82, 88, 100, 107, 113, 119):
-            return 2
+        num = num[0]
 
-        probability = 0.13  # 13% вероятность
-        if self.random_with_probability(probability):
+        # Условие для фиксированных коэффициентов
+        fixed_coefficients = {
+            4: {1, 32, 63, 94},
+            7: {125},
+            3: {100, 75, 50, 25}.union(range(121, 125 + 1)),
+            2: {7, 13, 19, 26, 38, 44, 51, 57, 69, 76, 82, 88, 101, 107, 113, 119}.union(
+                range(2, 5+1), range(31, 35 + 1),
+                range(61, 65 + 1), range(91, 95 + 1)
+            ),
+        }
+
+        for coefficient, numbers in fixed_coefficients.items():
+            if num in numbers:
+                return coefficient
+
+        # Вероятности
+        if self.random_with_probability(0.13):  # 13% вероятность
             return 1
-
-        probability = 0.17  # 17% вероятность
-        if self.random_with_probability(probability):
+        if self.random_with_probability(0.13):  # 13% вероятность
+            return 0.75
+        if self.random_with_probability(0.17):  # 17% вероятность
             return 0.5
+        if self.random_with_probability(0.17):  # 17% вероятность
+            return 0.25
+
         return 0

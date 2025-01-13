@@ -11,15 +11,25 @@ $(function () {
     const $buttonVaBank = $('#bid__vabank');
     const $freeSpin = $('#bid__freespin');
     const $inputBid = $('#input__bid');
+    const $selectType = $('#choose_type_cash');
+    const buttonsIsDisabled = false;
 
     const $doors = $(".door");
     let isSpinning = false;
 
     $form.on('submit', function (event) {
+        event.preventDefault(); // Предотвращаем отправку формы по умолчанию
+
+        const bidValue = $inputBid.val().trim(); // Убираем лишние пробелы
+
+        // Проверяем, является ли значение числом
+        if (isNaN(bidValue) || bidValue === '' || parseFloat(bidValue) < 150) {
+            return handleMessages('Введите корректное число, больше или равное 150');
+        }
+
 
         const submitter = event.originalEvent.submitter; // Получаем DOM-элемент кнопки
         let bid = $inputBid.val();
-        console.log(bid);
 
         if ($(submitter).is($buttonx05)) {
             bid = setBidValue(Math.floor(bid / 2));
@@ -33,33 +43,50 @@ $(function () {
 
         } else if ($(submitter).is($freeSpin)) {
             bid = setBidValue(bid, 'freespin');
+
+        } else if ($(submitter).is($mainButton)){
+            null;
+
         } else {
-            console.log('Вы нажали на неизвестную кнопку');
+            return
         }
 
 
-        event.preventDefault(); // Предотвращаем отправку формы по умолчанию
+        if (buttonsIsDisabled) {
+            return
+        } else {
+            toggleButtonState(true)
+            setTimeout(function() {
+                toggleButtonState(false)
+            }, 1900);
+        }
+
 
         if (isSpinning) return; // Предотвращаем запуск нескольких спинов одновременно
         isSpinning = true;
 
         const formData = $form.serializeArray();
-
         formData.push({ name: 'bid', value: bid });
-        console.log(formData);
 
         // Запрос комбинации с сервера
-        fetchCombinationFromServer(formData).then(combination => {
-            if (!combination) {
+        fetchCombinationFromServer(formData).then(data => {
+
+            if (!data) {
                 isSpinning = false;
                 return;
             }
+            console.log(data);
+            let combination = data.combination;
+            let message = data.notify;
+            let winnings = data.winnings;
+            let balance = data.balance;
+            let choice = data.user_choice;
 
             // Инициализация перед запуском
             init(false);
 
             const duration = parseFloat(getComputedStyle($doors[0].querySelector(".boxes")).transitionDuration) * 1000;
-            const delay = 200; // Задержка между началом анимации барабанов (в миллисекундах)
+            const delay = 400; // Задержка между началом анимации барабанов (в миллисекундах)
 
             // Запуск анимации всех барабанов с задержкой
             $doors.each(function (index, door) {
@@ -92,11 +119,61 @@ $(function () {
 
                 isSpinning = false;
             }, duration + delay * ($doors.length - 1));
+
+            setTimeout(() => {
+                handleMessages(message);
+                addNotification($selectType.val(), winnings);
+                updateBalance(choice, balance);
+            }, 1900)
+
         });
     });
 
+    function updateBalance(choice, amount) {
+        const $amountBalance = $(`#text_amount_${choice}`)
+        $amountBalance.html(amount.toLocaleString('ru-RU'));
+    }
+
+    function addNotification(currency, amount) {
+        // Найдем элемент уведомления по валюте
+        const $notificationElement = $(`#amount_${currency} .balance_notification`);
+
+        // Установим текст уведомления (например, " +140 " или любой другой текст)
+        console.log(amount, amount.toString()[0]);
+
+        // Преобразуем amount в строку, если это не строка
+        const amountStr = amount.toString();
+
+        if (amountStr[0] === '-') {
+            $notificationElement.text(`${amountStr} ${currency === 'cash' ? '₽' : (currency === 'dollar' ? '$' : '₿')}`);
+            $notificationElement.addClass('failed');
+        } else {
+            $notificationElement.text(`+${amountStr} ${currency === 'cash' ? '₽' : (currency === 'dollar' ? '$' : '₿')}`);
+            $notificationElement.addClass('winned');
+        }
+
+        // Покажем уведомление
+        $notificationElement.addClass('show');
+
+        // Скрыть уведомление через 3 секунды (3000 миллисекунд)
+        setTimeout(() => {
+            $notificationElement.removeClass('show');
+            setTimeout(() => {
+                $notificationElement.removeClass('failed');
+                $notificationElement.removeClass('winned');
+            }, 190);
+        }, 1800);
+    }
+
+    function toggleButtonState(state) {
+        $mainButton.prop("disabled", state);
+        $buttonx05.prop("disabled", state);
+        $buttonx2.prop("disabled", state);
+        $buttonVaBank.prop("disabled", state);
+        $freeSpin.prop("disabled", state);
+    }
+
     function setBidValue(value, type=null) {
-        console.log(value, type);
 
         if (type === 'vabank') {
             return type;
@@ -121,9 +198,9 @@ $(function () {
             data: formData,
             dataType: 'json'
         }).then(response => {
-            console.log(response);
-            if (response.combination) {
-                return response.combination;
+
+            if (response.combination && response.notify) {
+                return response;
             } else {
                 return null;
             }

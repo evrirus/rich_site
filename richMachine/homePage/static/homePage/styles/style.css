@@ -280,3 +280,18 @@ body {
     width: 17em;
     margin-bottom: 5px;
 }
+
+@keyframes slideOutRight {
+    0% {
+        transform: translateX(0);
+        opacity: 1;
+    }
+    100% {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+}
+
+.slide-out {
+    animation: slideOutRight 0.5s forwards; /* Длительность анимации 0.5 секунды */
+}
