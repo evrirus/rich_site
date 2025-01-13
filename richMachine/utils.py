@@ -160,16 +160,17 @@ class Money:
         self._type_money = type_money
 
 
-
-    def give(self):
+    def give(self, save=True):
         if self.amount == 0:
             return False
         user = self._request.user
 
         user.money[self.type_money] += self.amount
-        user.save()
-        ic(user.money, 'give')
+        if save:
+            user.save()
+
         return self
+
 
     def create_notification(self, v: str):
         if self.amount > 0 and not v:
@@ -181,6 +182,7 @@ class Money:
         send_message_to_user(self._server_id, {'text': v})
 
         return self
+
 
     @staticmethod
     def get_symbol(type_money: str = "cash"):
@@ -202,28 +204,7 @@ def calculate_total_quantity(house_id: int):
     return quantity
 
 
-def calculate_money(money: str) -> int:
-    match = re.match(r'(\d+)([a-zA-Zа-яА-Я]+)?$', money)
 
-    if match:
-        stavka = int(match.group(1))
-        suffix = match.group(2) or ''
-        suffix_factors = {'k': 1e3, 'm': 1e6, 'b': 1e9, 'к': 1e3}
-
-        if suffix in suffix_factors:
-            stavka *= suffix_factors[suffix]
-        elif suffix.startswith('k'):
-            stavka *= 10**(3 * len(suffix))
-
-        return stavka
-
-def calculate_stavka(args, bablo=None):
-    stavka = calculate_money(args)
-
-    if args in ['вабанк', 'ва-банк', 'все', 'всё', 'all', 'олл']:
-        stavka = bablo['money']['cash']
-
-    return int(stavka)
 
 
 
@@ -256,15 +237,6 @@ def add_log_entry(user_id, action):
         {'$push': {'months.$.days.$.logs': log_entry}}
     )
 
-def add_videocard_in_house(house_id: int, id_videocard: int, qty: int = 1):
-    house_info = get_house_by_id(house_id)
-    ic('yeeees')
-    if house_info['basement']['videocards'].get(str(id_videocard)):
-        return db_houses.update_one({'id': house_id},
-                               {'$inc': {f'basement.videocards.{id_videocard}': qty}})
-    db_houses.update_one({'id': house_id},
-                               {'$set': {f'basement.videocards.{id_videocard}': qty}})
-    
 
 def get_item_by_id(item_id: int):
     try:
