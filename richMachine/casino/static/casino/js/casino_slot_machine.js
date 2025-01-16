@@ -145,10 +145,10 @@ $(function () {
         const amountStr = amount.toString();
 
         if (amountStr[0] === '-') {
-            $notificationElement.text(`${amountStr} ${currency === 'cash' ? '₽' : (currency === 'dollar' ? '$' : '₿')}`);
+            $notificationElement.text(`${amountStr} ${currency === 'cash' ? '₽' : (currency === 'USD' ? '$' : '₿')}`);
             $notificationElement.addClass('failed');
         } else {
-            $notificationElement.text(`+${amountStr} ${currency === 'cash' ? '₽' : (currency === 'dollar' ? '$' : '₿')}`);
+            $notificationElement.text(`+${amountStr} ${currency === 'cash' ? '₽' : (currency === 'USD' ? '$' : '₿')}`);
             $notificationElement.addClass('winned');
         }
 

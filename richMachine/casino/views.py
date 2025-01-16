@@ -30,7 +30,7 @@ class SlotMachineView(APIView):
 
         currency = {'bitcoin': {'translate': 'Биткоин', 'symbol': '₿'},
                     'cash': {'translate': 'Рубли', 'symbol': '₽'},
-                    'dollar': {'translate': 'Доллары', 'symbol': '$'}}
+                    'USD': {'translate': 'Доллары', 'symbol': '$'}}
 
         usable_currency = currency.copy()
 

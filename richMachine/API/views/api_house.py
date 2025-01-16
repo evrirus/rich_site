@@ -186,7 +186,7 @@ class GetTakeProfitBasementView(APIView):
         house.basement['balance'] = 0
         house.save()
 
-        money = Money(request, current_balance, type_money='dollar').give()
+        money = Money(request, current_balance, type_money='USD').give()
         money.create_notification(f'Вы обналичили заработок с майнинга! Заработано: {intcomma(current_balance)}$')
 
         return Response({'success': True, 'message': 'ok',

@@ -187,7 +187,7 @@ class Money:
     @staticmethod
     def get_symbol(type_money: str = "cash"):
         if type_money in ("cash", "bank") : symbol = "₽"
-        elif type_money == 'dollar': symbol = "$"
+        elif type_money == 'USD': symbol = "$"
         elif type_money == 'bitcoin': symbol = "₿"
         else: symbol = "(?)"
         return symbol

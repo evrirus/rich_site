@@ -13,6 +13,6 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='casinomodel',
             name='max_cash_win_type',
-            field=models.CharField(default='dollar', max_length=100, null=True),
+            field=models.CharField(default='USD', max_length=100, null=True),
         ),
     ]

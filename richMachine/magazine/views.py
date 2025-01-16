@@ -214,7 +214,7 @@ def buy_videocard(request: Request, videocard_id: int):
     videocard_info = get_item_by_id(videocard_id)
     ic(videocard_info, 'buy_videocard')
 
-    if request.user.money.get('dollar', {}) < videocard_info.price:
+    if request.user.money.get('USD', {}) < videocard_info.price:
 
         send_message_to_user(request.user.server_id, {'text': 'Недостаточно средств.'})
         return JsonResponse({'success': False, 'message': 'Недостаточно средств.', })
@@ -227,7 +227,7 @@ def buy_videocard(request: Request, videocard_id: int):
         send_message_to_user(request.user.server_id, {'text': 'Ваш инвентарь полон. Недостаточно места.'})
         return JsonResponse({'success': False, 'message': 'Ваш инвентарь полон. Недостаточно места.'})
 
-    money = Money(request, -videocard_info.price, type_money='dollar').give()
+    money = Money(request, -videocard_info.price, type_money='USD').give()
 
     inventory_items.create(inventory=user_inventory, item_id=videocard_info.id, item_type=videocard_info.type)
 

@@ -19,7 +19,7 @@ def give_payday():
     counter = 0
     total_distributed_money = {
         "rubles": 0,
-        "dollars": 0
+        "USD": 0
         }
 
     # Фильтруем только пользователей с домами
@@ -60,7 +60,7 @@ def give_payday():
                 house_info.basement['balance'] += total_house_income // 24
                 house_info.save()
 
-                total_distributed_money['dollars'] += total_house_income
+                total_distributed_money['USD'] += total_house_income
 
 
         # Сохраняем изменения в пользователе

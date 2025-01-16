@@ -23,7 +23,7 @@ class Migration(migrations.Migration):
                 ('prize_type', models.CharField(choices=[('item', 'Item'), ('cash', 'Cash'), ('freespin', 'FreeSpin')], default='item', max_length=50)),
                 ('prize_value', models.IntegerField()),
                 ('stake_value', models.DecimalField(decimal_places=7, max_digits=10)),
-                ('currency', models.CharField(default='dollar', max_length=15)),
+                ('currency', models.CharField(default='USD', max_length=15)),
             ],
         ),
         migrations.CreateModel(
@@ -34,7 +34,7 @@ class Migration(migrations.Migration):
                 ('description', models.TextField()),
                 ('prize_value', models.IntegerField()),
                 ('stake_value', models.IntegerField()),
-                ('currency', models.CharField(default='dollar', max_length=10)),
+                ('currency', models.CharField(default='USD', max_length=10)),
             ],
         ),
         migrations.CreateModel(

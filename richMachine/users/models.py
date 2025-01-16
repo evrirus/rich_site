@@ -27,7 +27,7 @@ def default_money():
     return {
         'cash': 10000,
         'bank': 0,
-        'dollar': 0,
+        'USD': 0,
         'bitcoin': 0,
     }
 
