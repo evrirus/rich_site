@@ -23,23 +23,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const csrfToken = $('[name=csrfmiddlewaretoken]').val();
 
-            fetch('/users/logout/', {
-                method: 'POST',
+            $.ajax({
+                url: '/api/logout/',
+                type: 'POST',
+                contentType: 'application/json',
                 headers: {
-                    'Content-Type': 'application/json',
                     'X-CSRFToken': csrfToken // Если используется CSRF защита, добавьте токен
                 },
-            })
-            .then(response => {
-                if (response.ok) {
+                success: function(response) {
+                    // Если выход успешен, перенаправляем пользователя на страницу входа
                     window.location.href = '/users/login/';
-
-                } else {
-                    console.error('Ошибка при выходе:', response.statusText);
+                },
+                error: function(xhr) {
+                    console.error('Ошибка при выходе:', xhr.statusText);
                 }
-            })
-            .catch(error => {
-                console.error('Ошибка сети:', error);
             });
+
         })}
     });

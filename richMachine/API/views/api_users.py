@@ -1,6 +1,8 @@
 from authentication import SiteAuthentication, TelegramAuthentication
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.authentication import TokenAuthentication
+from rest_framework_simplejwt.authentication import JWTAuthentication
+from rest_framework.permissions import IsAuthenticated
 # from django.contrib import messages
 from icecream import ic
 
@@ -9,7 +11,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from jobs.models import Jobs
-from utils import (get_full_houses_info,
+from utils import (get_full_house_info,
                    send_message_to_user)
 from users.models import CustomUser
 
@@ -21,12 +23,17 @@ class ChangeNicknameView(APIView):
     
     returns: success: bool, old_nickname: str, new_nickname: str,
              server_id: int, max_lenght: int"""
-    authentication_classes = [SessionAuthentication, TelegramAuthentication, SiteAuthentication]
-    permission_classes = []
+    authentication_classes = [SessionAuthentication, TelegramAuthentication, SiteAuthentication, JWTAuthentication]
+    permission_classes = [IsAuthenticated]
 
     def post(self, request: Request):
+
+        ic(request.data)
+
         if not request.data:
             return Response({"success": False, "error": "data_is_empty"})
+
+        ic(request.user)
         
         data = request.data
         
@@ -36,23 +43,23 @@ class ChangeNicknameView(APIView):
         max_length = request.user.nickname['max']
         
         if not new_nickname:
-            send_message_to_user(request.user.server_id, {'text': 'Вы не указали нового имени.'})
+            send_message_to_user(request, {'text': 'Вы не указали нового имени.'})
             # messages.error(request, f"Вы не указали нового имени.")
             return Response({"success": False, "error": "nickname_is_empty"})
         
         if len(new_nickname) < 3:
-            send_message_to_user(request.user.server_id, {'text': 'Указанное имя слишком короткое. Имя должно содержать более 3 символов'})
+            send_message_to_user(request, {'text': 'Указанное имя слишком короткое. Имя должно содержать более 3 символов'})
             # messages.error(request, f"Указанное имя слишком короткое. Имя должно содержать более 3 символов")
             return Response({"success": False, "error": "nickname_is_short"})
         
         if len(new_nickname) > max_length:
-            send_message_to_user(request.user.server_id,
+            send_message_to_user(request,
                                  {'text': f'Указанное имя слишком длинное. Максимальное количество символов: {max_length}'})
             # messages.error(request, f"Указанное имя слишком длинное. Максимальное количество символов: {max_length}")
             return Response({"success": False, "error": "nickname_is_long"})
         
         if new_nickname == old_nickname:
-            send_message_to_user(request.user.server_id, {'text': 'Указанное имя совпадает с предыдущим.'})
+            send_message_to_user(request, {'text': 'Указанное имя совпадает с предыдущим.'})
             # messages.error(request, f"Указанное имя совпадает с предыдущим.")
             return Response({"success": False, "error": "nickname_is_the_same"})
         
@@ -60,7 +67,7 @@ class ChangeNicknameView(APIView):
         user.nickname['name'] = new_nickname
         user.save()
 
-        send_message_to_user(request.user.server_id, {'text': f'Теперь вы известны как {new_nickname}'})
+        send_message_to_user(request, {'text': f'Теперь вы известны как {new_nickname}'})
         # messages.success(request, f"Теперь вы известны как {new_nickname}")
         return Response({"success": True, 
                          "old_nickname": old_nickname, "new_nickname": new_nickname, 
@@ -77,7 +84,7 @@ class ProfileView(APIView):
              nickname: dict, registration: datetime, server_id: int, telegram_id: int,
              user_id: int, username: str, username_tg: str"""
     authentication_classes = [SessionAuthentication, TelegramAuthentication, SiteAuthentication, TokenAuthentication]
-    permission_classes = []
+    permission_classes = [IsAuthenticated]
     
     def post(self, request: Request):
         user_info = request.user
@@ -85,7 +92,7 @@ class ProfileView(APIView):
         if not user_info:
             return Response({"success": False, "error": "user_not_found"})
 
-        houses = [get_full_houses_info(x['id']) for x in user_info.house['houses']]
+        houses = [get_full_house_info(x['id']) for x in user_info.house['houses']]
         # ic(houses[0].id)
         houses_standard_view = []
         for house in houses:
@@ -134,6 +141,8 @@ class ProfileView(APIView):
         ic(response_data)
         return Response(response_data)
 
+
+
 class ChangeLanguageView(APIView):
     """API для смены языка
     :param: None
@@ -141,7 +150,7 @@ class ChangeLanguageView(APIView):
     returns: success: bool, old_language: str, new_language: str"""
     
     authentication_classes = [SessionAuthentication, TelegramAuthentication, SiteAuthentication]
-    permission_classes = []
+    permission_classes = [IsAuthenticated]
     
     def post(self, request: Request):
         
@@ -161,7 +170,7 @@ class ChangeLanguageView(APIView):
         
         result = {"success": True, "old_language": language, "new_language": new_language}
         if not request.user.is_anonymous:
-            send_message_to_user(request.user.server_id,
+            send_message_to_user(request,
                                  {'text': f'Вы поменяли язык на {'Русский' if languages[new_language_index] == 'ru' else 'Английский'}'})
             # messages.success(request, f"Вы поменяли язык на {'Русский' if languages[new_language_index] == 'ru' else 'Английский'}")
         
@@ -174,7 +183,7 @@ class GetBalance(APIView):
     returns: success: bool, cash: int, bitcoin: int, ..."""
     
     authentication_classes = [SessionAuthentication, TelegramAuthentication, SiteAuthentication]
-    permission_classes = []
+    permission_classes = [IsAuthenticated]
     
     def post(self, request: Request):
         balance = request.user.money

@@ -14,17 +14,26 @@
     align-items: center;
     justify-content: center;
     flex-direction: column;
+    .trasport-type, .marking, .videocard-title {
+        font-size: 32px;
+        font-weight: 500;
+        margin: 50px 0 0 0;
+        width: 60vw;
+        padding-left: 50px;
+    }
+
+    .property {
+        display: grid;
+        width: 60vw;
+        margin-bottom: 30px;
+        padding: 20px;
+        border-radius: 10px;
+        /* background-color: rgba(255, 255, 255, 0.8); */
+        grid-template-columns: repeat(3, 1fr);
+    }
 }
 
-.property {
-    display: grid;
-    width: 60vw;
-    margin-bottom: 30px;
-    padding: 20px;
-    border-radius: 10px;
-    /* background-color: rgba(255, 255, 255, 0.8); */
-    grid-template-columns: repeat(3, 1fr);
-}
+
 
 .cell_item {
     padding: 10px;
@@ -51,7 +60,8 @@
 }
 
 /* Стили для типа яхт */
-.cell_item.type__yachts:hover {
+
+.cell_item.type__yacht:hover {
     border-color: radial-gradient(circle at 12.3% 19.3%, rgb(85, 88, 218) 0%, rgb(95, 209, 249) 100.2%);
 }
 
@@ -87,89 +97,84 @@
 .transport_item .property-price, .videocard-price {
     color: #444444;
     font-size: 18px;
+    white-space: nowrap;
 }
 
-.trasport-type, .marking, .videocard-title {
-    font-size: 32px;
-    font-weight: 500;
-    margin: 50px 0 0 0;
-    width: 60vw;
-    padding-left: 50px;
-}
+
 
 
 /* Стили для яхт */
-.cell_item.type__yachts:hover {
+.cell_item.type__yacht:hover {
     border-color: var(--yacht-color);
 }
 
-.cell_item.type__yachts .property-icon path {
+.cell_item.type__yacht .property-icon path {
     transition: fill 0.5s;
     fill: #ffffff;
 }
-.cell_item.type__yachts:hover .property-icon path {
+.cell_item.type__yacht:hover .property-icon path {
     transition: fill 0.5s;
     fill: var(--yacht-color);
 }
 
-.cell_item.type__yachts:hover .property-class {
+.cell_item.type__yacht:hover .property-class {
     color: var(--yacht-color);
 } 
 
 
 /* Стили для машин */
-.cell_item.type__cars:hover {
+.cell_item.type__car:hover {
     border-color: var(--car-color);
 }
 
-.cell_item.type__cars .property-icon path {
+.cell_item.type__car .property-icon path {
     transition: fill 0.5s;
     fill: #ffffff;
 }
-.cell_item.type__cars:hover .property-icon path {
+.cell_item.type__car:hover .property-icon path {
     transition: fill 0.5s;
     fill: var(--car-color);
 }
 
-.cell_item.type__cars:hover .property-class {
+.cell_item.type__car:hover .property-class {
     color: var(--car-color);
 } 
 
 
 /* Стили для домов */
-.cell_item.type__districts:hover {
+.cell_item.type__district:hover {
     border-color: var(--houses-color);
 }
 
-.cell_item.type__districts .property-icon path {
+.cell_item.type__district .property-icon path {
     transition: fill 0.5s;
     fill: #ffffff;
 }
-.cell_item.type__districts:hover .property-icon path {
+.cell_item.type__district:hover .property-icon path {
     transition: fill 0.5s;
     fill: var(--houses-color);
 }
 
-.cell_item.type__districts:hover .property-class {
+.cell_item.type__district:hover .property-class {
     color: var(--houses-color);
 } 
 
 
 /* Стили для видеокарт */
-.cell_item.type__videocards:hover {
+.cell_item.type__videocard:hover {
     border-color: var(--videocard-color);
 }
 
-.cell_item.type__videocards .property-icon path {
+.cell_item.type__videocard .property-icon path {
     transition: fill 0.5s;
     fill: #ffffff;
 }
-.cell_item.type__videocards:hover .property-icon path {
+.cell_item.type__videocard:hover .property-icon path {
     transition: fill 0.5s;
     fill: var(--videocard-color);
 }
 
-.cell_item.type__videocards:hover .property-class {
+.cell_item.type__videocard:hover .property-class {
     color: var(--videocard-color);
 } 
 
@@ -222,7 +227,7 @@
 }
 
 
-.buttons button{
+.buttons button {
     height: 2.188em;
     width: 8.75em;
     margin-bottom: 15px;
@@ -248,6 +253,7 @@
     background-clip: text;
     -webkit-background-clip: text;
     margin-bottom: 1em;
+    white-space: nowrap;
 }
 .transport-produced, .transport-quantity {
     font-size: 14px;
@@ -384,3 +390,4 @@ table {
       transform: rotateX(35deg) rotateY(55deg) rotateZ(360deg);
     }
   }
+

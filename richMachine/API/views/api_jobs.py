@@ -12,15 +12,16 @@ from rest_framework.views import APIView
 from authentication import SiteAuthentication, TelegramAuthentication
 from jobs.models import Jobs
 from jobs.serializers import JobsSerializer
-from utils import (send_message_to_user)
+from utils import send_message_to_user
+from rest_framework.permissions import IsAuthenticated
 
 
 class WorkAPI(APIView):
 
     authentication_classes = [SessionAuthentication, TelegramAuthentication, SiteAuthentication]
-    permission_classes = []
+    permission_classes = [IsAuthenticated]
 
-    @method_decorator(ratelimit(key='ip', rate='1/3s', block=False))
+    @method_decorator(ratelimit(key='ip', rate='1/s', block=False))
     def post(self, request: Request):
         if getattr(request, 'limited', False):  # Проверка флага ограничения
 
@@ -50,7 +51,7 @@ class WorkAPI(APIView):
             # Если используемый и будущий-1 уровни равны
             # Если используемый и открытый уровни равны
 
-            send_message_to_user(request.user.server_id, {'text': 'Поздравляем! Вы открыли новую работу!'})
+            send_message_to_user(request, {'text': 'Поздравляем! Вы открыли новую работу!'})
             user_job['tasks_completed'] = 0
             request.user.job_lvl += 1
 
@@ -60,10 +61,10 @@ class WorkAPI(APIView):
             # Если остаток от деления количества кликов на 7 равно 0
             # Если открытый уровень меньше максимально возможному уровню(сейчас не максимальный уровень работы)
 
-            send_message_to_user(request.user.server_id, {'text': 'Вам открыт следующий уровень работы!'})
+            send_message_to_user(request, {'text': 'Вам открыт следующий уровень работы!'})
 
         if request.user.job_lvl == max_level and user_job['tasks_completed'] == 0:
-            send_message_to_user(request.user.server_id, {'text': 'Вы достигли последнего уровня работы!'})
+            send_message_to_user(request, {'text': 'Вы достигли последнего уровня работы!'})
 
         salary = int(job.salary * clicks)
         request.user.money['cash'] += salary

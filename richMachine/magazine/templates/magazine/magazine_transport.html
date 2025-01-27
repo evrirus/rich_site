@@ -38,7 +38,7 @@
     <div class="property">
         {% if transport %}
             {% for item in transport %}
-                <div class="transport_item {{type}}" data-modal-id="{{ item.id }}" data-type="{{ type }}" 
+                <div class="transport_item {{ type }}" data-modal-id="{{ item.id }}" data-type="{{ type }}"
                      data-name="{{ item.name }}" data-price="{{ item.price|intcomma }} ₽" 
                      data-produced="{{ item.produced }}" data-quantity="{{ item.quantity }}">
                     <div class="property-icon">

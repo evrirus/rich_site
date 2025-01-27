@@ -11,7 +11,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const modalTransport = document.querySelector('#transportModal');
     const modalHouse = document.querySelector('#houseModal');
 
-    const acceptSellTransportButton = document.getElementById('acceptSellTransport');
+    const btnSellTransportToPlayer = $('#acceptSellTransportToPlayer')
+    const sellToPlayerTransportModal = $('#sellToPlayerTransportModal')
+    const acceptSellToPlayerButton = $('#accept_sellToPlayer')
+    const inputSellToPlayer = $('#price')
+
+    const acceptSellTransportButton = $('#acceptSellTransport');
     const acceptSellHouseButton = document.getElementById('acceptSellHouse');
 
     const loadingIndicatorTransport = document.querySelector('.transport-modal-content .loader');
@@ -25,9 +30,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let currentTransportId, currentTransportType, currentTransportNumerical;
 
-    function formatNumberWithSpaces(number) {
-        return number.toLocaleString('ru-RU'); // Используем локаль 'ru-RU' для формата с пробелами
-    }
 
     function openModal(modal, event, xOffset = -200, yOffset = 0) {
         // Close all other modals
@@ -49,6 +51,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (infoCar) infoCar.style.visibility = 'hidden';
         if (infoHouse) infoHouse.style.visibility = 'hidden';
         if (loadingIndicatorHouse.style.visibility === 'visible') loadingIndicatorHouse.style.visibility = 'hidden';
+        if (sellToPlayerTransportModal) sellToPlayerTransportModal.css('visibility', 'hidden')
     }
 
     function updateModalContent(data, type) {
@@ -96,7 +99,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const cacheKey = `${currentTransportType}-${currentTransportId}-${currentTransportUcode}`;
 
         infoCar.style.visibility = 'hidden';
-        loadingIndicatorTransport.style.visibility = 'visible';
+        $('#loadingIndicatorTransport').css('visibility', 'visible');
 
         if (cache[cacheKey]) {
             updateModalContent(cache[cacheKey], 'transport');
@@ -106,11 +109,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 url: `/api/transport_info?type=${currentTransportType}&ucode=${currentTransportUcode}&id=${currentTransportId}`,
                 success: function(response) {
                     cache[cacheKey] = response;
-                    console.log(response);
                     updateModalContent(response, 'transport');
                 },
                 error: function(xhr, status, error) {
-                    console.error('Ошибка при загрузке данных: ', error);
                     loadingIndicatorTransport.style.visibility = 'hidden';
                 }
             });
@@ -131,7 +132,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             $.ajax({
                 type: 'GET',
-                url: `/api/get_house_profile/${currentHouseId}/`,
+                url: `/api/get_house/${currentHouseId}/`,
                 success: function(response) {
                     if (!response.success) {
                         loadingIndicatorHouse.style.visibility = 'visible';
@@ -139,14 +140,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     }
                     else {
-                        console.log(response);
+
                         cache[cacheKey] = response;
                         updateModalContent(response, 'house');
                     }
                 },
                 error: function(xhr, status, error) {
-                    console.log(error);
-                    console.error('Ошибка при загрузке данных: ', error);
                     loadingIndicatorHouse.style.visibility = 'hidden';
                 }
             });
@@ -189,7 +188,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
     
-    
 
     function handleTransportClick(event) {
         openTransportModal(event, this);
@@ -199,11 +197,80 @@ document.addEventListener('DOMContentLoaded', () => {
         carDivs.forEach(element => element.addEventListener('click', handleTransportClick));
         yachtDivs.forEach(element => element.addEventListener('click', handleTransportClick));
 
+        if (btnSellTransportToPlayer) {
+            btnSellTransportToPlayer.on('click', function() {
+                sellToPlayerTransportModal.css('visibility', 'visible');
+            })
+        }
+        if (acceptSellToPlayerButton) {
+            acceptSellToPlayerButton.on('click', function() {
+
+                let priceValue = inputSellToPlayer.val().replaceAll(/s/g, '');
+                inputSellToPlayer.val(priceValue);
+                console.log(currentTransportType, currentTransportId, currentTransportUcode);
+
+                let dataForm = $(this.form).serializeArray();
+                let jsonData = {};
+                dataForm.forEach(item => {
+                    jsonData[item.name] = item.value;
+                });
+
+                jsonData['type'] = currentTransportType;
+                jsonData['id'] = currentTransportId;
+                jsonData['ucode'] = currentTransportUcode;
+
+                jsonData['price'] = jsonData['price'].replaceAll(/\s/g,'')
+
+
+                if (!jsonData['price'] || jsonData['price'].trim() === '') {
+                    return handleMessages('Цена не может быть пустой.');
+                } else if (isNaN(jsonData['price'])) {
+                    return handleMessages('Цена должна быть числом.');
+                } else if (parseInt(jsonData['price'], 10) === 0) {
+                    return handleMessages('Цена не может быть равна нулю.');
+                } else if (parseInt(jsonData['price'], 10) < 1000) {
+                    return handleMessages('Цена не может быть меньше тысячи.');
+                }
+
+
+                const csrfToken = $('[name=csrfmiddlewaretoken]').val();
+
+                $.ajax({
+                    url: '/api/sell_transport_to_player/',
+                    type: 'POST',
+                    headers: {
+                        'X-CSRFToken': csrfToken,
+                        'Content-Type': 'application/json'
+                    },
+                    data: JSON.stringify(jsonData),
+                    success: function(response) {
+
+                        if (response.success) {
+                            const transportDiv = $(`.${currentTransportType}.frosted_glass[ucode="${currentTransportUcode}"][data-modal-type="${currentTransportType}"][numerical-order="${currentTransportNumerical}"]`);
+                            transportDiv.remove();
+                        }
+                        else {
+                            handleMessages('Произошла ошибка|' + response.error);
+                        }
+
+                        closeAllModals();
+                    },
+                    error: function(error) {
+
+                        handleMessages('Произошла ошибка|' + (error.responseJSON.error || error.error));
+                    }
+                });
+            });
+        }
+
+
+
         if (acceptSellTransportButton) {
-            acceptSellTransportButton.addEventListener('click', function() {
+            acceptSellTransportButton.on('click', function() {
+
                 const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
                 const url = `/api/sell_transport_to_state/${currentTransportType}/${currentTransportUcode}/`;
-                console.log(currentTransportId);
+
                 const data = {
                     id: currentTransportId,
                     type: currentTransportType
@@ -221,7 +288,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     success: function(response) {
                         loadingIndicatorTransport.style.visibility = 'hidden';
                         if (response.success) {
-                            const transportDiv = document.querySelector(`.${currentTransportType}.frosted_glass[ucode="${currentTransportUcode}"][data-modal-type="${currentTransportType}"][numerical-order="${currentTransportNumerical}"]`);
+                            const transportDiv = $(`.${currentTransportType}.frosted_glass[ucode="${currentTransportUcode}"][data-modal-type="${currentTransportType}"][numerical-order="${currentTransportNumerical}"]`);
                             transportDiv.remove();
                         }
 
@@ -259,27 +326,41 @@ document.addEventListener('DOMContentLoaded', () => {
                         id: currentHouseId,
                     })
                 }).then(response => response.json())
-                  .then(data => {
-                    loadingIndicatorTransport.style.visibility = 'hidden';
-                    if (data.success) {
-                        const houseDiv = document.querySelector(`.house.frosted_glass[id="${currentHouseId}"][data-modal-type="house"]`);
-                        houseDiv.remove();
-                    }
-                    console.log(data);
+                    .then(data => {
+                      loadingIndicatorTransport.style.visibility = 'hidden';
+                          if (data.success) {
+                              const houseDiv = document.querySelector(`.house.frosted_glass[id="${currentHouseId}"][data-modal-type="house"]`);
+                              houseDiv.remove();
+                          }
 
-                    closeAllModals();
-                  }).catch(error => {
-                    loadingIndicatorTransport.style.visibility = 'hidden';
-                      alert('Произошла ошибка: ' + error.message);
-                  });
+
+                      closeAllModals();
+                    }).catch(error => {
+                      loadingIndicatorTransport.style.visibility = 'hidden';
+                        alert('Произошла ошибка: ' + error.message);
+                    });
             });
         }
     }
 
+    if (acceptSellTransportToPlayer)
+
     window.addEventListener('click', (event) => {
-        if (!modalTransport.contains(event.target) && !modalHouse.contains(event.target) && !modalNickname.contains(event.target) && !event.target.closest('.car.frosted_glass') && !event.target.closest('.yacht.frosted_glass') && !event.target.closest('.house.frosted_glass')) {
+
+        let sTPTM = document.getElementById('sellToPlayerTransportModal');
+
+        if (
+            !modalTransport.contains(event.target) &&
+            !modalHouse.contains(event.target) &&
+            !modalNickname.contains(event.target) &&
+            !event.target.closest('.car.frosted_glass') &&
+            !event.target.closest('.yacht.frosted_glass') &&
+            !event.target.closest('.house.frosted_glass') &&
+            !sTPTM.contains(event.target)
+        ) {
             closeAllModals();
         }
+
     });
 
     window.openModal = openModal;

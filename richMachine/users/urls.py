@@ -13,13 +13,13 @@ handler404 = 'users.views.page_not_found'
 # handler500 = 'users.views.server_error'
 
 urlpatterns = [
-    path('register/', views.RegistrationView.as_view(), name='register'),
+    path('register/', views.SignUpView.as_view(), name='register'),
     # path('profile/<int:server_id>/', views.profile, name='profile'),
     # path('profile/', views.self_profile, name='self_profile'),
     # path('change_nickname/', views.change_nickname, name='change_nickname'),
     # path('change_language/', views.change_language, name='language'),
-    path('login/', views.LoginView.as_view(), name='login'),
-    path('logout/', views.loguot_user, name='logout'),
+    path('login/', views.SignInView.as_view(), name='login'),
+    # path('logout/', views.loguot_user, name='logout'),
     # path('password_change/',
     #      PasswordChangeView.as_view(template_name='registration/password_change.html'),
     #      name='password_change'),

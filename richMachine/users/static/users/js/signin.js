@@ -2,7 +2,7 @@ $('#loginForm').on('submit', function (event) {
     event.preventDefault();
 
     const formData = $(this);
-
+    console.log(LOGIN_URL)
     $.ajax({
         url: LOGIN_URL,
         type: "POST",
@@ -11,7 +11,7 @@ $('#loginForm').on('submit', function (event) {
             'X-CSRFToken': $('input[name="csrfmiddlewaretoken"]').val()
         },
         success: function (response) {
-
+            console.log(response);
             if (response.success) {
                 handleNotifications('Вход успешен!', 'success');
                 window.location.href = PROFILE_URL;
@@ -58,3 +58,4 @@ $('#loginForm').on('submit', function (event) {
     }
 
 });
+

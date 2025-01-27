@@ -38,8 +38,8 @@ let rainArray = [];
 let svgPath = 'static/homePage/img/dollar.svg';
 
 for (let i = 0; i < 14; i++) {
-		rainArray.push(new RainDrops(svgPath));
-	}
+	rainArray.push(new RainDrops(svgPath));
+}
 
 function animateRain() {
 	

@@ -9,7 +9,7 @@
 
 {% block script %}
     <script>
-        const LOGIN_URL = "{% url 'users:login' %}";
+        const LOGIN_URL = "{% url 'api:login' %}";
         const PROFILE_URL = "{% url 'self_profile' %}";
     </script>
     <script src="{% static 'users/js/signin.js' %}" defer type="text/javascript"></script>
@@ -17,6 +17,7 @@
 
 {% block content %}
 <div class="frame">
+
     <p class="main-text">Авторизация</p>
     <div class="form">
         <form id="loginForm" onsubmit="return validateTelegramAuth()">

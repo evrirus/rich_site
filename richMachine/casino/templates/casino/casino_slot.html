@@ -1,5 +1,6 @@
 {% extends "homePage/layout.html" %}
 {% load static %}
+{% load sass_tags %}
 
 {% block title %}Slot Machine{% endblock %}
 {% block stylesheet %}
@@ -12,16 +13,13 @@
     <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Cinzel:wght@400..900&family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Moul&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Bangers&display=swap" rel="stylesheet">
-{#    <link rel="stylesheet" href="{% static 'homePage/styles/style.css' %}">#}
-    <link rel="stylesheet" href="{% static 'casino/styles/style_casino.css' %}">
+    <link href="{% sass_src 'casino/styles/slot.scss' %}" rel="stylesheet" type="text/css">
 {% endblock %}
 
 
 {% block script %}
     <script src="{% static '/casino/js/casino_slot_machine.js' %}" defer></script>
 {% endblock %}
-
-
 
 {% block content %}
     <div id="sides">

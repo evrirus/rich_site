@@ -2,7 +2,7 @@ import json
 
 from django.core.handlers.wsgi import WSGIRequest
 from django.utils.deprecation import MiddlewareMixin
-
+from django.shortcuts import redirect
 
 class ContentSecurityPolicyMiddleware(MiddlewareMixin):
     def process_response(self, request, response: WSGIRequest):
@@ -68,3 +68,12 @@ class AuthenticationUserMiddleware(MiddlewareMixin):
 
         request.server_id = user_server_id
 
+
+
+
+# class AuthRedirectMiddleware(MiddlewareMixin):
+#     def process_request(self, request):
+#         ...
+#         if not request.user.is_authenticated:
+#             if request.path != '/users/login/' and request.path != '/api/login/':
+#                 return redirect('/users/login/')

@@ -9,7 +9,6 @@
     align-items: center;
     justify-content:center;
     position: relative;
-    margin-top: 7em;
     width: 47.188em;
     height: 35.063em;
     flex-direction: column;
@@ -46,7 +45,8 @@ input {
     font-size: 13px;
     width: 19.063em;
     height: 3.375em;
-    border: none;
+    /*border: none;*/
+    border-color: inherit;
     border-radius: 1.25em;
     background-color: #131313;
     padding-left: 1.063em;
@@ -54,6 +54,11 @@ input {
     font-size: 16px;
     font-family: 'Montserrat', sans-serif;
     font-weight: bold;
+}
+input:focus {
+    border-color: #216B6A;
+    outline: none; /* Убирает стандартное обрамление браузера */
+    /* Добавляет тень */
 }
 
 .main-text {
@@ -114,3 +119,5 @@ p {
 #id_password {
     margin-bottom: 81px;
 }
+
+

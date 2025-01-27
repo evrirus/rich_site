@@ -9,7 +9,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const cache = {};
 
     let currentHouseId = null;
-    console.log(houseItemsContainer, modal);
+    
+    function formatNumberWithSpaces(number) {
+        return number.toLocaleString('ru-RU'); // Используем локаль 'ru-RU' для формата с пробелами
+    }
+
     if (houseItemsContainer && modal) {
         houseItemsContainer.addEventListener('click', (event) => {
             const houseItem = event.target.closest('.house_item');
@@ -37,10 +41,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Подгрузка данных из БД с использованием AJAX
                 $.ajax({
                     type: 'GET',
-                    url: `../get_house_info/${id}/`,  // URL вашего API эндпоинта
+                    url: `/api/get_house/${id}/`,  // URL вашего API эндпоинта
                     success: function(response) {
                         // Сохраняем данные в кеш
                         cache[cacheKey] = response;
+                        console.log(response);
                         // Обновление содержимого модального окна
                         updateModalContent(response);
                     },
@@ -55,16 +60,23 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         function updateModalContent(data) {
+            
+            let basement_text;
+            if (data.basement > 0) {
+                basement_text = `Имеется[<span style='color: rgb(255, 28, 28);'>lvl</span>=${data.basement}]`;
+            } else {
+                basement_text = 'Отсутствует';
+            }
 
-            document.querySelector('.house-district-name').textContent = `${data.district_name}`;
-            document.querySelector('.house-type').textContent = `${data.house_type} №`;
-            document.querySelector('#house_id_district').textContent = `${data.house_id_for_district}`;
+            document.querySelector('.house-district-name').textContent = `${data.district_info.name}`;
+            document.querySelector('.house-type').textContent = `${data.type} №`;
+            document.querySelector('#house_id_district').textContent = `${data.id_for_district}`;
 
-            document.querySelector('#house_id').textContent = `${data.house_id}`;
-            document.querySelector('#house_price').textContent = `${data.house_price} ₽`;
-            document.querySelector('#house_basement').innerHTML = `${data.house_basement}`;
-            document.querySelector('#house_floors').textContent = `${data.house_floor}`;
-            document.querySelector('#house_class').textContent = `${data.house_class}`;
+            document.querySelector('#house_id').textContent = `${data.id}`;
+            document.querySelector('#house_price').textContent = `${formatNumberWithSpaces(data.price)} ₽`;
+            document.querySelector('#house_basement').innerHTML = `${basement_text}`;
+            document.querySelector('#house_floors').textContent = `${data.floors}`;
+            document.querySelector('#house_class').textContent = `${data.class}`;
             
             loadingIndicator.style.visibility = 'hidden';
             infoHouse.style.visibility = 'visible';
@@ -91,7 +103,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
         
                 $.ajax({
-                    url: '../buy_house/' + currentHouseId + '/',
+                    url: '/api/buy_house/',
                     type: 'POST',
                     headers: {
                         'X-CSRFToken': csrfToken
@@ -104,6 +116,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         closeModal();
                     },
                     error: function(error) {
+                        console.log(error)
                         loadingIndicator.style.visiblity = 'hidden'; // Скрываем индикатор загрузки
                         alert('Произошла ошибка: ' + error.responseJSON.message || 'Неизвестная ошибка');
                     }

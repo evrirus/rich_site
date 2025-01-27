@@ -6,6 +6,7 @@ from rest_framework.views import APIView
 
 from authentication import SiteAuthentication, TelegramAuthentication
 from rest_framework.authentication import SessionAuthentication
+from rest_framework.permissions import IsAuthenticated
 
 from django.contrib.humanize.templatetags.humanize import intcomma
 from django.http import JsonResponse
@@ -17,7 +18,7 @@ from utils import send_message_to_user, Money
 
 class GenerateCombinationView(APIView):
     authentication_classes = [SessionAuthentication, TelegramAuthentication, SiteAuthentication]
-    permission_classes = []
+    permission_classes = [IsAuthenticated]
 
     coefficients = {
         1: ['🍭', '🍭', '🍭'],
@@ -153,7 +154,8 @@ class GenerateCombinationView(APIView):
 
         user_input = data.get('user_input')
         user_choice = data.get('user_choice')
-        user_bid = data.get('bid')
+        user_bid = data.get('bid', 0)
+        ic(user_input, user_choice, user_bid)
 
         casino_model = CasinoModel.objects.filter(user=request.user).first()
 
@@ -175,14 +177,14 @@ class GenerateCombinationView(APIView):
                 user_choice = freespins.first().currency
 
             else:
-                send_message_to_user(request.user.server_id, {'text': 'Нет доступных фриспинов'})
+                send_message_to_user(request, {'text': 'Нет доступных фриспинов'})
 
                 return JsonResponse(
                     {'success': False, 'message': 'Нет доступных фриспинов', 'freespin': 0})
         else: bid = 0
 
         if bid <= 0:
-            send_message_to_user(request.user.server_id, {'text': 'Ставка не может быть меньше единицы'})
+            send_message_to_user(request, {'text': 'Ставка не может быть меньше единицы'})
 
             return JsonResponse(
                 {'success': False, 'message': 'Ставка не может быть меньше единицы'})
@@ -191,7 +193,7 @@ class GenerateCombinationView(APIView):
 
         # Проверка достаточности средств
         if not user_bid == 'freespin' and balance < bid:
-            send_message_to_user(request.user.server_id, {'text': 'Недостаточно средств. | Пополнить счёт можно в Донате'})
+            send_message_to_user(request, {'text': 'Недостаточно средств. | Пополнить счёт можно в Донате'})
 
             return JsonResponse(
                 {'success': False, 'message': 'Недостаточно средств.'})

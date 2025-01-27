@@ -12,7 +12,9 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentTransportType = null;
     let currentTransportId = null;
 
-
+    function formatNumberWithSpaces(number) {
+        return number.toLocaleString('ru-RU'); // Используем локаль 'ru-RU' для формата с пробелами
+    }
 
     if (transportItemsContainer && modal) {
         transportItemsContainer.addEventListener('click', (event) => {
@@ -48,7 +50,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.log(type, id);
                 $.ajax({
                     type: 'GET',
-                    url: `get_transport_info/${type}/${id}/`,  // URL вашего API эндпоинта
+                    url: `/api/transport_info/`,  // URL вашего API эндпоинта
+                    data: {
+                        id: id,
+                        type: type,
+                    },
                     success: function(response) {
                         // Сохраняем данные в кеш
                         cache[cacheKey] = response;
@@ -70,8 +76,8 @@ document.addEventListener('DOMContentLoaded', () => {
         function updateModalContent(data) {
 
             document.querySelector('.transport-name').textContent = `${data.name}`;
-            document.querySelector('.transport-price').textContent = `${data.price} ₽`;
-            document.querySelector('.transport-produced').textContent = `Произведено: ${data.produced}`;
+            document.querySelector('.transport-price').textContent = `${formatNumberWithSpaces(data.price)} ₽`;
+            document.querySelector('.transport-produced').textContent = `Произведено: ${data.max_quantity}`;
             document.querySelector('.transport-quantity').textContent = `В наличии: ${data.quantity}`;
             
             loadingIndicator.style.visibility = 'hidden';
@@ -97,7 +103,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
 
-                fetch(`/magazine/buy_transport/${currentTransportType}/${currentTransportId}/`, {
+                fetch(`/api/buy_transport/`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',

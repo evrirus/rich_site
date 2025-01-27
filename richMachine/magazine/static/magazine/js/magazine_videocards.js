@@ -39,7 +39,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Подгрузка данных из БД с использованием AJAX
                 $.ajax({
                     type: 'GET',
-                    url: `get_videocard_info/${id}/`,  // URL вашего API эндпоинта
+                    url: `/api/item/`,  // URL вашего API эндпоинта
+                    data: {
+                        id: id,
+                    },
                     success: function(response) {
                         // Сохраняем данные в кеш
                         cache[cacheKey] = response;
@@ -60,8 +63,7 @@ document.addEventListener('DOMContentLoaded', () => {
             console.log(data);
             document.querySelector('.info-videocard-name').textContent = `${data.name}`;
             document.querySelector('.info-videocard-price').textContent = `${data.price} $`;
-            document.querySelector('.info-videocard-performance').textContent = `Доход ${data.performance}$  / день`;
-
+            document.querySelector('.info-videocard-performance').textContent = `Доход ${data.attributes.performance}$  / день`;
              
             loadingIndicator.style.visibility = 'hidden';
             infoCard.style.visibility = 'visible';
@@ -87,28 +89,31 @@ document.addEventListener('DOMContentLoaded', () => {
                 loadingIndicator.style.visibility = 'visible'; // Показываем индикатор загрузки
 
                 const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-
-                fetch(`./buy_videocard/${currentVideocardId}/`, {
-                    method: 'POST',
+                console.log(currentVideocardId)
+                $.ajax({
+                    url: '/api/buy_item/',
+                    type: 'POST',
                     headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': csrfToken
+                        'X-CSRFToken': csrfToken // Добавляем CSRF-токен
                     },
-                    body: JSON.stringify({
-                        id: currentVideocardId
-                    })
-                }).then(response => response.json())
-                  .then(data => {
-                      loadingIndicator.style.visibility = 'hidden'; // Скрываем индикатор загрузки
-
-                      if (data.success) {
-                          closeModal();
-                      } 
-
-                  }).catch(error => {
-                      loadingIndicator.style.visibility = 'hidden'; // Скрываем индикатор загрузки
-                      
-                  });
+                    contentType: 'application/json',
+                    data: JSON.stringify({ id: currentVideocardId }), // Преобразуем объект в JSON
+                    beforeSend: function () {
+                        loadingIndicator.style.visibility = 'visible'; // Показываем индикатор загрузки
+                    },
+                    success: function (data) {
+                        loadingIndicator.style.visibility = 'hidden'; // Скрываем индикатор загрузки
+                
+                        if (data.success) {
+                            closeModal(); // Закрываем модальное окно при успехе
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        loadingIndicator.style.visibility = 'hidden'; // Скрываем индикатор загрузки
+                        console.error('Ошибка:', error); // Обработка ошибок
+                    }
+                });
+                
             });
         } else {
             console.error('Кнопка покупки не найдена');

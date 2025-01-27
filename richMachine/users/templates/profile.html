@@ -3,6 +3,8 @@
 {% load static %}
 {% load humanize %}
 {% load my_filters %}
+{% load sass_tags %}
+
 {% block title %} {{title}} {% endblock %}
 {% block username %}{{ username }}{% endblock %}
 {% block server_id %}{{ server_id }}{% endblock %}
@@ -16,7 +18,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Cinzel:wght@400..900&family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Moul&display=swap" rel="stylesheet">
 
-<link rel="stylesheet" href="{% static 'users/styles/style_profile.css' %}">
+<link href="{% sass_src 'users/styles/style_profile.scss' %}" rel="stylesheet" type="text/css">
 {% endblock %}
 
 
@@ -47,15 +49,15 @@
             </div>
             <div id="nicknameModal" class="modal">
                 <div class="modal-content">
-                  <form id="nickname-form" method="POST">
-                    {% csrf_token %}
-                    <label for="new_nickname" class="label_new_nickname">Введите новый никнейм</label>
-                    <input type="text" id="new_nickname" name="new_nickname" placeholder="Никнейм" required maxlength="{{nickname.max}}">
-                    <div class="buttons">
-                      <button type="button" id="close_nickname">Закрыть</button>
-                      <button type="reset" id="accept_nickname">Подтвердить</button>
-                    </div>
-                  </form>
+                    <form id="nickname-form" method="POST">
+                        {% csrf_token %}
+                        <label for="new_nickname" class="label_new_nickname">Введите новый никнейм</label>
+                        <input type="text" id="new_nickname" name="new_nickname" placeholder="Никнейм" required maxlength="{{nickname.max}}">
+                        <div class="buttons">
+                            <button type="button" id="close_nickname">Закрыть</button>
+                            <button type="reset" id="accept_nickname">Подтвердить</button>
+                        </div>
+                    </form>
                 </div>
             </div>
             
@@ -74,7 +76,7 @@
             <div class="info-group">
                 <div class="balance">
                     <div class="balance__cash nowrap">Наличные: {{money.cash|intcomma}} ₽</div>
-                    <br>
+
                     <div class="balance__bank nowrap">Банк: {{money.bank|intcomma}} ₽</div>
                 </div>
                 <div class="couple">
@@ -146,6 +148,27 @@
             </div>
         </div>
     </div>
+    <div id="sellToPlayerTransportModal" class="modal">
+         <div class="modal-content">
+             <form id="sellToPlayer-form" method="POST">
+                 {% csrf_token %}
+                 <label for="user_id" class="labelHeader">Заполните данные</label>
+                 <div id="inputs">
+                     <div class="background-input"><input type="text" id="user_id" name="user_id" placeholder="id or username" required maxlength="50"/></div>
+                     <div class="background-input"><input type="text" id="price" name="price" placeholder="0" required maxlength="20" onkeypress="noDigits(event)"/></div>
+                     <select id="choose_type_cash" name="user_choice" title="currency">
+                        <option value="cash" title="RUB">₽</option>
+                        <option value="USD" title="USD">$</option>
+                     </select>
+                 </div>
+
+                 <div class="buttons">
+                     <button type="button" id="close_sellToPlayer">Закрыть</button>
+                     <button type="reset" id="accept_sellToPlayer">Подтвердить</button>
+                 </div>
+             </form>
+         </div>
+    </div>
     <div id="houseModal" class="house-modal">
         <div class="house-modal-content">
             <div class="loader">
@@ -154,10 +177,10 @@
                 <div class="inner three"></div>
             </div>
             <div class="info__house">
-                <span class="house-district-name">Арбат</span><br>
+                <span class="house-district-name"></span><br>
                 <div class="type_and_number_house">
-                    <span class="house-type">Квартира</span>
-                    <span id="house_id_district"> №1</span><br>
+                    <span class="house-type"></span>
+                    <span id="house_id_district"></span><br>
                 </div>
                 <table>
                     <tr>
@@ -203,5 +226,41 @@
 <span class="sun">
     
 </span>
+
+<script>
+    function formatNumberWithSpaces(number) {
+        return number.toLocaleString('ru-RU'); // Добавляем пробелы для форматирования
+    }
+
+    function noDigits(event) {
+
+        if (event.key !== "Backspace" && "1234567890 ".indexOf(event.key) === -1) {
+            event.preventDefault();
+        }
+    }
+
+
+    const input = $('#price');
+
+    // Запрещаем ввод нецифровых символов
+    input.on('keydown', noDigits);
+
+    input.on('input', function() {
+        let value = input.val();
+        console.log("Исходное значение:", value);
+
+        // Удаляем все пробелы
+        let no_probel = value.replaceAll(/\s/g,'') // Исправлено: s вместо s
+        console.log("Значение после удаления пробелов:", no_probel);
+
+
+        let formattedValue = formatNumberWithSpaces(Number(no_probel));
+        console.log(formattedValue);
+        input.val(formattedValue);
+
+
+    });
+
+</script>
 {% endblock %}
 

@@ -3,8 +3,9 @@ const WorkButton = $('#main-circuit');
 // Переменные для буферизации кликов
 let clickBuffer = 0; // Количество кликов, накопленных в буфере
 let isSyncing = false; // Флаг синхронизации с сервером
-let clickThreshold = 7;
+const clickThreshold = 3;
 let disabled = false;
+const autoInterval = 5000;
 
 // Обработчик клика
 WorkButton.on('click', function () {
@@ -93,6 +94,6 @@ function syncWithServer() {
 }
 
 // Автоматическая синхронизация каждые 10 секунд
-setInterval(syncWithServer, 5000);
+setInterval(syncWithServer, autoInterval);
 
 

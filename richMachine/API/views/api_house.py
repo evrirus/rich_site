@@ -1,4 +1,6 @@
-from utils import (get_district_by_id, get_full_houses_info,
+from API.serializers import HousesSerializer
+from users.models import CustomUser
+from utils import (get_district_by_id, get_full_house_info,
                    get_item_by_id, send_message_to_user, Money)
 
 from django.db import transaction
@@ -15,6 +17,7 @@ from rest_framework.authentication import SessionAuthentication
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticated
 
 
 class GetMyHousesView(APIView):
@@ -24,7 +27,7 @@ class GetMyHousesView(APIView):
     returns: success: bool, houses: list"""
     
     authentication_classes = [SessionAuthentication, TelegramAuthentication, SiteAuthentication]
-    permission_classes = []
+    permission_classes = [IsAuthenticated]
     
     def post(self, request: Request):
         user_info = request.user
@@ -32,8 +35,8 @@ class GetMyHousesView(APIView):
         if not user_info:
             return Response({"success": False, "error": "user_not_found"})
         
-        houses = [get_full_houses_info(x['id']) for x in user_info.house['houses']]
-        
+        houses = [HousesSerializer(get_full_house_info(x['id'])).data for x in user_info.house['houses']]
+        ic(houses)
         return Response(houses)
 
 
@@ -43,19 +46,19 @@ class SellHouseView(APIView):
 
     returns: success: bool, message: str"""
     authentication_classes = [SessionAuthentication, TelegramAuthentication, SiteAuthentication]
-    permission_classes = []
+    permission_classes = [IsAuthenticated]
 
     def post(self, request: Request, id: int):
         ic(id)
         house_info = get_house_by_id(id)
 
         if not house_info:
-            send_message_to_user(request.user.server_id, {'text': 'Дом не найден'})
+            send_message_to_user(request, {'text': 'Дом не найден'})
             # messages.error(request, "Дом не найден")
             return Response({"success": False, "error": "Дом не найден"})
 
         if house_info.owner != request.user.server_id:
-            send_message_to_user(request.user.server_id, {'text': 'Дом не найден'})
+            send_message_to_user(request, {'text': 'Дом не найден'})
             # messages.error(request, "Дом не найден")
             return Response({"success": False, "error": "Дом не найден",
                              })
@@ -73,7 +76,7 @@ class SellHouseView(APIView):
         money.create_notification('Продажа прошла успешно!')
 
 
-        # send_message_to_user(request.user.server_id, {'text': 'Продажа прошла успешно!'})
+        # send_message_to_user(request, {'text': 'Продажа прошла успешно!'})
         # messages.success(request, 'Продажа прошла успешно!')
         return JsonResponse({'success': True, 'message': 'Продажа прошла успешно!'})
 
@@ -84,12 +87,13 @@ class GetHouseView(APIView):
     returns: success: bool, houses: list"""
     
     authentication_classes = [SessionAuthentication, TelegramAuthentication, SiteAuthentication]
-    permission_classes = []    
+    permission_classes = [IsAuthenticated]
 
     def get(self, request: Request, id_house: int):
+  
         house_info = get_house_by_id(id_house)
         if not house_info:
-            send_message_to_user(request.user.server_id, {'text': 'Дом не найден'})
+            send_message_to_user(request, {'text': 'Дом не найден'})
             # messages.error(request, 'Дом не найден')
             return JsonResponse({"success": False, "error": "Дом не найден",
                                  })
@@ -114,6 +118,8 @@ class GetHouseView(APIView):
         return Response({'success': True, 'message': 'ok',
                         **standart_house_info})
         
+        
+        
 class GetBasementView(APIView):
     """API для получения списка домов пользователя
     :param: None
@@ -121,7 +127,7 @@ class GetBasementView(APIView):
     returns: success: bool, houses: list"""
     
     authentication_classes = [SessionAuthentication, TelegramAuthentication, SiteAuthentication]
-    permission_classes = []    
+    permission_classes = [IsAuthenticated]
 
     def get(self, request: Request, id_house: int):
         ic(id_house)
@@ -166,19 +172,19 @@ class GetTakeProfitBasementView(APIView):
     returns: success: bool, houses: list"""
     
     authentication_classes = [SessionAuthentication, TelegramAuthentication, SiteAuthentication]
-    permission_classes = []   
+    permission_classes = [IsAuthenticated]
     
     def post(self, request: Request):
         house_info = get_house_by_id(request.data)
 
         if not house_info.basement:
-            send_message_to_user(request.user.server_id, {'text': 'Подвал | Подвал не построен.'})
+            send_message_to_user(request, {'text': 'Подвал | Подвал не построен.'})
             # messages.info(request, 'Подвал | Подвал не построен.')
             return Response({'success': False,})
         
         current_balance = house_info.basement['balance']
         if current_balance <= 0:
-            send_message_to_user(request.user.server_id, {'text': 'Подвал | Вы ничего не добыли.\nВозможно, вы недавно забирали прибыль'})
+            send_message_to_user(request, {'text': 'Подвал | Вы ничего не добыли.\nВозможно, вы недавно забирали прибыль'})
             # messages.info(request, 'Подвал | Вы ничего не добыли.\nВозможно, вы недавно забирали прибыль')
             return Response({'success': False,})
 
@@ -201,18 +207,18 @@ class GetBalanceBasementView(APIView):
     returns: success: bool, balance: int"""
 
     authentication_classes = [SessionAuthentication, TelegramAuthentication, SiteAuthentication]
-    permission_classes = []
+    permission_classes = [IsAuthenticated]
 
     def get(self, request: Request, id_house: int):
         house_info = get_house_by_id(id_house)
 
         if house_info.owner != request.user.server_id:
-            send_message_to_user(request.user.server_id, {'text': 'Вы не являетесь владельцем этого дома.'})
+            send_message_to_user(request, {'text': 'Вы не являетесь владельцем этого дома.'})
             # messages.error(request, 'Вы не являетесь владельцем этого дома.')
             return Response({'success': False})
 
         if not house_info.basement:
-            send_message_to_user(request.user.server_id, {'text': 'Нет подвала.'})
+            send_message_to_user(request, {'text': 'Нет подвала.'})
             # messages.error(request, 'Нет подвала.')
             return Response({'success': False})
 
@@ -226,21 +232,21 @@ class CreateBasementView(APIView):
     returns: success: bool, houses: list"""
 
     authentication_classes = [SessionAuthentication, TelegramAuthentication, SiteAuthentication]
-    permission_classes = []
+    permission_classes = [IsAuthenticated]
 
     def post(self, request: Request, *args, **kwargs):
         ic(request.data)
         house = Houses.objects.get(id=request.data)
 
         if house.basement:
-            send_message_to_user(request.user.server_id, {'text': 'Подвал | У вас уже имеется подвал.'})
+            send_message_to_user(request, {'text': 'Подвал | У вас уже имеется подвал.'})
             # messages.error(request, 'Подвал | У вас уже имеется подвал.')
             return Response({'success': False})
 
         PRICE_FIRST_LEVEL = 4_000_000
 
         if request.user.money['cash'] < PRICE_FIRST_LEVEL:
-            send_message_to_user(request.user.server_id, {'text': 'Недостаточно средств.'})
+            send_message_to_user(request, {'text': 'Недостаточно средств.'})
             # messages.error(request, "Недостаточно средств.")
             return Response({'success': False})
 
@@ -271,7 +277,7 @@ class UpgradeBasementView(APIView):
     """
 
     authentication_classes = [SessionAuthentication, TelegramAuthentication, SiteAuthentication]
-    permission_classes = []
+    permission_classes = [IsAuthenticated]
 
     def get(self, request: Request, id_house: int):
         house_info = get_house_by_id(id_house)
@@ -282,32 +288,32 @@ class UpgradeBasementView(APIView):
         }
 
         if not house_info.basement:
-            send_message_to_user(request.user.server_id, {'text': 'Нет подвала'})
+            send_message_to_user(request, {'text': 'Нет подвала'})
             # messages.error(request, 'Нет подвала.')
             return Response({'success': False})
 
         if house_info.basement.get('level', 0) < 1:
-            send_message_to_user(request.user.server_id, {'text': 'Нет подвала'})
+            send_message_to_user(request, {'text': 'Нет подвала'})
             # messages.error(request, 'Нет подвала.')
             return Response({'success': False})
 
         if house_info.owner != request.user.server_id:
-            send_message_to_user(request.user.server_id, {'text': 'Дом не найден'})
+            send_message_to_user(request, {'text': 'Дом не найден'})
             # messages.error(request, "Дом не найден")
             return Response({'success': False})
 
         if house_info.basement.get('level', 0) >= max(upgrade_data.keys()):
-            send_message_to_user(request.user.server_id, {'text': 'Уровень подвала максимален'})
+            send_message_to_user(request, {'text': 'Уровень подвала максимален'})
             # messages.error(request, 'Уровень подвала максимален')
             return Response({'success': False})
 
         if house_info.basement.get('level', 0) not in upgrade_data.keys():
-            send_message_to_user(request.user.server_id, {'text': 'Неизвестная ошибка.'})
+            send_message_to_user(request, {'text': 'Неизвестная ошибка.'})
             # messages.error(request, 'Неизвестная ошибка.')
             return Response({'success': False})
 
         if request.user.money['cash'] < upgrade_data[house_info.basement.get('level', 0) + 1]['price']:
-            send_message_to_user(request.user.server_id, {'text': 'Недостаточно средств.'})
+            send_message_to_user(request, {'text': 'Недостаточно средств.'})
             # messages.error(request, 'Недостаточно средств.')
             return Response({'success': False})
 
@@ -321,3 +327,58 @@ class UpgradeBasementView(APIView):
 
         return Response({'success': True, 'new_level': house_info.basement['level']})
 
+
+class BuyHouseView(APIView):
+    """
+    API для покупки дома.
+    Проверяет условия покупки и обновляет информацию о доме и пользователе.
+    """
+
+    authentication_classes = [SessionAuthentication, TelegramAuthentication, SiteAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        """
+        Обрабатывает POST-запрос для покупки дома.
+        """
+
+        house_id = int(request.data.get('id')) if request.data.get('id').isdigit() else None
+        
+        # Получение информации о доме
+        house_info = get_house_by_id(house_id)
+        if not house_info:
+            return Response({'success': False, 'message': 'Дом не найден'}, status=404)
+
+        # Проверка: дом уже занят
+        if house_info.owner:
+            send_message_to_user(request, {'text': 'Дом уже занят!'})
+            return Response({'success': False, 'message': 'Дом уже занят'})
+
+        user_info = request.user
+
+        # Проверка: достаточно ли денег
+        if user_info.money.get('cash', {}) < house_info.price:
+            send_message_to_user(request, {'text': 'Недостаточно средств.'})
+            return Response({'success': False, 'message': 'Недостаточно средств'})
+
+        # Проверка: не превышено ли максимальное количество домов
+        if user_info.house.get('maxPlaces', 2) <= len(user_info.house.get('houses', {})):
+            send_message_to_user(request, {'text': 'Превышено максимальное количество.'})
+            return Response({'success': False, 'message': 'Превышено максимальное количество домов'})
+
+        # Списание денег
+        money = Money(request, -house_info.price).give()
+
+        # Обновление данных пользователя
+        user = CustomUser.objects.get(server_id=user_info.server_id)
+        user.house['houses'].append({'id': house_info.id})
+        user.save()
+
+        # Обновление данных дома
+        house = Houses.objects.get(id=house_info.id)
+        house.owner = user_info.server_id
+        house.save()
+
+        # Уведомление о покупке
+        money.create_notification('Дом успешно приобретен!')
+        return Response({'success': True, 'message': 'Дом успешно приобретен'})

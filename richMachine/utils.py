@@ -70,22 +70,21 @@ def get_crypto_info(name: str):
     return {'name': data['name'], 'owner': data['owner'],
             'quantity': data['quantity'], 'symbol': data['symbol']}
 
-def get_full_houses_info(house_id: int) -> list[dict]:
+def get_full_house_info(house_id: int) -> dict:
     house_info = get_house_by_id(house_id)
-    district_info = get_district_by_id(house_info.district_id)
-    house_info.district_info = district_info
+    house_info.district_info = get_district_by_id(house_info.district_id)
     return house_info
 
 #* ID
 def get_house_by_id(house_id: int):
     try:
         return Houses.objects.get(id=house_id)
-    except Houses.DoesNotExist: return None
+    except Houses.DoesNotExist: return {}
 
 def get_district_by_id(dis_id: int):
     try:
         return Districts.objects.get(district_id=dis_id)
-    except Districts.DoesNotExist: return None
+    except Districts.DoesNotExist: return {}
 
 def get_car_by_id(car_id: int):
     try:
@@ -98,16 +97,15 @@ def get_yacht_by_id(yacht_id: int):
     except Yacht.DoesNotExist: return None
 
 #* ucode
-def get_transport_by_ucode(server_id: int, type: str, ucode: str):
-
-    user = CustomUser.objects.get(server_id=server_id)
-
+def get_transport_by_ucode(request: Request, type: str, ucode: str) -> None | dict:
+    ic(request)
     if type == 'car':
-        for transport in user.car['cars']:
+        for transport in request.user.car['cars']:
             if transport['ucode'] == ucode:
                 return transport
+
     elif type == 'yacht':
-        for transport in user.yacht['yachts']:
+        for transport in request.user.yacht['yachts']:
             if transport['ucode'] == ucode:
                 return transport
     return None
@@ -115,12 +113,16 @@ def get_transport_by_ucode(server_id: int, type: str, ucode: str):
 
 
 
-def send_message_to_user(server_id: int, message: dict[str, str]) -> None:
+def send_message_to_user(request: Request, message: dict[str, str]) -> None:
     """
     Отправляет сообщение пользователю через WebSocket.
     """
+
+    if request.data and request.data.get('source') == 'telegram_bot':
+        return
+
     channel_layer = get_channel_layer()
-    group_name = f'user_{server_id}'
+    group_name = f'user_{request.user.server_id}'
 
     # todo: удалить
 
@@ -179,7 +181,7 @@ class Money:
         elif self.amount < 0 and not v:
             v = f"С баланса списано: {intcomma(self.amount)} {self.get_symbol(self._type_money)}"
 
-        send_message_to_user(self._server_id, {'text': v})
+        send_message_to_user(self._request, {'text': v})
 
         return self
 
